@@ -135,11 +135,15 @@ def chat_register():
             flash('Email already registered', 'error')
             return render_template('chat_register.html')
 
+        # If this is the very first user to register, make them an admin
+        user_count = ChatUser.query.count()
+        role = 'admin' if user_count == 0 else 'user'
+
         user = ChatUser(
             username=username,
             email=email,
             display_name=display_name or username,
-            role='user'
+            role=role
         )
         user.set_password(password)
         db.session.add(user)
