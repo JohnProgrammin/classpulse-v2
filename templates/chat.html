@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -26,20 +27,43 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        body { background: #000000; color: #FFFFFF; }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #000000;
+            color: #FFFFFF;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
 
         .message-enter {
             animation: slideIn 0.2s ease-out;
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Fix dropdown styling */
@@ -70,7 +94,7 @@
             padding: 4px;
             z-index: 100;
             min-width: 140px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
 
         .context-menu button {
@@ -103,19 +127,24 @@
             position: fixed;
             z-index: 60;
             background: #1e1e1e;
-            border: 1px solid rgba(255,255,255,0.15);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
             padding: 10px;
             width: 260px;
-            box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
             display: none;
         }
-        .emoji-picker.active { display: block; }
+
+        .emoji-picker.active {
+            display: block;
+        }
+
         .emoji-picker .emoji-grid {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             gap: 2px;
         }
+
         .emoji-picker .emoji-btn {
             background: none;
             border: none;
@@ -127,7 +156,10 @@
             text-align: center;
             transition: background 0.12s;
         }
-        .emoji-picker .emoji-btn:hover { background: rgba(255,255,255,0.12); }
+
+        .emoji-picker .emoji-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
 
         /* Reaction badges */
         .reaction-row {
@@ -136,22 +168,30 @@
             gap: 4px;
             margin-top: 4px;
         }
+
         .reaction-badge {
             display: inline-flex;
             align-items: center;
             gap: 3px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 14px;
             padding: 2px 7px;
             cursor: pointer;
             font-size: 0.82rem;
-            color: rgba(255,255,255,0.75);
+            color: rgba(255, 255, 255, 0.75);
             transition: background 0.15s, border-color 0.15s;
             user-select: none;
         }
-        .reaction-badge:hover { background: rgba(255,255,255,0.14); }
-        .reaction-badge.own { border-color: #0066FF; background: rgba(0,102,255,0.15); }
+
+        .reaction-badge:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .reaction-badge.own {
+            border-color: #0066FF;
+            background: rgba(0, 102, 255, 0.15);
+        }
 
         /* Unread badge */
         .unread-badge {
@@ -167,13 +207,17 @@
             align-items: center;
             justify-content: center;
         }
-        .unread-badge.visible { display: flex; }
+
+        .unread-badge.visible {
+            display: flex;
+        }
 
         /* Swipe-to-reply (mobile) */
         .message-wrapper {
             position: relative;
             transition: transform 0.15s ease-out;
         }
+
         .swipe-reply-hint {
             position: absolute;
             left: -40px;
@@ -181,8 +225,9 @@
             transform: translateY(-50%);
             opacity: 0;
             transition: opacity 0.15s;
-            color: rgba(255,255,255,0.5);
+            color: rgba(255, 255, 255, 0.5);
         }
+
         .message-wrapper.swiping .swipe-reply-hint {
             opacity: 1;
         }
@@ -226,53 +271,91 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.75);
             z-index: 40;
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: opacity 0.3s;
         }
-        #sidebarBackdrop.visible { display: block; }
 
-        .hamburger-btn { display: none !important; }
+        #sidebarBackdrop.visible {
+            display: block;
+        }
+
+        .hamburger-btn {
+            display: none !important;
+        }
+
         @media (max-width: 1023px) {
-            .hamburger-btn { display: flex !important; }
+            .hamburger-btn {
+                display: flex !important;
+            }
+
             #sidebar {
                 position: fixed;
-                top: 0; left: 0; bottom: 0;
+                top: 0;
+                left: 0;
+                bottom: 0;
                 width: min(85vw, 320px);
                 z-index: 50;
                 transform: translateX(-100%);
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 background: #0c0c0c;
             }
+
             #sidebar.open {
                 transform: translateX(0);
             }
+
             /* bigger touch targets */
-            .context-menu button { min-height: 44px; padding: 10px 16px; }
-            .message-actions button { min-width: 36px; min-height: 36px; padding: 6px; }
+            .context-menu button {
+                min-height: 44px;
+                padding: 10px 16px;
+            }
+
+            .message-actions button {
+                min-width: 36px;
+                min-height: 36px;
+                padding: 6px;
+            }
+
             /* prevent iOS input zoom */
-            #messageInput, select, textarea { font-size: 16px !important; }
+            #messageInput,
+            select,
+            textarea {
+                font-size: 16px !important;
+            }
+
             /* modals: full-width on small screens */
-            .modal-inner { margin: 16px; max-width: calc(100vw - 32px); }
+            .modal-inner {
+                margin: 16px;
+                max-width: calc(100vw - 32px);
+            }
         }
 
         /* iOS safe-area bottom padding */
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
-            .input-area-wrapper { padding-bottom: env(safe-area-inset-bottom); }
+            .input-area-wrapper {
+                padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+            }
         }
 
         /* Auto-resize textarea */
         #messageInput {
-            height: 40px;
+            height: 48px;
             max-height: 120px;
             overflow-y: auto;
             line-height: 1.4;
+            padding-top: 12px;
+            padding-bottom: 12px;
         }
+
         @media (max-width: 640px) {
             #messageInput {
-                height: 38px;
+                height: 44px;
                 max-height: 100px;
+                font-size: 16px !important;
+                /* Prevents iOS zoom */
             }
         }
 
@@ -285,12 +368,18 @@
            Inner flex row is a separate child so the cap
            is a parent-determined width, not a nested flex guess. */
         .msg-bubble-wrap {
-            max-width: 70%;
+            max-width: 75%;
             overflow: hidden;
         }
+
         @media (max-width: 640px) {
-            .msg-bubble-wrap { max-width: calc(85vw - 28px); }
-            .bubble-inner { max-width: calc(85vw - 60px); }
+            .msg-bubble-wrap {
+                max-width: calc(90vw - 28px);
+            }
+
+            .bubble-inner {
+                max-width: calc(90vw - 60px);
+            }
         }
 
         /* Bubble body: contain text, prevent viewport overflow */
@@ -318,13 +407,15 @@
         }
 
         #messageInput::placeholder {
-            color: rgba(255,255,255,0.4);
+            color: rgba(255, 255, 255, 0.4);
         }
+
         #messageInput:focus {
             border-color: #0066FF !important;
         }
     </style>
 </head>
+
 <body class="h-screen flex overflow-hidden">
     <!-- Mobile backdrop -->
     <div id="sidebarBackdrop" onclick="closeSidebar()"></div>
@@ -340,12 +431,15 @@
                 </a>
             </div>
             <!-- Profile link with avatar -->
-            <a href="{{ url_for('chat_profile') }}" class="flex items-center gap-3 mt-3 hover:opacity-80 transition-opacity">
+            <a href="{{ url_for('chat_profile') }}"
+                class="flex items-center gap-3 mt-3 hover:opacity-80 transition-opacity">
                 {% if user.profile_pic %}
-                <img src="/static/{{ user.profile_pic }}" alt="{{ user.display_name or user.username }}" class="w-9 h-9 rounded-full object-cover">
+                <img src="/static/{{ user.profile_pic }}" alt="{{ user.display_name or user.username }}"
+                    class="w-9 h-9 rounded-full object-cover">
                 {% else %}
                 <div class="w-9 h-9 rounded-full bg-blue/20 flex items-center justify-center">
-                    <span class="text-sm font-semibold text-blue">{{ (user.display_name or user.username)[0].upper() }}</span>
+                    <span class="text-sm font-semibold text-blue">{{ (user.display_name or user.username)[0].upper()
+                        }}</span>
                 </div>
                 {% endif %}
                 <div>
@@ -360,16 +454,19 @@
         <!-- Actions -->
         <div class="p-4 border-b border-white/10 space-y-2">
             {% if user.is_admin() %}
-            <button onclick="showCreateGroup()" class="w-full py-2 px-4 bg-blue hover:bg-blue-dark rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+            <button onclick="showCreateGroup()"
+                class="w-full py-2 px-4 bg-blue hover:bg-blue-dark rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 <span>Create Group</span>
             </button>
-            <button onclick="openAiDm()" class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+            <button onclick="openAiDm()"
+                class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
                 <i data-lucide="bot" class="w-4 h-4"></i>
                 <span>Chat with AI</span>
             </button>
             {% endif %}
-            <button onclick="showJoinGroup()" class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+            <button onclick="showJoinGroup()"
+                class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
                 <i data-lucide="user-plus" class="w-4 h-4"></i>
                 <span>Join Group</span>
             </button>
@@ -380,8 +477,8 @@
             <div id="roomList" class="space-y-1">
                 {% for room in rooms %}
                 <button onclick="selectRoom({{ room.id }})"
-                        class="room-item w-full p-3 rounded-lg text-left hover:bg-white/10 transition-colors"
-                        data-room-id="{{ room.id }}">
+                    class="room-item w-full p-3 rounded-lg text-left hover:bg-white/10 transition-colors"
+                    data-room-id="{{ room.id }}">
                     <div class="flex items-center space-x-3">
                         {% if room.room_type == 'ai_dm' %}
                         <div class="w-10 h-10 bg-blue/20 rounded-full flex items-center justify-center">
@@ -420,7 +517,8 @@
         <div id="noRoomView" class="flex-1 flex flex-col">
             <!-- Mobile header with hamburger -->
             <div class="shrink-0 p-3 border-b border-white/10 hamburger-btn">
-                <button onclick="toggleSidebar()" style="align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.1);">
+                <button onclick="toggleSidebar()"
+                    style="align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.1);">
                     <i data-lucide="menu" class="w-6 h-6 text-white"></i>
                 </button>
             </div>
@@ -439,21 +537,25 @@
             <div class="shrink-0 p-3 sm:p-4 border-b border-white/10 flex items-center justify-between">
                 <div class="flex items-center space-x-2 sm:space-x-3">
                     <!-- hamburger (mobile only) -->
-                    <button onclick="toggleSidebar()" class="hamburger-btn" style="align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;background:rgba(255,255,255,0.1);">
+                    <button onclick="toggleSidebar()" class="hamburger-btn"
+                        style="align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;background:rgba(255,255,255,0.1);">
                         <i data-lucide="menu" class="w-5 h-5 text-white"></i>
                     </button>
-                    <div id="chatIcon" class="w-9 h-9 sm:w-10 sm:h-10 bg-white/10 rounded-full flex items-center justify-center shrink-0">
+                    <div id="chatIcon"
+                        class="w-9 h-9 sm:w-10 sm:h-10 bg-white/10 rounded-full flex items-center justify-center shrink-0">
                         <i data-lucide="users" class="w-5 h-5"></i>
                     </div>
                     <div>
                         <h2 id="chatTitle" class="font-medium">Chat</h2>
                         <p id="chatSubtitle" class="text-white/40 text-sm"></p>
-                        <p id="teachingCountdown" class="text-orange-400 text-xs hidden">⏱️ <span id="countdownText"></span></p>
+                        <p id="teachingCountdown" class="text-orange-400 text-xs hidden">⏱️ <span
+                                id="countdownText"></span></p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
                     {% if user.is_admin() %}
-                    <button id="exportBtn" onclick="exportChat()" class="text-white/40 hover:text-white transition-colors hidden" title="Export chat">
+                    <button id="exportBtn" onclick="exportChat()"
+                        class="text-white/40 hover:text-white transition-colors hidden" title="Export chat">
                         <i data-lucide="download" class="w-5 h-5"></i>
                     </button>
                     {% endif %}
@@ -491,38 +593,55 @@
                     </button>
                 </div>
                 <!-- Lock banner (shown when group is locked and user is not admin) -->
-                <div id="lockBanner" class="hidden mb-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
+                <div id="lockBanner"
+                    class="hidden mb-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
                     <i data-lucide="lock" class="w-4 h-4 text-red-400 shrink-0"></i>
                     <p class="text-red-400 text-sm">This group is locked by the lecturer.</p>
                 </div>
                 <!-- Voice recording indicator -->
                 <div id="recordingIndicator" class="hidden flex items-center gap-2 mb-2">
-                    <span class="inline-block w-2.5 h-2.5 bg-red-500 rounded-full" style="animation:pulse 1s infinite"></span>
+                    <span class="inline-block w-2.5 h-2.5 bg-red-500 rounded-full"
+                        style="animation:pulse 1s infinite"></span>
                     <span class="text-red-400 text-sm" id="recordingTimer">Recording 0:00</span>
                 </div>
                 <form id="messageForm" style="display:flex;align-items:flex-end;gap:8px;width:100%;">
                     <!-- Attach button (AI DM only) -->
                     <div id="leftActions" class="hidden" style="flex-shrink:0;">
-                        <label style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);cursor:pointer;">
+                        <label
+                            style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);cursor:pointer;">
                             <i data-lucide="paperclip" class="w-5 h-5 text-white/60"></i>
-                            <input type="file" id="docUpload" accept=".txt,.md,.csv,.json,.xml,.log,.py,.js,.html,.css" class="hidden">
+                            <input type="file" id="docUpload" accept=".txt,.md,.csv,.json,.xml,.log,.py,.js,.html,.css"
+                                class="hidden">
                         </label>
                     </div>
                     <!-- Text input -->
                     <textarea id="messageInput" rows="1"
-                        style="flex:1;min-width:0;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:20px;color:white;font-size:16px;resize:none;outline:none;height:40px;max-height:100px;"
+                        style="flex:1;min-width:0;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:24px;color:white;font-size:16px;resize:none;outline:none;"
                         placeholder="Type a message..."></textarea>
                     <!-- Mic button (AI DM only) -->
                     <button type="button" id="micBtn" class="hidden" onclick="toggleRecording()"
-                        style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
+                        style="flex-shrink:0;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
                         <i data-lucide="mic" class="w-5 h-5 text-white/60"></i>
                     </button>
                     <!-- Send button -->
-                    <button type="submit" style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:#0066FF;display:flex;align-items:center;justify-content:center;">
+                    <button type="submit"
+                        style="flex-shrink:0;width:44px;height:44px;border-radius:50%;background:#0066FF;display:flex;align-items:center;justify-content:center;">
                         <i data-lucide="send" class="w-5 h-5 text-white"></i>
                     </button>
                 </form>
-                <style>@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }</style>
+                <style>
+                    @keyframes pulse {
+
+                        0%,
+                        100% {
+                            opacity: 1;
+                        }
+
+                        50% {
+                            opacity: 0.4;
+                        }
+                    }
+                </style>
             </div>
         </div>
     </div>
@@ -560,18 +679,18 @@
                 <div>
                     <label class="block text-sm text-white/80 mb-2">Group Name</label>
                     <input type="text" id="groupName" required
-                           class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
                 </div>
                 <div>
                     <label class="block text-sm text-white/80 mb-2">Description (optional)</label>
                     <textarea id="groupDescription" rows="2"
-                              class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue resize-none"></textarea>
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue resize-none"></textarea>
                 </div>
                 {% if courses %}
                 <div>
                     <label class="block text-sm text-white/80 mb-2">Link to Course (optional)</label>
                     <select id="groupCourse"
-                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
                         <option value="">No course link</option>
                         {% for course in courses %}
                         <option value="{{ course.id }}">{{ course.code }} - {{ course.name }}</option>
@@ -581,11 +700,10 @@
                 {% endif %}
                 <div class="flex space-x-3">
                     <button type="button" onclick="hideCreateGroup()"
-                            class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                        class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
                         Cancel
                     </button>
-                    <button type="submit"
-                            class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
+                    <button type="submit" class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
                         Create
                     </button>
                 </div>
@@ -601,16 +719,15 @@
                 <div>
                     <label class="block text-sm text-white/80 mb-2">Invite Code</label>
                     <input type="text" id="inviteCode" required maxlength="6"
-                           class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue uppercase text-center text-2xl tracking-widest"
-                           placeholder="ABC123">
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue uppercase text-center text-2xl tracking-widest"
+                        placeholder="ABC123">
                 </div>
                 <div class="flex space-x-3">
                     <button type="button" onclick="hideJoinGroup()"
-                            class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                        class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
                         Cancel
                     </button>
-                    <button type="submit"
-                            class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
+                    <button type="submit" class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
                         Join
                     </button>
                 </div>
@@ -626,7 +743,7 @@
                 <!-- Content will be loaded here -->
             </div>
             <button onclick="hideRoomInfo()"
-                    class="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                class="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
                 Close
             </button>
         </div>
@@ -636,10 +753,10 @@
         // User data
         const currentUser = {
             id: {{ user.id }},
-            username: '{{ user.username }}',
+        username: '{{ user.username }}',
             displayName: '{{ user.display_name or user.username }}',
-            role: '{{ user.role }}',
-            profilePic: {% if user.profile_pic %}'{{ user.profile_pic }}'{% else %}null{% endif %}
+                role: '{{ user.role }}',
+                    profilePic: {% if user.profile_pic %} '{{ user.profile_pic }}'{% else %} null{% endif %}
         };
 
         // Socket connection
@@ -677,7 +794,7 @@
             for (let i = 0; i < name.length; i++) {
                 hash = name.charCodeAt(i) + ((hash << 5) - hash);
             }
-            const colors = ['#e74c3c','#e67e22','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#ff5722'];
+            const colors = ['#e74c3c', '#e67e22', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c', '#e91e63', '#ff5722'];
             return colors[Math.abs(hash) % colors.length];
         }
 
@@ -1020,7 +1137,7 @@
 
         function getHiddenMessages() {
             try { return JSON.parse(localStorage.getItem('cp_hidden_msgs') || '[]'); }
-            catch(e) { return []; }
+            catch (e) { return []; }
         }
 
         function hideMessageLocally(messageId) {
@@ -1126,11 +1243,11 @@
 
         // ————— Emoji Reactions —————
         const EMOJIS = [
-            '😀','😊','😂','🤣','😍','🥰','😘','😎','🤔','🙄',
-            '😤','😠','😢','😭','🤩','😃','😏','😑','🤤','😴',
-            '👍','👎','✊','👏','🙌','👐','🤝','💪','🙏','👀',
-            '❤️','💕','💗','💖','💯','🔥','💢','💥','⭐','🌟',
-            '✨','🎉','🎊','👑','🎯','🚀','😈','💀','🤖','👻'
+            '😀', '😊', '😂', '🤣', '😍', '🥰', '😘', '😎', '🤔', '🙄',
+            '😤', '😠', '😢', '😭', '🤩', '😃', '😏', '😑', '🤤', '😴',
+            '👍', '👎', '✊', '👏', '🙌', '👐', '🤝', '💪', '🙏', '👀',
+            '❤️', '💕', '💗', '💖', '💯', '🔥', '💢', '💥', '⭐', '🌟',
+            '✨', '🎉', '🎊', '👑', '🎯', '🚀', '😈', '💀', '🤖', '👻'
         ];
         let emojiPickerTarget = null;
 
@@ -1763,4 +1880,5 @@
         }
     </script>
 </body>
+
 </html>

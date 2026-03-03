@@ -10,32 +10,39 @@
 <section class="relative min-h-screen flex items-center">
     <div class="max-w-4xl mx-auto px-6 lg:px-8 py-32 text-center">
         <div class="fade-in" style="animation-delay: 0.1s;">
-            <div class="inline-flex items-center space-x-2 px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full mb-8 text-sm">
+            <div
+                class="inline-flex items-center space-x-2 px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full mb-8 text-sm">
                 <div class="w-2 h-2 bg-blue rounded-full animate-pulse"></div>
                 <span class="text-white/60">AI-powered communication for universities</span>
             </div>
         </div>
-        
-        <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight fade-in" style="animation-delay: 0.2s;">
-            Stop repeating yourself.<br/>
+
+        <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight fade-in"
+            style="animation-delay: 0.2s;">
+            Stop repeating yourself.<br />
             Let AI handle it.
         </h1>
-        
-        <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12 fade-in" style="animation-delay: 0.3s;">
-            ClassPulse connects you with your students through WhatsApp. 
+
+        <p class="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-8 sm:mb-12 fade-in"
+            style="animation-delay: 0.3s; px-4">
+            ClassPulse connects you with your students through WhatsApp.
             Answer questions once, and AI takes care of the rest.
         </p>
-        
-        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-16 fade-in" style="animation-delay: 0.4s;">
-            <a href="{{ url_for('login') }}" class="px-8 py-4 bg-blue hover:bg-blue-dark rounded-xl font-medium transition-all w-full sm:w-auto text-center">
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 sm:space-x-4 mb-12 sm:mb-16 fade-in"
+            style="animation-delay: 0.4s;">
+            <a href="{{ url_for('login') }}"
+                class="px-8 py-4 bg-blue hover:bg-blue-dark rounded-xl font-medium transition-all text-center">
                 Get started free
             </a>
-            <button onclick="showDemo()" class="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-medium transition-all w-full sm:w-auto">
+            <button onclick="showDemo()"
+                class="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-medium transition-all text-center">
                 See how it works
             </button>
         </div>
-        
-        <div class="flex items-center justify-center space-x-8 text-sm text-white/40 fade-in" style="animation-delay: 0.5s;">
+
+        <div class="flex items-center justify-center space-x-8 text-sm text-white/40 fade-in"
+            style="animation-delay: 0.5s;">
             <span>No credit card required</span>
             <span>•</span>
             <span>Free forever for small teams</span>
@@ -49,9 +56,10 @@
         <h2 class="text-3xl md:text-4xl font-bold mb-4">Everything you need</h2>
         <p class="text-white/60">Simple tools that save you hours every week</p>
     </div>
-    
+
     <div class="grid md:grid-cols-3 gap-8">
-        <div class="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-colors">
+        <div
+            class="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-colors">
             <div class="w-12 h-12 bg-blue/20 rounded-xl flex items-center justify-center mb-6">
                 <i data-lucide="message-circle" class="w-6 h-6 text-blue"></i>
             </div>
@@ -60,8 +68,9 @@
                 Works where your students already are. No apps to download or accounts to create.
             </p>
         </div>
-        
-        <div class="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-colors">
+
+        <div
+            class="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-colors">
             <div class="w-12 h-12 bg-blue/20 rounded-xl flex items-center justify-center mb-6">
                 <i data-lucide="brain" class="w-6 h-6 text-blue"></i>
             </div>
@@ -70,8 +79,9 @@
                 Answer a question once. The AI remembers and helps other students automatically.
             </p>
         </div>
-        
-        <div class="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-colors">
+
+        <div
+            class="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-colors">
             <div class="w-12 h-12 bg-blue/20 rounded-xl flex items-center justify-center mb-6">
                 <i data-lucide="clock" class="w-6 h-6 text-blue"></i>
             </div>
@@ -89,7 +99,7 @@
         <h2 class="text-3xl md:text-4xl font-bold mb-4">Start in 3 minutes</h2>
         <p class="text-white/60">No technical setup required</p>
     </div>
-    
+
     <div class="space-y-12">
         <div class="flex items-start space-x-6">
             <div class="w-12 h-12 bg-blue rounded-xl flex items-center justify-center flex-shrink-0 text-lg font-bold">
@@ -103,7 +113,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="flex items-start space-x-6">
             <div class="w-12 h-12 bg-blue rounded-xl flex items-center justify-center flex-shrink-0 text-lg font-bold">
                 2
@@ -113,7 +123,7 @@
                 <p class="text-white/60">Just like adding any other contact to a WhatsApp group</p>
             </div>
         </div>
-        
+
         <div class="flex items-start space-x-6">
             <div class="w-12 h-12 bg-blue rounded-xl flex items-center justify-center flex-shrink-0 text-lg font-bold">
                 3
@@ -127,17 +137,18 @@
 </section>
 
 <!-- CTA -->
-<section class="max-w-4xl mx-auto px-6 lg:px-8 py-24">
-    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 text-center">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to save time?</h2>
-        <p class="text-white/60 mb-8 max-w-xl mx-auto">
+<section class="max-w-4xl mx-auto px-6 lg:px-8 py-16 sm:py-24">
+    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-12 text-center">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Ready to save time?</h2>
+        <p class="text-white/60 mb-8 max-w-xl mx-auto text-sm sm:text-base">
             Join educators who've reclaimed their evenings by letting AI handle repetitive questions
         </p>
-        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <a href="{{ url_for('login') }}" class="px-8 py-4 bg-blue hover:bg-blue-dark rounded-xl font-medium transition-all w-full sm:w-auto text-center">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 sm:space-x-4">
+            <a href="{{ url_for('login') }}"
+                class="px-8 py-4 bg-blue hover:bg-blue-dark rounded-xl font-medium transition-all text-center">
                 Get started
             </a>
-            <div class="flex items-center space-x-2 text-white/40 text-sm">
+            <div class="flex items-center justify-center space-x-2 text-white/40 text-sm py-2">
                 <i data-lucide="phone" class="w-4 h-4"></i>
                 <span>+1 415 523 8886</span>
             </div>
@@ -150,11 +161,12 @@
     <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl max-w-3xl w-full p-8">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-2xl font-bold">Quick guide</h3>
-            <button onclick="closeDemo()" class="w-10 h-10 hover:bg-white/10 rounded-lg flex items-center justify-center transition-colors">
+            <button onclick="closeDemo()"
+                class="w-10 h-10 hover:bg-white/10 rounded-lg flex items-center justify-center transition-colors">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
         </div>
-        
+
         <div class="space-y-6">
             <div>
                 <h4 class="font-semibold mb-2">Register your course</h4>
@@ -162,14 +174,14 @@
                     <code class="text-sm">Register: Your Name, Course Code, Course Name</code>
                 </div>
             </div>
-            
+
             <div>
                 <h4 class="font-semibold mb-2">Broadcast to students</h4>
                 <div class="bg-black/40 border border-white/10 rounded-lg p-4">
                     <code class="text-sm">Broadcast: Class moved to 2pm tomorrow in Room 301</code>
                 </div>
             </div>
-            
+
             <div>
                 <h4 class="font-semibold mb-2">Schedule a reminder</h4>
                 <div class="bg-black/40 border border-white/10 rounded-lg p-4">
@@ -177,9 +189,10 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="mt-8 pt-6 border-t border-white/10 flex justify-end">
-            <a href="{{ url_for('login') }}" class="px-6 py-3 bg-blue hover:bg-blue-dark rounded-lg font-medium transition-colors">
+            <a href="{{ url_for('login') }}"
+                class="px-6 py-3 bg-blue hover:bg-blue-dark rounded-lg font-medium transition-colors">
                 Get started
             </a>
         </div>
@@ -187,29 +200,29 @@
 </div>
 
 <script>
-// WebGL Background
-const canvas = document.getElementById('webgl-canvas');
-const gl = canvas.getContext('webgl');
+    // WebGL Background
+    const canvas = document.getElementById('webgl-canvas');
+    const gl = canvas.getContext('webgl');
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gl.viewport(0, 0, canvas.width, canvas.height);
-}
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+    }
 
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-// Vertex shader
-const vsSource = `
+    // Vertex shader
+    const vsSource = `
     attribute vec4 aVertexPosition;
     void main() {
         gl_Position = aVertexPosition;
     }
 `;
 
-// Fragment shader with animated gradient
-const fsSource = `
+    // Fragment shader with animated gradient
+    const fsSource = `
     precision mediump float;
     uniform float uTime;
     uniform vec2 uResolution;
@@ -226,55 +239,55 @@ const fsSource = `
     }
 `;
 
-function createShader(gl, type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    return shader;
-}
+    function createShader(gl, type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        return shader;
+    }
 
-const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
-const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
-const program = gl.createProgram();
-gl.attachShader(program, vertexShader);
-gl.attachShader(program, fragmentShader);
-gl.linkProgram(program);
-gl.useProgram(program);
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    gl.useProgram(program);
 
-const positionBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-const positions = [-1, -1, 1, -1, -1, 1, 1, 1];
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const positions = [-1, -1, 1, -1, -1, 1, 1, 1];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-const positionLocation = gl.getAttribLocation(program, 'aVertexPosition');
-gl.enableVertexAttribArray(positionLocation);
-gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+    const positionLocation = gl.getAttribLocation(program, 'aVertexPosition');
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-const timeLocation = gl.getUniformLocation(program, 'uTime');
-const resolutionLocation = gl.getUniformLocation(program, 'uResolution');
+    const timeLocation = gl.getUniformLocation(program, 'uTime');
+    const resolutionLocation = gl.getUniformLocation(program, 'uResolution');
 
-function render(time) {
-    time *= 0.001;
-    
-    gl.uniform1f(timeLocation, time);
-    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
-    
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    requestAnimationFrame(render);
-}
+    function render(time) {
+        time *= 0.001;
 
-render(0);
+        gl.uniform1f(timeLocation, time);
+        gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
 
-function showDemo() {
-    document.getElementById('demoModal').classList.remove('hidden');
-    document.getElementById('demoModal').classList.add('flex');
-    lucide.createIcons();
-}
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        requestAnimationFrame(render);
+    }
 
-function closeDemo() {
-    document.getElementById('demoModal').classList.add('hidden');
-    document.getElementById('demoModal').classList.remove('flex');
-}
+    render(0);
+
+    function showDemo() {
+        document.getElementById('demoModal').classList.remove('hidden');
+        document.getElementById('demoModal').classList.add('flex');
+        lucide.createIcons();
+    }
+
+    function closeDemo() {
+        document.getElementById('demoModal').classList.add('hidden');
+        document.getElementById('demoModal').classList.remove('flex');
+    }
 </script>
 {% endblock %}
