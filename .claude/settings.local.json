@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(dir /B \"c:\\\\Users\\\\HP\\\\Documents\\\\classpulse_v2\\\\*.py\")",
+      "Bash(python:*)",
+      "Bash(railway:*)",
+      "Bash(ngrok:*)",
+      "Bash(choco install:*)",
+      "Bash(winget install:*)"
+    ]
+  }
+}

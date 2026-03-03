@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - ClassPulse</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blue: { DEFAULT: '#0066FF', dark: '#0052CC' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #111111; color: #FFFFFF; min-height: 100vh; }
+
+        /* ---- avatar circle ---- */
+        .avatar-wrap {
+            position: relative;
+            width: 120px; height: 120px;
+            margin: 0 auto;
+        }
+        .avatar-wrap img,
+        .avatar-wrap .avatar-initials {
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+        }
+        .avatar-wrap .avatar-initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #0066FF, #7c3aed);
+        }
+
+        /* camera badge */
+        .camera-badge {
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 36px; height: 36px;
+            background: #0066FF;
+            border-radius: 50%;
+            border: 3px solid #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .camera-badge:hover { background: #0052CC; }
+
+        /* sticky header blur */
+        .header-blur {
+            background: rgba(17,17,17,0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* iOS zoom prevention */
+        @media (max-width: 1023px) {
+            input, textarea, select { font-size: 16px !important; }
+        }
+
+        /* ---- Crop / adjust modal ---- */
+        #cropModal             { display: none; }
+        #cropModal.active      { display: flex; }
+        #cropModal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 48px 24px 56px;
+        }
+        .crop-clip {
+            width: 240px; height: 240px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.25);
+            overflow: hidden;
+            position: relative;
+            touch-action: none;
+        }
+        #cropImg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform-origin: center center;
+            user-select: none;
+            -webkit-user-drag: none;
+            max-width: none;
+            cursor: grab;
+        }
+        #cropImg.dragging { cursor: grabbing; }
+        .zoom-row { width: 100%; max-width: 280px; display: flex; align-items: center; gap: 12px; }
+        .zoom-row span { color: rgba(255,255,255,0.6); font-size: 1.25rem; user-select: none; }
+        .crop-btns { width: 100%; max-width: 280px; display: flex; gap: 16px; }
+        .crop-btns button {
+            flex: 1; padding: 12px 0; border-radius: 8px; border: none;
+            font-size: 0.875rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; color: #fff;
+        }
+        .crop-btns .btn-cancel       { background: rgba(255,255,255,0.1); }
+        .crop-btns .btn-cancel:hover { background: rgba(255,255,255,0.2); }
+        .crop-btns .btn-save         { background: #0066FF; }
+        .crop-btns .btn-save:hover   { background: #0052CC; }
+        #zoomSlider { flex: 1; accent-color: #0066FF; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <!-- Sticky back-nav header -->
+    <header class="sticky top-0 z-10 border-b border-white/10 header-blur">
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center gap-3">
+            <a href="{{ url_for('chat_app') }}" class="text-white/60 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <h1 class="text-base font-semibold">Profile</h1>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 py-6">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="mb-4 px-4 py-3 rounded-lg text-sm
+                        {% if category == 'success' %}bg-green-500/20 text-green-400
+                        {% else %}bg-red-500/20 text-red-400{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Avatar display -->
+        <div class="avatar-wrap">
+            {% if user.profile_pic %}
+            <img id="avatarPreview" src="/static/{{ user.profile_pic }}" alt="{{ user.display_name or user.username }}">
+            {% else %}
+            <div class="avatar-initials" id="avatarPreview">{{ (user.display_name or user.username)[0].upper() }}</div>
+            {% endif %}
+
+            <!-- Camera overlay – triggers hidden file input -->
+            <label class="camera-badge" for="avatarUpload">
+                <i data-lucide="camera" class="w-4 h-4 text-white"></i>
+            </label>
+        </div>
+
+        {% if user.profile_pic %}
+        <!-- Remove-photo is its own mini form so it doesn't fight with the file upload -->
+        <form method="POST" class="text-center mt-3 mb-2">
+            <input type="hidden" name="remove_avatar" value="true">
+            <button type="submit" class="text-red-400 hover:text-red-300 text-xs underline transition-colors">
+                Remove photo
+            </button>
+        </form>
+        {% endif %}
+
+        <!-- Main profile form -->
+        <form method="POST" enctype="multipart/form-data" class="mt-6 space-y-5">
+            <!-- file input (visually hidden, triggered by camera badge label) -->
+            <input type="file" id="avatarUpload" name="avatar" accept="image/*" class="hidden">
+
+            <!-- Display Name -->
+            <div>
+                <label class="block text-white/60 text-sm mb-2">Display Name</label>
+                <input type="text" name="display_name" value="{{ user.display_name or user.username }}"
+                       class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue transition-colors">
+            </div>
+
+            <!-- Username (read-only) -->
+            <div>
+                <label class="block text-white/60 text-sm mb-2">Username</label>
+                <div class="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white/40">{{ user.username }}</div>
+            </div>
+
+            <!-- Bio -->
+            <div>
+                <label class="block text-white/60 text-sm mb-2">About me</label>
+                <textarea name="bio" rows="3" placeholder="Write something about yourself..."
+                          class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue transition-colors resize-none placeholder-white/30">{{ user.bio or '' }}</textarea>
+            </div>
+
+            <!-- Save -->
+            <button type="submit"
+                    class="w-full py-3 bg-blue hover:bg-blue-dark rounded-lg text-sm font-semibold transition-colors">
+                Save Changes
+            </button>
+        </form>
+    </main>
+
+    <!-- Crop / Adjust Photo modal -->
+    <div id="cropModal">
+        <h3 style="color:#fff;font-size:1rem;font-weight:600;">Adjust Photo</h3>
+        <div class="crop-clip">
+            <img id="cropImg" alt="">
+        </div>
+        <div class="zoom-row">
+            <span>−</span>
+            <input type="range" id="zoomSlider" min="100" max="300" value="100">
+            <span>+</span>
+        </div>
+        <div class="crop-btns">
+            <button class="btn-cancel" onclick="cancelCrop()">Cancel</button>
+            <button class="btn-save"   onclick="applyCrop()">Save</button>
+        </div>
+    </div>
+
+    <script>
+        let cropState  = { baseScale: 1, zoom: 100, offsetX: 0, offsetY: 0 };
+        let croppedDataUrl = null;
+        let dragStart  = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // File picked → open crop modal instead of direct preview
+            document.getElementById('avatarUpload').addEventListener('change', function () {
+                const file = this.files && this.files[0];
+                if (!file) return;
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Image must be under 5 MB');
+                    this.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => openCrop(e.target.result);
+                reader.readAsDataURL(file);
+            });
+
+            // Zoom slider
+            document.getElementById('zoomSlider').addEventListener('input', function () {
+                cropState.zoom = parseInt(this.value);
+                positionCropImg();
+            });
+
+            // Drag – mouse
+            const clip = document.querySelector('.crop-clip');
+            clip.addEventListener('mousedown', startDrag);
+            window.addEventListener('mousemove', moveDrag);
+            window.addEventListener('mouseup',  endDrag);
+            // Drag – touch
+            clip.addEventListener('touchstart', startDrag, { passive: false });
+            window.addEventListener('touchmove', moveDrag, { passive: false });
+            window.addEventListener('touchend',  endDrag);
+
+            // Form submit: if we have a cropped image, send it via fetch
+            const mainForm = document.querySelector('form[enctype="multipart/form-data"]');
+            if (mainForm) {
+                mainForm.addEventListener('submit', function (e) {
+                    if (!croppedDataUrl) return; // no crop – normal submit
+                    e.preventDefault();
+                    const fd = new FormData();
+                    fd.append('display_name', document.querySelector('[name="display_name"]').value);
+                    fd.append('bio',          document.querySelector('[name="bio"]').value);
+                    // dataURL → Blob
+                    const b64  = croppedDataUrl.split(',')[1];
+                    const raw  = atob(b64);
+                    const bytes = new Uint8Array(raw.length);
+                    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+                    fd.append('avatar', new Blob([bytes], { type: 'image/png' }), 'avatar.png');
+
+                    fetch(window.location.pathname, { method: 'POST', body: fd })
+                        .then(() => window.location.reload())
+                        .catch(() => window.location.reload());
+                });
+            }
+        });
+
+        // ————— Crop modal logic —————
+        function openCrop(dataUrl) {
+            const img = document.getElementById('cropImg');
+            img.src = dataUrl;
+            img.onload = () => {
+                const CLIP = 240;
+                // scale so the image fills the circle on its shorter side
+                cropState.baseScale = Math.max(CLIP / img.naturalWidth, CLIP / img.naturalHeight);
+                cropState.zoom    = 100;
+                cropState.offsetX = 0;
+                cropState.offsetY = 0;
+                document.getElementById('zoomSlider').value = 100;
+                positionCropImg();
+                document.getElementById('cropModal').classList.add('active');
+            };
+        }
+
+        function positionCropImg() {
+            const img = document.getElementById('cropImg');
+            if (!img || !img.naturalWidth) return;
+            const scale = cropState.baseScale * (cropState.zoom / 100);
+            img.style.width  = (img.naturalWidth  * scale) + 'px';
+            img.style.height = (img.naturalHeight * scale) + 'px';
+            img.style.transform = `translate(calc(-50% + ${cropState.offsetX}px), calc(-50% + ${cropState.offsetY}px))`;
+        }
+
+        function cancelCrop() {
+            document.getElementById('cropModal').classList.remove('active');
+            document.getElementById('avatarUpload').value = '';
+            croppedDataUrl = null;
+        }
+
+        function applyCrop() {
+            const CLIP = 240;
+            const img  = document.getElementById('cropImg');
+            const scale = cropState.baseScale * (cropState.zoom / 100);
+            const w = img.naturalWidth  * scale;
+            const h = img.naturalHeight * scale;
+
+            const canvas = document.createElement('canvas');
+            canvas.width  = CLIP;
+            canvas.height = CLIP;
+            const ctx = canvas.getContext('2d');
+
+            // circular clip
+            ctx.beginPath();
+            ctx.arc(CLIP / 2, CLIP / 2, CLIP / 2, 0, Math.PI * 2);
+            ctx.clip();
+
+            // draw image at current pan / zoom
+            ctx.drawImage(img,
+                CLIP / 2 + cropState.offsetX - w / 2,
+                CLIP / 2 + cropState.offsetY - h / 2,
+                w, h
+            );
+
+            croppedDataUrl = canvas.toDataURL('image/png');
+
+            // live-update the avatar circle
+            const preview = document.getElementById('avatarPreview');
+            if (preview.tagName === 'IMG') {
+                preview.src = croppedDataUrl;
+            } else {
+                const newImg   = document.createElement('img');
+                newImg.id      = 'avatarPreview';
+                newImg.src     = croppedDataUrl;
+                newImg.alt     = 'Preview';
+                preview.replaceWith(newImg);
+            }
+
+            document.getElementById('cropModal').classList.remove('active');
+        }
+
+        // ————— Drag / pan handlers —————
+        function getPoint(e) {
+            const src = e.touches ? e.touches[0] : e;
+            return { x: src.clientX, y: src.clientY };
+        }
+        function startDrag(e) {
+            e.preventDefault();
+            const pt = getPoint(e);
+            dragStart = { x: pt.x, y: pt.y, ox: cropState.offsetX, oy: cropState.offsetY };
+            document.getElementById('cropImg').classList.add('dragging');
+        }
+        function moveDrag(e) {
+            if (!dragStart) return;
+            e.preventDefault();
+            const pt = getPoint(e);
+            cropState.offsetX = dragStart.ox + (pt.x - dragStart.x);
+            cropState.offsetY = dragStart.oy + (pt.y - dragStart.y);
+            positionCropImg();
+        }
+        function endDrag() {
+            dragStart = null;
+            const img = document.getElementById('cropImg');
+            if (img) img.classList.remove('dragging');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chat - ClassPulse</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blue: {
+                            DEFAULT: '#0066FF',
+                            dark: '#0052CC',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #000000; color: #FFFFFF; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        .message-enter {
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Fix dropdown styling */
+        select {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #FFFFFF;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        select option {
+            background-color: #1a1a1a;
+            color: #FFFFFF;
+            padding: 12px;
+        }
+
+        /* Context menu */
+        .context-menu {
+            position: fixed;
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 4px;
+            z-index: 100;
+            min-width: 140px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .context-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .context-menu button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-menu .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .context-menu #deleteForMeBtn:hover {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        /* Emoji picker popup */
+        .emoji-picker {
+            position: fixed;
+            z-index: 60;
+            background: #1e1e1e;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 10px;
+            width: 260px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+            display: none;
+        }
+        .emoji-picker.active { display: block; }
+        .emoji-picker .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 2px;
+        }
+        .emoji-picker .emoji-btn {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            line-height: 1.2;
+            text-align: center;
+            transition: background 0.12s;
+        }
+        .emoji-picker .emoji-btn:hover { background: rgba(255,255,255,0.12); }
+
+        /* Reaction badges */
+        .reaction-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .reaction-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 14px;
+            padding: 2px 7px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.75);
+            transition: background 0.15s, border-color 0.15s;
+            user-select: none;
+        }
+        .reaction-badge:hover { background: rgba(255,255,255,0.14); }
+        .reaction-badge.own { border-color: #0066FF; background: rgba(0,102,255,0.15); }
+
+        /* Unread badge */
+        .unread-badge {
+            display: none;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            background: #0066FF;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        .unread-badge.visible { display: flex; }
+
+        /* Swipe-to-reply (mobile) */
+        .message-wrapper {
+            position: relative;
+            transition: transform 0.15s ease-out;
+        }
+        .swipe-reply-hint {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.15s;
+            color: rgba(255,255,255,0.5);
+        }
+        .message-wrapper.swiping .swipe-reply-hint {
+            opacity: 1;
+        }
+
+        /* Reply preview bar */
+        .reply-preview {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #0066FF;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Message hover actions */
+        .message-wrapper {
+            position: relative;
+        }
+
+        .message-wrapper .message-actions {
+            opacity: 0;
+            transition: opacity 0.15s;
+            flex-shrink: 0;
+        }
+
+        .message-wrapper:hover .message-actions {
+            opacity: 1;
+        }
+
+        /* Touch devices: show actions on tap */
+        @media (hover: none) {
+            .message-wrapper .message-actions {
+                opacity: 1;
+            }
+        }
+
+        /* ===================== RESPONSIVE LAYOUT ===================== */
+        #sidebarBackdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 40;
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+        }
+        #sidebarBackdrop.visible { display: block; }
+
+        .hamburger-btn { display: none !important; }
+        @media (max-width: 1023px) {
+            .hamburger-btn { display: flex !important; }
+            #sidebar {
+                position: fixed;
+                top: 0; left: 0; bottom: 0;
+                width: min(85vw, 320px);
+                z-index: 50;
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                background: #0c0c0c;
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+            /* bigger touch targets */
+            .context-menu button { min-height: 44px; padding: 10px 16px; }
+            .message-actions button { min-width: 36px; min-height: 36px; padding: 6px; }
+            /* prevent iOS input zoom */
+            #messageInput, select, textarea { font-size: 16px !important; }
+            /* modals: full-width on small screens */
+            .modal-inner { margin: 16px; max-width: calc(100vw - 32px); }
+        }
+
+        /* iOS safe-area bottom padding */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .input-area-wrapper { padding-bottom: env(safe-area-inset-bottom); }
+        }
+
+        /* Auto-resize textarea */
+        #messageInput {
+            height: 40px;
+            max-height: 120px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+        @media (max-width: 640px) {
+            #messageInput {
+                height: 38px;
+                max-height: 100px;
+            }
+        }
+
+        /* Each message row must fill the container so percentage max-widths resolve */
+        .message-wrapper {
+            width: 100%;
+        }
+
+        /* Bubble wrapper: block container with width cap.
+           Inner flex row is a separate child so the cap
+           is a parent-determined width, not a nested flex guess. */
+        .msg-bubble-wrap {
+            max-width: 70%;
+            overflow: hidden;
+        }
+        @media (max-width: 640px) {
+            .msg-bubble-wrap { max-width: calc(85vw - 28px); }
+            .bubble-inner { max-width: calc(85vw - 60px); }
+        }
+
+        /* Bubble body: contain text, prevent viewport overflow */
+        .bubble-inner {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* Break long words / URLs inside bubbles */
+        .message-content {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Safety net: no horizontal scroll in message list */
+        #messagesContainer {
+            overflow-x: hidden;
+        }
+
+        /* Mobile input area */
+        @media (max-width: 640px) {
+            .input-area-wrapper {
+                padding: 8px !important;
+            }
+        }
+
+        #messageInput::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+        #messageInput:focus {
+            border-color: #0066FF !important;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+    <!-- Mobile backdrop -->
+    <div id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="w-80 bg-white/5 border-r border-white/10 flex flex-col">
+        <!-- Header -->
+        <div class="p-4 border-b border-white/10">
+            <div class="flex items-center justify-between">
+                <h1 class="text-lg font-semibold">ClassPulse Chat</h1>
+                <a href="{{ url_for('chat_logout') }}" class="text-white/40 hover:text-white transition-colors">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </a>
+            </div>
+            <!-- Profile link with avatar -->
+            <a href="{{ url_for('chat_profile') }}" class="flex items-center gap-3 mt-3 hover:opacity-80 transition-opacity">
+                {% if user.profile_pic %}
+                <img src="/static/{{ user.profile_pic }}" alt="{{ user.display_name or user.username }}" class="w-9 h-9 rounded-full object-cover">
+                {% else %}
+                <div class="w-9 h-9 rounded-full bg-blue/20 flex items-center justify-center">
+                    <span class="text-sm font-semibold text-blue">{{ (user.display_name or user.username)[0].upper() }}</span>
+                </div>
+                {% endif %}
+                <div>
+                    <p class="text-white/90 text-sm font-medium">{{ user.display_name or user.username }}</p>
+                    {% if user.is_admin() %}
+                    <span class="text-blue text-xs">Admin</span>
+                    {% endif %}
+                </div>
+            </a>
+        </div>
+
+        <!-- Actions -->
+        <div class="p-4 border-b border-white/10 space-y-2">
+            {% if user.is_admin() %}
+            <button onclick="showCreateGroup()" class="w-full py-2 px-4 bg-blue hover:bg-blue-dark rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Create Group</span>
+            </button>
+            <button onclick="openAiDm()" class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+                <span>Chat with AI</span>
+            </button>
+            {% endif %}
+            <button onclick="showJoinGroup()" class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                <span>Join Group</span>
+            </button>
+        </div>
+
+        <!-- Room List -->
+        <div class="flex-1 overflow-y-auto p-2">
+            <div id="roomList" class="space-y-1">
+                {% for room in rooms %}
+                <button onclick="selectRoom({{ room.id }})"
+                        class="room-item w-full p-3 rounded-lg text-left hover:bg-white/10 transition-colors"
+                        data-room-id="{{ room.id }}">
+                    <div class="flex items-center space-x-3">
+                        {% if room.room_type == 'ai_dm' %}
+                        <div class="w-10 h-10 bg-blue/20 rounded-full flex items-center justify-center">
+                            <i data-lucide="bot" class="w-5 h-5 text-blue"></i>
+                        </div>
+                        {% elif room.room_type == 'group' %}
+                        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        {% else %}
+                        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                            <i data-lucide="message-circle" class="w-5 h-5"></i>
+                        </div>
+                        {% endif %}
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium truncate">{{ room.name or 'Chat' }}</p>
+                            <p class="text-white/40 text-xs truncate">
+                                {% if room.room_type == 'group' %}
+                                Code: {{ room.invite_code }}
+                                {% elif room.room_type == 'ai_dm' %}
+                                AI Assistant
+                                {% endif %}
+                            </p>
+                        </div>
+                        <span class="unread-badge" data-badge-room="{{ room.id }}"></span>
+                    </div>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="flex-1 flex flex-col min-h-0">
+        <!-- No Room Selected -->
+        <div id="noRoomView" class="flex-1 flex flex-col">
+            <!-- Mobile header with hamburger -->
+            <div class="shrink-0 p-3 border-b border-white/10 hamburger-btn">
+                <button onclick="toggleSidebar()" style="align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.1);">
+                    <i data-lucide="menu" class="w-6 h-6 text-white"></i>
+                </button>
+            </div>
+            <div class="flex-1 flex items-center justify-center">
+                <div class="text-center">
+                    <i data-lucide="message-square" class="w-16 h-16 text-white/20 mx-auto mb-4"></i>
+                    <h2 class="text-xl font-medium text-white/60">Select a chat</h2>
+                    <p class="text-white/40 mt-2">Choose a room from the sidebar to start chatting</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Chat -->
+        <div id="chatView" class="flex-1 flex flex-col min-h-0 hidden">
+            <!-- Chat Header -->
+            <div class="shrink-0 p-3 sm:p-4 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- hamburger (mobile only) -->
+                    <button onclick="toggleSidebar()" class="hamburger-btn" style="align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;background:rgba(255,255,255,0.1);">
+                        <i data-lucide="menu" class="w-5 h-5 text-white"></i>
+                    </button>
+                    <div id="chatIcon" class="w-9 h-9 sm:w-10 sm:h-10 bg-white/10 rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 id="chatTitle" class="font-medium">Chat</h2>
+                        <p id="chatSubtitle" class="text-white/40 text-sm"></p>
+                        <p id="teachingCountdown" class="text-orange-400 text-xs hidden">⏱️ <span id="countdownText"></span></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    {% if user.is_admin() %}
+                    <button id="exportBtn" onclick="exportChat()" class="text-white/40 hover:text-white transition-colors hidden" title="Export chat">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                    {% endif %}
+                    <button onclick="showRoomInfo()" class="text-white/40 hover:text-white transition-colors">
+                        <i data-lucide="info" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+                <!-- Messages will be loaded here -->
+            </div>
+
+            <!-- Message Input -->
+            <div class="shrink-0 p-3 sm:p-4 border-t border-white/10 input-area-wrapper">
+                <!-- Reply Preview -->
+                <div id="replyPreview" class="reply-preview hidden">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs text-blue">Replying to <span id="replyToName"></span></p>
+                        <p id="replyToContent" class="text-sm text-white/60 truncate"></p>
+                    </div>
+                    <button onclick="cancelReply()" class="text-white/40 hover:text-white p-1">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <!-- Edit Preview -->
+                <div id="editPreview" class="reply-preview hidden" style="border-left-color: #f59e0b;">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs text-amber-500">Editing message</p>
+                        <p id="editOriginalContent" class="text-sm text-white/60 truncate"></p>
+                    </div>
+                    <button onclick="cancelEdit()" class="text-white/40 hover:text-white p-1">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <!-- Lock banner (shown when group is locked and user is not admin) -->
+                <div id="lockBanner" class="hidden mb-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
+                    <i data-lucide="lock" class="w-4 h-4 text-red-400 shrink-0"></i>
+                    <p class="text-red-400 text-sm">This group is locked by the lecturer.</p>
+                </div>
+                <!-- Voice recording indicator -->
+                <div id="recordingIndicator" class="hidden flex items-center gap-2 mb-2">
+                    <span class="inline-block w-2.5 h-2.5 bg-red-500 rounded-full" style="animation:pulse 1s infinite"></span>
+                    <span class="text-red-400 text-sm" id="recordingTimer">Recording 0:00</span>
+                </div>
+                <form id="messageForm" style="display:flex;align-items:flex-end;gap:8px;width:100%;">
+                    <!-- Attach button (AI DM only) -->
+                    <div id="leftActions" class="hidden" style="flex-shrink:0;">
+                        <label style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);cursor:pointer;">
+                            <i data-lucide="paperclip" class="w-5 h-5 text-white/60"></i>
+                            <input type="file" id="docUpload" accept=".txt,.md,.csv,.json,.xml,.log,.py,.js,.html,.css" class="hidden">
+                        </label>
+                    </div>
+                    <!-- Text input -->
+                    <textarea id="messageInput" rows="1"
+                        style="flex:1;min-width:0;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:20px;color:white;font-size:16px;resize:none;outline:none;height:40px;max-height:100px;"
+                        placeholder="Type a message..."></textarea>
+                    <!-- Mic button (AI DM only) -->
+                    <button type="button" id="micBtn" class="hidden" onclick="toggleRecording()"
+                        style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
+                        <i data-lucide="mic" class="w-5 h-5 text-white/60"></i>
+                    </button>
+                    <!-- Send button -->
+                    <button type="submit" style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:#0066FF;display:flex;align-items:center;justify-content:center;">
+                        <i data-lucide="send" class="w-5 h-5 text-white"></i>
+                    </button>
+                </form>
+                <style>@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }</style>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu hidden">
+        <button onclick="replyToMessage()" class="text-white">
+            <i data-lucide="reply" class="w-4 h-4"></i>
+            Reply
+        </button>
+        <button onclick="editMessage()" id="editBtn" class="text-white hidden">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+            Edit
+        </button>
+        <button onclick="deleteForMe()" id="deleteForMeBtn" class="text-white hidden" style="color: #fbbf24;">
+            <i data-lucide="eye-off" class="w-4 h-4"></i>
+            Delete for me
+        </button>
+        <button onclick="deleteForEveryone()" id="deleteForEveryoneBtn" class="text-white delete-btn hidden">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            Delete for everyone
+        </button>
+    </div>
+
+    <!-- Emoji Picker -->
+    <div id="emojiPicker" class="emoji-picker">
+        <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold mb-4">Create New Group</h3>
+            <form id="createGroupForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">Group Name</label>
+                    <input type="text" id="groupName" required
+                           class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
+                </div>
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">Description (optional)</label>
+                    <textarea id="groupDescription" rows="2"
+                              class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue resize-none"></textarea>
+                </div>
+                {% if courses %}
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">Link to Course (optional)</label>
+                    <select id="groupCourse"
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
+                        <option value="">No course link</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}">{{ course.code }} - {{ course.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="flex space-x-3">
+                    <button type="button" onclick="hideCreateGroup()"
+                            class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
+                        Create
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Join Group Modal -->
+    <div id="joinGroupModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold mb-4">Join Group</h3>
+            <form id="joinGroupForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">Invite Code</label>
+                    <input type="text" id="inviteCode" required maxlength="6"
+                           class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue uppercase text-center text-2xl tracking-widest"
+                           placeholder="ABC123">
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" onclick="hideJoinGroup()"
+                            class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
+                        Join
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Room Info Modal -->
+    <div id="roomInfoModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold mb-4">Room Info</h3>
+            <div id="roomInfoContent" class="space-y-4">
+                <!-- Content will be loaded here -->
+            </div>
+            <button onclick="hideRoomInfo()"
+                    class="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // User data
+        const currentUser = {
+            id: {{ user.id }},
+            username: '{{ user.username }}',
+            displayName: '{{ user.display_name or user.username }}',
+            role: '{{ user.role }}',
+            profilePic: {% if user.profile_pic %}'{{ user.profile_pic }}'{% else %}null{% endif %}
+        };
+
+        // Socket connection
+        const socket = io();
+
+        // State
+        let currentRoom = null;
+        let rooms = {};
+        let replyingTo = null;
+        let editingMessage = null;
+        let contextMenuTarget = null;
+        let unreadCounts = {}; // room_id -> count
+
+        // ————— Unread badge helpers —————
+        function updateUnreadBadge(roomId) {
+            const badge = document.querySelector(`[data-badge-room="${roomId}"]`);
+            if (!badge) return;
+            const count = unreadCounts[roomId] || 0;
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.classList.add('visible');
+            } else {
+                badge.classList.remove('visible');
+            }
+        }
+
+        function clearUnreadBadge(roomId) {
+            unreadCounts[roomId] = 0;
+            updateUnreadBadge(roomId);
+        }
+
+        // ————— Avatar helpers —————
+        function getAvatarColor(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const colors = ['#e74c3c','#e67e22','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#ff5722'];
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        function renderAvatar(name, picUrl, size) {
+            size = size || 'w-8 h-8';
+            if (picUrl === '__bot__') {
+                return `<div class="${size} rounded-full bg-purple-600/30 border border-purple-500/30 flex items-center justify-center shrink-0">
+                    <i data-lucide="bot" class="w-4 h-4 text-purple-400"></i></div>`;
+            }
+            if (picUrl) {
+                return `<img src="/static/${picUrl}" alt="${escapeHtml(name)}" class="${size} rounded-full object-cover shrink-0">`;
+            }
+            const initial = name ? name.charAt(0).toUpperCase() : '?';
+            const color = getAvatarColor(name || '');
+            return `<div class="${size} rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0" style="background-color:${color}">${initial}</div>`;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // Authenticate with socket
+            socket.emit('authenticate', { user_id: currentUser.id });
+
+            // Setup event listeners
+            setupSocketEvents();
+            setupFormHandlers();
+
+            // On mobile, auto-open sidebar so user can pick a room
+            if (window.innerWidth < 1024 && !currentRoom) {
+                toggleSidebar();
+            }
+        });
+
+        function setupSocketEvents() {
+            socket.on('authenticated', (data) => {
+                console.log('Authenticated:', data);
+            });
+
+            socket.on('error', (data) => {
+                alert(data.message);
+            });
+
+            socket.on('room_joined', (data) => {
+                if (currentRoom) {
+                    currentRoom.locked = !!data.locked;
+                    currentRoom.teaching = data.teaching || null;
+                }
+                updateLockUI();
+                updateTeachingCountdown();
+                displayMessages(data.messages);
+            });
+
+            socket.on('room_removed', (data) => {
+                // Remove room from sidebar
+                const roomBtn = document.querySelector(`[data-room-id="${data.room_id}"]`);
+                if (roomBtn) {
+                    roomBtn.remove();
+                }
+                // If user is currently in this room, show "no room selected" view
+                if (currentRoom && currentRoom.id === data.room_id) {
+                    currentRoom = null;
+                    document.getElementById('chatView').classList.add('hidden');
+                    document.getElementById('noRoomView').classList.remove('hidden');
+                }
+            });
+
+            socket.on('room_lock_update', (data) => {
+                if (currentRoom && currentRoom.id === data.room_id) {
+                    currentRoom.locked = data.locked;
+                    updateLockUI();
+                }
+            });
+
+            socket.on('new_message', (data) => {
+                if (data.room_id === currentRoom?.id) {
+                    if (!getHiddenMessages().includes(data.id)) {
+                        appendMessage(data);
+                    }
+                } else {
+                    // Increment unread count for other rooms
+                    unreadCounts[data.room_id] = (unreadCounts[data.room_id] || 0) + 1;
+                    updateUnreadBadge(data.room_id);
+                }
+            });
+
+            socket.on('user_joined', (data) => {
+                if (data.room_id === currentRoom?.id) {
+                    appendMessage({
+                        content: `${data.display_name || data.username} joined the group`,
+                        message_type: 'system',
+                        created_at: new Date().toISOString()
+                    });
+                }
+            });
+
+            socket.on('group_created', (data) => {
+                hideCreateGroup();
+                addRoomToList(data);
+                selectRoom(data.room_id);
+                alert(`Group created! Invite code: ${data.invite_code}`);
+            });
+
+            socket.on('joined_group', (data) => {
+                hideJoinGroup();
+                addRoomToList(data);
+                selectRoom(data.room_id);
+            });
+
+            socket.on('ai_dm_ready', (data) => {
+                currentRoom = { id: data.room_id, name: 'AI Assistant', room_type: 'ai_dm' };
+                showChatView('AI Assistant', 'ClassPulse AI', 'ai_dm');
+                displayMessages(data.messages);
+            });
+
+            // AI created a group on your behalf — add to sidebar silently
+            socket.on('ai_created_group', (data) => {
+                addRoomToList(data);
+            });
+
+            socket.on('message_deleted', (data) => {
+                const msgEl = document.querySelector(`[data-message-id="${data.message_id}"]`);
+                if (msgEl) {
+                    const contentEl = msgEl.querySelector('.message-content');
+                    if (contentEl) {
+                        contentEl.innerHTML = '<span class="italic text-white/40">This message was deleted</span>';
+                    }
+                    // Remove action buttons
+                    const actionsEl = msgEl.querySelector('.message-actions');
+                    if (actionsEl) actionsEl.remove();
+                }
+            });
+
+            socket.on('message_edited', (data) => {
+                const msgEl = document.querySelector(`[data-message-id="${data.message_id}"]`);
+                if (msgEl) {
+                    const contentEl = msgEl.querySelector('.message-content');
+                    if (contentEl) {
+                        contentEl.textContent = data.content;
+                    }
+                    // Add edited indicator
+                    let editedEl = msgEl.querySelector('.edited-indicator');
+                    if (!editedEl) {
+                        const timeEl = msgEl.querySelector('.message-time');
+                        if (timeEl) {
+                            editedEl = document.createElement('span');
+                            editedEl.className = 'edited-indicator text-white/30 ml-2';
+                            editedEl.textContent = '(edited)';
+                            timeEl.appendChild(editedEl);
+                        }
+                    }
+                }
+            });
+
+            socket.on('reaction_update', (data) => {
+                const row = document.querySelector(`[data-reactions="${data.message_id}"]`);
+                if (row) {
+                    row.innerHTML = renderReactions(data.reactions, data.message_id);
+                }
+            });
+
+            socket.on('teaching_stats', (data) => {
+                const statsEl = document.getElementById('teachingStatsContent');
+                if (!statsEl) return;
+
+                if (!data.stats || data.stats.length === 0) {
+                    statsEl.innerHTML = '<p class="text-white/40 italic">No student activity yet</p>';
+                    return;
+                }
+
+                // Build leaderboard
+                let html = `<p class="text-white/50 mb-2">Day ${data.day}/${data.total_days}</p>`;
+                html += '<div class="space-y-1">';
+                data.stats.forEach((s, i) => {
+                    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '•';
+                    html += `<div class="flex justify-between items-center">
+                        <span>${medal} ${escapeHtml(s.name)}</span>
+                        <span class="text-white/40">${s.messages} msgs</span>
+                    </div>`;
+                });
+                html += '</div>';
+                statsEl.innerHTML = html;
+            });
+        }
+
+        function setupFormHandlers() {
+            // Message form
+            document.getElementById('messageForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('messageInput');
+                const content = input.value.trim();
+
+                if (content && currentRoom) {
+                    if (editingMessage) {
+                        // Edit mode
+                        socket.emit('edit_message', {
+                            user_id: currentUser.id,
+                            message_id: editingMessage.id,
+                            content: content
+                        });
+                        cancelEdit();
+                    } else if (replyingTo) {
+                        // Reply mode
+                        socket.emit('send_reply', {
+                            user_id: currentUser.id,
+                            room_id: currentRoom.id,
+                            content: content,
+                            reply_to_id: replyingTo.id
+                        });
+                        cancelReply();
+                    } else {
+                        // Normal send
+                        socket.emit('send_message', {
+                            user_id: currentUser.id,
+                            room_id: currentRoom.id,
+                            content: content
+                        });
+                    }
+                    input.value = '';
+                    input.style.height = 'auto';
+                    input.style.height = input.scrollHeight + 'px';
+                }
+            });
+
+            // Textarea: Enter sends, Shift+Enter inserts newline; auto-resize
+            const textarea = document.getElementById('messageInput');
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    document.getElementById('messageForm').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }
+            });
+            textarea.addEventListener('input', () => {
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            });
+
+            // Close context menu on click outside
+            document.addEventListener('click', (e) => {
+                const menu = document.getElementById('contextMenu');
+                if (!menu.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            });
+
+            // Close context menu on scroll
+            document.getElementById('messagesContainer').addEventListener('scroll', () => {
+                document.getElementById('contextMenu').classList.add('hidden');
+            });
+
+            // Create group form
+            document.getElementById('createGroupForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('groupName').value.trim();
+                const description = document.getElementById('groupDescription').value.trim();
+                const courseSelect = document.getElementById('groupCourse');
+                const courseId = courseSelect ? courseSelect.value : null;
+
+                if (name) {
+                    socket.emit('create_group', {
+                        user_id: currentUser.id,
+                        name: name,
+                        description: description,
+                        course_id: courseId || null
+                    });
+                }
+            });
+
+            // Join group form
+            document.getElementById('joinGroupForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const code = document.getElementById('inviteCode').value.trim().toUpperCase();
+
+                if (code) {
+                    socket.emit('join_with_code', {
+                        user_id: currentUser.id,
+                        invite_code: code
+                    });
+                }
+            });
+        }
+
+        function selectRoom(roomId) {
+            closeSidebar();  // auto-close sidebar on mobile after picking a room
+
+            // Update UI
+            document.querySelectorAll('.room-item').forEach(el => {
+                el.classList.remove('bg-white/10');
+            });
+            document.querySelector(`[data-room-id="${roomId}"]`)?.classList.add('bg-white/10');
+
+            // Clear unread badge when entering the room
+            clearUnreadBadge(roomId);
+
+            // Get room info from DOM or fetch
+            const roomEl = document.querySelector(`[data-room-id="${roomId}"]`);
+            const name = roomEl?.querySelector('.font-medium')?.textContent || 'Chat';
+            const subtitle = roomEl?.querySelector('.text-white\\/40')?.textContent || '';
+            const isAi = subtitle.includes('AI Assistant');
+            const roomType = isAi ? 'ai_dm' : 'group';
+
+            currentRoom = { id: roomId, name: name, room_type: roomType };
+
+            // Join room via socket
+            socket.emit('join_room', { user_id: currentUser.id, room_id: roomId });
+
+            showChatView(name, subtitle, roomType);
+        }
+
+        function showChatView(title, subtitle, roomType) {
+            document.getElementById('noRoomView').classList.add('hidden');
+            document.getElementById('chatView').classList.remove('hidden');
+            document.getElementById('chatTitle').textContent = title;
+            document.getElementById('chatSubtitle').textContent = subtitle;
+
+            // Update icon
+            const iconDiv = document.getElementById('chatIcon');
+            if (roomType === 'ai_dm') {
+                iconDiv.innerHTML = '<i data-lucide="bot" class="w-5 h-5 text-blue"></i>';
+                iconDiv.className = 'w-10 h-10 bg-blue/20 rounded-full flex items-center justify-center';
+            } else {
+                iconDiv.innerHTML = '<i data-lucide="users" class="w-5 h-5"></i>';
+                iconDiv.className = 'w-10 h-10 bg-white/10 rounded-full flex items-center justify-center';
+            }
+
+            // Show export button only for group rooms (admin)
+            const exportBtn = document.getElementById('exportBtn');
+            if (exportBtn) {
+                exportBtn.classList.toggle('hidden', roomType !== 'group');
+            }
+
+            // Show mic & doc buttons only in AI DM
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) micBtn.classList.toggle('hidden', roomType !== 'ai_dm');
+            const leftActions = document.getElementById('leftActions');
+            if (leftActions) leftActions.classList.toggle('hidden', roomType !== 'ai_dm');
+
+            lucide.createIcons();
+        }
+
+        function getHiddenMessages() {
+            try { return JSON.parse(localStorage.getItem('cp_hidden_msgs') || '[]'); }
+            catch(e) { return []; }
+        }
+
+        function hideMessageLocally(messageId) {
+            const hidden = getHiddenMessages();
+            if (!hidden.includes(messageId)) {
+                hidden.push(messageId);
+                localStorage.setItem('cp_hidden_msgs', JSON.stringify(hidden));
+            }
+        }
+
+        function displayMessages(messages) {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+            const hidden = getHiddenMessages();
+
+            messages.forEach(msg => {
+                if (hidden.includes(msg.id)) return;
+                appendMessage(msg, false);
+            });
+            scrollToBottom();
+        }
+
+        function appendMessage(msg, animate = true) {
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+
+            if (msg.message_type === 'system') {
+                div.className = 'text-center text-white/40 text-sm py-2';
+                div.textContent = msg.content;
+            } else if (msg.message_type === 'deleted') {
+                const isOwn = msg.sender_id === currentUser.id;
+                div.className = `flex ${isOwn ? 'justify-end' : 'justify-start'}`;
+                div.setAttribute('data-message-id', msg.id);
+                div.innerHTML = `
+                    <div class="max-w-[70%] bg-white/5 rounded-2xl px-4 py-3">
+                        <p class="text-sm italic text-white/40">This message was deleted</p>
+                    </div>
+                `;
+            } else {
+                const isOwn = msg.sender_id === currentUser.id;
+                const isAi = msg.message_type === 'ai_response';
+                const isBroadcast = msg.message_type === 'broadcast';
+                const canEdit = isOwn && !isAi;
+                const canDelete = isOwn || currentUser.role === 'admin';
+
+                // Reply preview HTML
+                let replyHtml = '';
+                if (msg.reply_to) {
+                    replyHtml = `
+                        <div class="text-xs bg-white/5 rounded px-2 py-1 mb-2 border-l-2 border-blue">
+                            <span class="text-blue">${escapeHtml(msg.reply_to.sender_name)}</span>
+                            <p class="text-white/50 truncate">${escapeHtml(msg.reply_to.content)}</p>
+                        </div>
+                    `;
+                }
+
+                // Edited indicator
+                const editedHtml = msg.edited_at ? '<span class="edited-indicator text-white/30 ml-2">(edited)</span>' : '';
+
+                div.className = `message-wrapper flex ${isOwn ? 'justify-end' : 'justify-start'} ${animate ? 'message-enter' : ''} group`;
+                div.setAttribute('data-message-id', msg.id);
+                div.setAttribute('data-sender-id', msg.sender_id);
+                div.setAttribute('data-content', msg.content);
+                div.setAttribute('data-sender-name', msg.sender_name || 'Unknown');
+                div.setAttribute('data-message-type', msg.message_type || 'text');
+
+                const bgClass = isOwn ? 'bg-blue' : isBroadcast ? 'bg-green-600/30 border border-green-500/30' : isAi ? 'bg-purple-600/30 border border-purple-500/30' : 'bg-white/10';
+
+                div.innerHTML = `
+                    <span class="swipe-reply-hint"><i data-lucide="reply" class="w-4 h-4"></i></span>
+                    <div class="msg-bubble-wrap">
+                        <div class="flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : ''}">
+                            ${!isOwn ? renderAvatar(msg.sender_name || 'Unknown', msg.sender_pic, 'w-8 h-8') : ''}
+                            <div class="bubble-inner min-w-0 ${bgClass} rounded-2xl px-4 py-3">
+                                ${!isOwn ? `<p class="text-xs ${isAi ? 'text-purple-400' : isBroadcast ? 'text-green-400' : 'text-white/60'} mb-1">${escapeHtml(msg.sender_name || 'Unknown')}${isAi ? ' (AI)' : isBroadcast ? ' (Broadcast)' : ''}</p>` : ''}
+                                ${replyHtml}
+                                <p class="message-content text-sm whitespace-pre-wrap">${escapeHtml(msg.content)}</p>
+                                <p class="message-time text-xs text-white/40 mt-1">${formatTime(msg.created_at)}${editedHtml}</p>
+                            </div>
+                            <div class="message-actions flex items-center gap-1 mb-2">
+                                <button onclick="openEmojiPicker(event, ${msg.id})" class="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white transition-colors">
+                                    <span style="font-size:1rem;line-height:1.5;">😊</span>
+                                </button>
+                                <button onclick="showContextMenu(event, ${msg.id})" class="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white transition-colors">
+                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="reaction-row" data-reactions="${msg.id}">${renderReactions(msg.reactions || [], msg.id)}</div>
+                    </div>
+                `;
+            }
+
+            container.appendChild(div);
+            lucide.createIcons();
+            if (animate) scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ————— Emoji Reactions —————
+        const EMOJIS = [
+            '😀','😊','😂','🤣','😍','🥰','😘','😎','🤔','🙄',
+            '😤','😠','😢','😭','🤩','😃','😏','😑','🤤','😴',
+            '👍','👎','✊','👏','🙌','👐','🤝','💪','🙏','👀',
+            '❤️','💕','💗','💖','💯','🔥','💢','💥','⭐','🌟',
+            '✨','🎉','🎊','👑','🎯','🚀','😈','💀','🤖','👻'
+        ];
+        let emojiPickerTarget = null;
+
+        (function initEmojiPicker() {
+            const grid = document.getElementById('emojiGrid');
+            EMOJIS.forEach(e => {
+                const btn = document.createElement('button');
+                btn.className = 'emoji-btn';
+                btn.textContent = e;
+                btn.onclick = (ev) => { ev.stopPropagation(); pickEmoji(e); };
+                grid.appendChild(btn);
+            });
+        })();
+
+        function openEmojiPicker(event, messageId) {
+            event.preventDefault();
+            event.stopPropagation();
+            emojiPickerTarget = messageId;
+
+            const picker = document.getElementById('emojiPicker');
+            const rect = event.target.getBoundingClientRect();
+
+            let top = rect.bottom + 4;
+            let left = rect.left - 100;
+
+            // Keep within viewport
+            if (top + 220 > window.innerHeight) top = rect.top - 224;
+            if (left < 8) left = 8;
+            if (left + 260 > window.innerWidth) left = window.innerWidth - 268;
+
+            picker.style.top = top + 'px';
+            picker.style.left = left + 'px';
+            picker.classList.add('active');
+
+            // Close context menu if open
+            document.getElementById('contextMenu').classList.add('hidden');
+        }
+
+        function closeEmojiPicker() {
+            document.getElementById('emojiPicker').classList.remove('active');
+            emojiPickerTarget = null;
+        }
+
+        function pickEmoji(emoji) {
+            if (emojiPickerTarget == null) return;
+            socket.emit('toggle_reaction', {
+                message_id: emojiPickerTarget,
+                user_id: currentUser.id,
+                emoji: emoji
+            });
+            closeEmojiPicker();
+        }
+
+        function renderReactions(reactions, messageId) {
+            if (!reactions || !reactions.length) return '';
+            return reactions.map(r => {
+                const isOwn = r.user_ids && r.user_ids.includes(currentUser.id);
+                return `<span class="reaction-badge${isOwn ? ' own' : ''}" onclick="toggleReactionBadge(event, ${messageId}, '${r.emoji}')">${r.emoji} <span>${r.count}</span></span>`;
+            }).join('');
+        }
+
+        function toggleReactionBadge(event, messageId, emoji) {
+            event.stopPropagation();
+            socket.emit('toggle_reaction', {
+                message_id: messageId,
+                user_id: currentUser.id,
+                emoji: emoji
+            });
+        }
+
+        // ————— Group Lock UI —————
+        function updateLockUI() {
+            const isAdmin = currentUser.role === 'admin';
+            const locked = currentRoom?.locked;
+            const banner = document.getElementById('lockBanner');
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.querySelector('#messageForm button[type="submit"]');
+
+            if (locked && !isAdmin) {
+                banner.classList.remove('hidden');
+                input.disabled = true;
+                input.placeholder = 'Group is locked...';
+                if (sendBtn) sendBtn.disabled = true;
+            } else {
+                banner.classList.add('hidden');
+                input.disabled = false;
+                input.placeholder = 'Type a message...';
+                if (sendBtn) sendBtn.disabled = false;
+            }
+            lucide.createIcons();
+        }
+
+        // ————— Teaching Countdown —————
+        let countdownInterval = null;
+
+        function updateTeachingCountdown() {
+            const countdownEl = document.getElementById('teachingCountdown');
+            const countdownText = document.getElementById('countdownText');
+
+            // Clear any existing interval
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+
+            // Hide if not a teaching group
+            if (!currentRoom?.teaching) {
+                countdownEl.classList.add('hidden');
+                return;
+            }
+
+            countdownEl.classList.remove('hidden');
+            const closeDate = new Date(currentRoom.teaching.close_date);
+
+            function updateText() {
+                const now = new Date();
+                const diff = closeDate - now;
+
+                if (diff <= 0) {
+                    countdownText.textContent = 'Session ended';
+                    clearInterval(countdownInterval);
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+                let text = '';
+                if (days > 0) text += `${days}d `;
+                if (hours > 0 || days > 0) text += `${hours}h `;
+                text += `${mins}m ${secs}s left`;
+                countdownText.textContent = text;
+            }
+
+            updateText();
+            countdownInterval = setInterval(updateText, 1000);
+        }
+
+        // ————— Voice Notes —————
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingTimerInterval = null;
+        let recordingSeconds = 0;
+
+        function toggleRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                    sendVoiceNote(audioBlob);
+                    stream.getTracks().forEach(t => t.stop());
+                };
+
+                mediaRecorder.start();
+                recordingSeconds = 0;
+                document.getElementById('recordingIndicator').classList.remove('hidden');
+                document.getElementById('micBtn').style.background = 'rgba(239,68,68,0.25)';
+                document.getElementById('micBtn').style.color = '#ef4444';
+
+                recordingTimerInterval = setInterval(() => {
+                    recordingSeconds++;
+                    const mins = Math.floor(recordingSeconds / 60);
+                    const secs = recordingSeconds % 60;
+                    document.getElementById('recordingTimer').textContent = `Recording ${mins}:${secs.toString().padStart(2, '0')}`;
+                    if (recordingSeconds >= 60) stopRecording();
+                }, 1000);
+            } catch (err) {
+                alert('Could not access microphone: ' + err.message);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            clearInterval(recordingTimerInterval);
+            document.getElementById('recordingIndicator').classList.add('hidden');
+            const micBtn = document.getElementById('micBtn');
+            micBtn.style.background = '';
+            micBtn.style.color = '';
+        }
+
+        function sendVoiceNote(audioBlob) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64 = reader.result.split(',')[1];
+                socket.emit('send_voice_note', {
+                    user_id: currentUser.id,
+                    room_id: currentRoom.id,
+                    audio_data: base64,
+                    mime_type: audioBlob.type || 'audio/webm'
+                });
+            };
+            reader.readAsDataURL(audioBlob);
+        }
+
+        // ————— Document Upload —————
+        document.addEventListener('DOMContentLoaded', () => {
+            const docInput = document.getElementById('docUpload');
+            if (docInput) {
+                docInput.addEventListener('change', function () {
+                    const file = this.files && this.files[0];
+                    if (!file) return;
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('Document must be 2 MB or less.');
+                        this.value = '';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const base64 = e.target.result.split(',')[1];
+                        socket.emit('send_document', {
+                            user_id: currentUser.id,
+                            room_id: currentRoom.id,
+                            filename: file.name,
+                            file_data: base64,
+                            file_size: file.size
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                    this.value = ''; // Reset so same file can be re-uploaded
+                });
+            }
+        });
+
+        // Close emoji picker on outside click
+        document.addEventListener('click', () => closeEmojiPicker());
+
+        // ————— Swipe to Reply (mobile) —————
+        let swipeStartX = 0;
+        let swipeStartY = 0;
+        let swipeEl = null;
+        let swipeMessageId = null;
+        const SWIPE_THRESHOLD = 60;
+
+        document.getElementById('messagesContainer').addEventListener('touchstart', (e) => {
+            const msgWrapper = e.target.closest('.message-wrapper');
+            if (!msgWrapper) return;
+
+            swipeEl = msgWrapper;
+            swipeMessageId = msgWrapper.getAttribute('data-message-id');
+            swipeStartX = e.touches[0].clientX;
+            swipeStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.getElementById('messagesContainer').addEventListener('touchmove', (e) => {
+            if (!swipeEl) return;
+
+            const deltaX = e.touches[0].clientX - swipeStartX;
+            const deltaY = e.touches[0].clientY - swipeStartY;
+
+            // Only swipe right, and only if horizontal movement > vertical
+            if (deltaX > 0 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                const translateX = Math.min(deltaX, 80);
+                swipeEl.style.transform = `translateX(${translateX}px)`;
+                swipeEl.classList.toggle('swiping', translateX > 30);
+            }
+        }, { passive: true });
+
+        document.getElementById('messagesContainer').addEventListener('touchend', (e) => {
+            if (!swipeEl) return;
+
+            const deltaX = e.changedTouches[0].clientX - swipeStartX;
+            swipeEl.style.transform = '';
+            swipeEl.classList.remove('swiping');
+
+            if (deltaX >= SWIPE_THRESHOLD && swipeMessageId) {
+                // Trigger reply
+                triggerReplyFromSwipe(swipeMessageId);
+            }
+
+            swipeEl = null;
+            swipeMessageId = null;
+        }, { passive: true });
+
+        // ————— Long-press to Copy (mobile) —————
+        let longPressTimer = null;
+        let longPressEl = null;
+        const LONG_PRESS_MS = 500;
+
+        document.getElementById('messagesContainer').addEventListener('touchstart', (e) => {
+            const msgWrapper = e.target.closest('.message-wrapper');
+            if (!msgWrapper) return;
+
+            longPressEl = msgWrapper;
+            longPressTimer = setTimeout(() => {
+                const content = longPressEl.getAttribute('data-content');
+                if (content) {
+                    navigator.clipboard.writeText(content).then(() => {
+                        showCopiedToast();
+                    }).catch(() => {
+                        // Fallback for older browsers
+                        const ta = document.createElement('textarea');
+                        ta.value = content;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        showCopiedToast();
+                    });
+                }
+                longPressEl = null;
+            }, LONG_PRESS_MS);
+        }, { passive: true });
+
+        document.getElementById('messagesContainer').addEventListener('touchmove', () => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }, { passive: true });
+
+        document.getElementById('messagesContainer').addEventListener('touchend', () => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }, { passive: true });
+
+        function showCopiedToast() {
+            let toast = document.getElementById('copyToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'copyToast';
+                toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-white/90 text-black px-4 py-2 rounded-full text-sm font-medium shadow-lg z-50 opacity-0 transition-opacity';
+                toast.textContent = '✓ Copied';
+                document.body.appendChild(toast);
+            }
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 1500);
+        }
+
+        function triggerReplyFromSwipe(messageId) {
+            const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (!msgEl) return;
+
+            const contentEl = msgEl.querySelector('.message-content');
+            const senderEl = msgEl.querySelector('.text-xs.mb-1') || msgEl.querySelector('.text-purple-400') || msgEl.querySelector('.text-green-400');
+
+            replyingTo = {
+                id: messageId,
+                content: contentEl ? contentEl.textContent : '',
+                senderName: senderEl ? senderEl.textContent.replace(' (AI)', '').replace(' (Broadcast)', '') : 'Unknown'
+            };
+
+            document.getElementById('replyToName').textContent = replyingTo.senderName;
+            document.getElementById('replyToContent').textContent = replyingTo.content.slice(0, 50) + (replyingTo.content.length > 50 ? '...' : '');
+            document.getElementById('replyPreview').classList.remove('hidden');
+            document.getElementById('messageInput').focus();
+        }
+
+        function addRoomToList(data) {
+            const list = document.getElementById('roomList');
+            const button = document.createElement('button');
+            button.className = 'room-item w-full p-3 rounded-lg text-left hover:bg-white/10 transition-colors';
+            button.setAttribute('data-room-id', data.room_id);
+            button.onclick = () => selectRoom(data.room_id);
+            button.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate">${escapeHtml(data.name)}</p>
+                        <p class="text-white/40 text-xs truncate">Code: ${data.invite_code || ''}</p>
+                    </div>
+                    <span class="unread-badge" data-badge-room="${data.room_id}"></span>
+                </div>
+            `;
+            list.appendChild(button);
+            lucide.createIcons();
+        }
+
+        function openAiDm() {
+            socket.emit('start_ai_dm', { user_id: currentUser.id });
+        }
+
+        // Modal functions
+        function showCreateGroup() {
+            document.getElementById('createGroupModal').classList.remove('hidden');
+        }
+
+        function hideCreateGroup() {
+            document.getElementById('createGroupModal').classList.add('hidden');
+            document.getElementById('createGroupForm').reset();
+        }
+
+        function showJoinGroup() {
+            document.getElementById('joinGroupModal').classList.remove('hidden');
+        }
+
+        function hideJoinGroup() {
+            document.getElementById('joinGroupModal').classList.add('hidden');
+            document.getElementById('joinGroupForm').reset();
+        }
+
+        function showRoomInfo() {
+            if (!currentRoom) return;
+            const isAdmin = currentUser.role === 'admin';
+            const lockToggleHtml = (isAdmin && currentRoom.room_type === 'group') ? `
+                <div class="flex items-center justify-between pt-2 border-t border-white/10">
+                    <p class="text-white/60 text-sm">Lock Group</p>
+                    <button id="lockToggleBtn" onclick="toggleGroupLock()"
+                            class="relative w-11 h-6 rounded-full transition-colors focus:outline-none ${currentRoom.locked ? 'bg-red-500' : 'bg-white/20'}">
+                        <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${currentRoom.locked ? 'translate-x-5' : 'translate-x-0'}"></span>
+                    </button>
+                </div>` : '';
+
+            // Teaching group stats section (placeholder, filled by socket response)
+            const teachingStatsHtml = currentRoom.teaching ? `
+                <div class="pt-2 border-t border-white/10">
+                    <p class="text-white/60 text-sm mb-2">📊 Student Activity</p>
+                    <div id="teachingStatsContent" class="text-sm text-white/50">Loading...</div>
+                </div>` : '';
+
+            const content = document.getElementById('roomInfoContent');
+            content.innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-white/60 text-sm">Room Name</p>
+                        <p class="font-medium">${escapeHtml(currentRoom.name)}</p>
+                    </div>
+                    <div>
+                        <p class="text-white/60 text-sm">Type</p>
+                        <p class="font-medium">${currentRoom.room_type === 'ai_dm' ? 'AI Chat' : currentRoom.teaching ? 'Teaching Group' : 'Group Chat'}</p>
+                    </div>
+                    ${lockToggleHtml}
+                    ${teachingStatsHtml}
+                </div>
+            `;
+            document.getElementById('roomInfoModal').classList.remove('hidden');
+
+            // Request teaching stats if it's a teaching group
+            if (currentRoom.teaching) {
+                socket.emit('get_teaching_stats', { room_id: currentRoom.id });
+            }
+        }
+
+        function hideRoomInfo() {
+            document.getElementById('roomInfoModal').classList.add('hidden');
+        }
+
+        function toggleGroupLock() {
+            if (!currentRoom) return;
+            socket.emit('toggle_lock', {
+                user_id: currentUser.id,
+                room_id: currentRoom.id
+            });
+            // Close modal so user sees the system message
+            hideRoomInfo();
+        }
+
+        // Context Menu Functions
+        function showContextMenu(event, messageId) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (!msgEl) return;
+
+            contextMenuTarget = {
+                id: messageId,
+                senderId: parseInt(msgEl.getAttribute('data-sender-id')),
+                content: msgEl.getAttribute('data-content'),
+                senderName: msgEl.getAttribute('data-sender-name'),
+                messageType: msgEl.getAttribute('data-message-type') || 'text'
+            };
+
+            const menu = document.getElementById('contextMenu');
+            const editBtn = document.getElementById('editBtn');
+            const deleteForMeBtn = document.getElementById('deleteForMeBtn');
+            const deleteForEveryoneBtn = document.getElementById('deleteForEveryoneBtn');
+
+            const isOwn = contextMenuTarget.senderId === currentUser.id;
+            const isAdmin = currentUser.role === 'admin';
+            const lockedType = ['ai_response', 'broadcast', 'system'].includes(contextMenuTarget.messageType);
+
+            // Edit: only your own non-locked messages
+            editBtn.classList.toggle('hidden', !isOwn || lockedType);
+            // Delete for me: always available
+            deleteForMeBtn.classList.toggle('hidden', false);
+            // Delete for everyone: own messages OR admin on any non-locked msg
+            deleteForEveryoneBtn.classList.toggle('hidden', !(isOwn && !lockedType) && !isAdmin);
+
+            // Position the menu
+            const rect = event.target.getBoundingClientRect();
+            const menuHeight = 120; // approximate
+            const menuWidth = 140;
+
+            let top = rect.bottom + 4;
+            let left = rect.left;
+
+            // Adjust if near edges
+            if (top + menuHeight > window.innerHeight) {
+                top = rect.top - menuHeight - 4;
+            }
+            if (left + menuWidth > window.innerWidth) {
+                left = window.innerWidth - menuWidth - 8;
+            }
+
+            menu.style.top = `${top}px`;
+            menu.style.left = `${left}px`;
+            menu.classList.remove('hidden');
+
+            lucide.createIcons();
+        }
+
+        function replyToMessage() {
+            if (!contextMenuTarget) return;
+
+            replyingTo = {
+                id: contextMenuTarget.id,
+                content: contextMenuTarget.content,
+                senderName: contextMenuTarget.senderName
+            };
+
+            document.getElementById('replyToName').textContent = replyingTo.senderName;
+            document.getElementById('replyToContent').textContent = replyingTo.content;
+            document.getElementById('replyPreview').classList.remove('hidden');
+            document.getElementById('messageInput').focus();
+
+            document.getElementById('contextMenu').classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        function cancelReply() {
+            replyingTo = null;
+            document.getElementById('replyPreview').classList.add('hidden');
+        }
+
+        function editMessage() {
+            if (!contextMenuTarget) return;
+
+            editingMessage = {
+                id: contextMenuTarget.id,
+                content: contextMenuTarget.content
+            };
+
+            document.getElementById('editOriginalContent').textContent = editingMessage.content;
+            document.getElementById('editPreview').classList.remove('hidden');
+            document.getElementById('messageInput').value = editingMessage.content;
+            document.getElementById('messageInput').focus();
+
+            document.getElementById('contextMenu').classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        function cancelEdit() {
+            editingMessage = null;
+            document.getElementById('editPreview').classList.add('hidden');
+            document.getElementById('messageInput').value = '';
+        }
+
+        function deleteForMe() {
+            if (!contextMenuTarget) return;
+
+            // Hide locally — remove the DOM element and persist in localStorage
+            const msgEl = document.querySelector(`[data-message-id="${contextMenuTarget.id}"]`);
+            if (msgEl) msgEl.remove();
+            hideMessageLocally(contextMenuTarget.id);
+
+            document.getElementById('contextMenu').classList.add('hidden');
+        }
+
+        function deleteForEveryone() {
+            if (!contextMenuTarget) return;
+
+            if (confirm('Delete this message for everyone?')) {
+                socket.emit('delete_message', {
+                    user_id: currentUser.id,
+                    message_id: contextMenuTarget.id
+                });
+            }
+
+            document.getElementById('contextMenu').classList.add('hidden');
+        }
+
+        function exportChat() {
+            if (!currentRoom || currentRoom.room_type !== 'group') return;
+            window.location.href = `/api/chat/export/${currentRoom.id}`;
+        }
+
+        // ————— Sidebar (mobile) —————
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const isOpen = sidebar.classList.contains('open');
+            sidebar.classList.toggle('open', !isOpen);
+            backdrop.classList.toggle('visible', !isOpen);
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarBackdrop').classList.remove('visible');
+        }
+
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarBackdrop').classList.add('visible');
+        }
+
+
+        // Utilities
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+    </script>
+</body>
+</html>

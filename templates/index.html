@@ -1,0 +1,280 @@
+{% extends "layout.html" %}
+
+{% block title %}ClassPulse - Smarter Course Communication{% endblock %}
+
+{% block content %}
+<!-- WebGL Background Canvas -->
+<canvas id="webgl-canvas" class="fixed inset-0 -z-10"></canvas>
+
+<!-- Hero Section -->
+<section class="relative min-h-screen flex items-center">
+    <div class="max-w-4xl mx-auto px-6 lg:px-8 py-32 text-center">
+        <div class="fade-in" style="animation-delay: 0.1s;">
+            <div class="inline-flex items-center space-x-2 px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full mb-8 text-sm">
+                <div class="w-2 h-2 bg-blue rounded-full animate-pulse"></div>
+                <span class="text-white/60">AI-powered communication for universities</span>
+            </div>
+        </div>
+        
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight fade-in" style="animation-delay: 0.2s;">
+            Stop repeating yourself.<br/>
+            Let AI handle it.
+        </h1>
+        
+        <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12 fade-in" style="animation-delay: 0.3s;">
+            ClassPulse connects you with your students through WhatsApp. 
+            Answer questions once, and AI takes care of the rest.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-16 fade-in" style="animation-delay: 0.4s;">
+            <a href="{{ url_for('login') }}" class="px-8 py-4 bg-blue hover:bg-blue-dark rounded-xl font-medium transition-all w-full sm:w-auto text-center">
+                Get started free
+            </a>
+            <button onclick="showDemo()" class="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-medium transition-all w-full sm:w-auto">
+                See how it works
+            </button>
+        </div>
+        
+        <div class="flex items-center justify-center space-x-8 text-sm text-white/40 fade-in" style="animation-delay: 0.5s;">
+            <span>No credit card required</span>
+            <span>•</span>
+            <span>Free forever for small teams</span>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="max-w-6xl mx-auto px-6 lg:px-8 py-24">
+    <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Everything you need</h2>
+        <p class="text-white/60">Simple tools that save you hours every week</p>
+    </div>
+    
+    <div class="grid md:grid-cols-3 gap-8">
+        <div class="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-colors">
+            <div class="w-12 h-12 bg-blue/20 rounded-xl flex items-center justify-center mb-6">
+                <i data-lucide="message-circle" class="w-6 h-6 text-blue"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">WhatsApp integration</h3>
+            <p class="text-white/60 text-sm leading-relaxed">
+                Works where your students already are. No apps to download or accounts to create.
+            </p>
+        </div>
+        
+        <div class="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-colors">
+            <div class="w-12 h-12 bg-blue/20 rounded-xl flex items-center justify-center mb-6">
+                <i data-lucide="brain" class="w-6 h-6 text-blue"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">AI that learns</h3>
+            <p class="text-white/60 text-sm leading-relaxed">
+                Answer a question once. The AI remembers and helps other students automatically.
+            </p>
+        </div>
+        
+        <div class="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-colors">
+            <div class="w-12 h-12 bg-blue/20 rounded-xl flex items-center justify-center mb-6">
+                <i data-lucide="clock" class="w-6 h-6 text-blue"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">Schedule announcements</h3>
+            <p class="text-white/60 text-sm leading-relaxed">
+                Write once, send later. Never forget to remind students about deadlines.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- How it works -->
+<section class="max-w-4xl mx-auto px-6 lg:px-8 py-24">
+    <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Start in 3 minutes</h2>
+        <p class="text-white/60">No technical setup required</p>
+    </div>
+    
+    <div class="space-y-12">
+        <div class="flex items-start space-x-6">
+            <div class="w-12 h-12 bg-blue rounded-xl flex items-center justify-center flex-shrink-0 text-lg font-bold">
+                1
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold mb-2">Send a message to register</h3>
+                <p class="text-white/60 mb-4">Text ClassPulse on WhatsApp with your course details</p>
+                <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <code class="text-sm text-white/80">Register: Prof. Sarah, CS101, Intro to Programming</code>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-start space-x-6">
+            <div class="w-12 h-12 bg-blue rounded-xl flex items-center justify-center flex-shrink-0 text-lg font-bold">
+                2
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold mb-2">Add ClassPulse to your group</h3>
+                <p class="text-white/60">Just like adding any other contact to a WhatsApp group</p>
+            </div>
+        </div>
+        
+        <div class="flex items-start space-x-6">
+            <div class="w-12 h-12 bg-blue rounded-xl flex items-center justify-center flex-shrink-0 text-lg font-bold">
+                3
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold mb-2">Start broadcasting</h3>
+                <p class="text-white/60">Send announcements, schedule reminders, and let AI handle questions</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="max-w-4xl mx-auto px-6 lg:px-8 py-24">
+    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to save time?</h2>
+        <p class="text-white/60 mb-8 max-w-xl mx-auto">
+            Join educators who've reclaimed their evenings by letting AI handle repetitive questions
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <a href="{{ url_for('login') }}" class="px-8 py-4 bg-blue hover:bg-blue-dark rounded-xl font-medium transition-all w-full sm:w-auto text-center">
+                Get started
+            </a>
+            <div class="flex items-center space-x-2 text-white/40 text-sm">
+                <i data-lucide="phone" class="w-4 h-4"></i>
+                <span>+1 415 523 8886</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Modal -->
+<div id="demoModal" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 hidden items-center justify-center p-6">
+    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl max-w-3xl w-full p-8">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold">Quick guide</h3>
+            <button onclick="closeDemo()" class="w-10 h-10 hover:bg-white/10 rounded-lg flex items-center justify-center transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-6">
+            <div>
+                <h4 class="font-semibold mb-2">Register your course</h4>
+                <div class="bg-black/40 border border-white/10 rounded-lg p-4">
+                    <code class="text-sm">Register: Your Name, Course Code, Course Name</code>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="font-semibold mb-2">Broadcast to students</h4>
+                <div class="bg-black/40 border border-white/10 rounded-lg p-4">
+                    <code class="text-sm">Broadcast: Class moved to 2pm tomorrow in Room 301</code>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="font-semibold mb-2">Schedule a reminder</h4>
+                <div class="bg-black/40 border border-white/10 rounded-lg p-4">
+                    <code class="text-sm">Schedule 14:30: Assignment deadline is tonight</code>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-8 pt-6 border-t border-white/10 flex justify-end">
+            <a href="{{ url_for('login') }}" class="px-6 py-3 bg-blue hover:bg-blue-dark rounded-lg font-medium transition-colors">
+                Get started
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// WebGL Background
+const canvas = document.getElementById('webgl-canvas');
+const gl = canvas.getContext('webgl');
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Vertex shader
+const vsSource = `
+    attribute vec4 aVertexPosition;
+    void main() {
+        gl_Position = aVertexPosition;
+    }
+`;
+
+// Fragment shader with animated gradient
+const fsSource = `
+    precision mediump float;
+    uniform float uTime;
+    uniform vec2 uResolution;
+    
+    void main() {
+        vec2 uv = gl_FragCoord.xy / uResolution.xy;
+        
+        float wave1 = sin(uv.x * 3.0 + uTime * 0.5) * 0.5 + 0.5;
+        float wave2 = sin(uv.y * 2.0 - uTime * 0.3) * 0.5 + 0.5;
+        
+        vec3 color = vec3(0.0, 0.2 * wave1, 0.5 * wave2);
+        
+        gl_FragColor = vec4(color * 0.15, 1.0);
+    }
+`;
+
+function createShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    return shader;
+}
+
+const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+const program = gl.createProgram();
+gl.attachShader(program, vertexShader);
+gl.attachShader(program, fragmentShader);
+gl.linkProgram(program);
+gl.useProgram(program);
+
+const positionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+const positions = [-1, -1, 1, -1, -1, 1, 1, 1];
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+const positionLocation = gl.getAttribLocation(program, 'aVertexPosition');
+gl.enableVertexAttribArray(positionLocation);
+gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+const timeLocation = gl.getUniformLocation(program, 'uTime');
+const resolutionLocation = gl.getUniformLocation(program, 'uResolution');
+
+function render(time) {
+    time *= 0.001;
+    
+    gl.uniform1f(timeLocation, time);
+    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+    
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+}
+
+render(0);
+
+function showDemo() {
+    document.getElementById('demoModal').classList.remove('hidden');
+    document.getElementById('demoModal').classList.add('flex');
+    lucide.createIcons();
+}
+
+function closeDemo() {
+    document.getElementById('demoModal').classList.add('hidden');
+    document.getElementById('demoModal').classList.remove('flex');
+}
+</script>
+{% endblock %}
