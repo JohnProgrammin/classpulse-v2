@@ -291,8 +291,8 @@ def register_socket_events(socketio):
         }
         emit('new_message', message_data, room=f'room_{room_id}')
 
-        # Check if this is an AI DM from admin
-        if room.room_type == 'ai_dm' and user.is_admin():
+        # Check if this is an AI DM — any user can chat with AI
+        if room.room_type == 'ai_dm':
             handle_ai_response(user, room, content, socketio)
 
     @socketio.on('create_group')
@@ -412,12 +412,12 @@ def register_socket_events(socketio):
 
     @socketio.on('start_ai_dm')
     def handle_start_ai_dm(data):
-        """Start or get AI DM room (admin only)"""
+        """Start or get AI DM room (any authenticated user)"""
         user_id = data.get('user_id')
 
         user = ChatUser.query.get(user_id)
-        if not user or not user.is_admin():
-            emit('error', {'message': 'Only admins can DM the AI'})
+        if not user:
+            emit('error', {'message': 'User not found'})
             return
 
         # Check for existing AI DM room
@@ -682,8 +682,8 @@ def register_socket_events(socketio):
         }
         emit('new_message', message_data, room=f'room_{room_id}')
 
-        # Check if this is an AI DM from admin
-        if room.room_type == 'ai_dm' and user.is_admin():
+        # Check if this is an AI DM — any user can chat with AI
+        if room.room_type == 'ai_dm':
             handle_ai_response(user, room, content, socketio)
 
         # If replying to an AI message in a group, trigger AI reply
@@ -1354,8 +1354,9 @@ def handle_ai_response(user, room, user_message, socketio):
                 doc_preview = doc.content[:3000] + ("...[truncated]" if len(doc.content) > 3000 else "")
                 docs_section += f"\n--- {doc.filename} (uploaded {doc.uploaded_at.strftime('%Y-%m-%d')}) ---\n{doc_preview}\n"
 
-        # System prompt for conversational AI with full system control
-        system_prompt = f"""You are ClassPulse AI — the admin's private assistant for the ClassPulse education platform. You talk like a smart, direct friend. No corporate speak, no filler.
+        # System prompt — adapts based on user role
+        is_admin_user = user.role == 'admin'
+        system_prompt = f"""You are ClassPulse AI — {'the admin assistant' if is_admin_user else 'a helpful AI assistant'} for the ClassPulse education platform. You talk like a smart, direct friend. No corporate speak, no filler.
 
 PERSONALITY:
 - Skip the "Sure!" and "Of course!" openers. Just get to the point.
