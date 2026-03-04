@@ -271,24 +271,28 @@ def get_chat_rooms():
     return jsonify({'rooms': rooms})
 
 
-@app.route('/api/chat/make-admin/<int:user_id>', methods=['POST'])
-def make_chat_admin(user_id):
-    """Make a user an admin (requires existing admin)"""
+    return jsonify({'success': True, 'message': f'{user.username} is now an admin'})
+
+
+@app.route('/api/chat/delete-account', methods=['POST'])
+def delete_chat_account():
+    """Delete current user's account"""
     if 'chat_user_id' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
 
-    current = ChatUser.query.get(session['chat_user_id'])
-    if not current or not current.is_admin():
-        return jsonify({'error': 'Admin access required'}), 403
-
-    user = ChatUser.query.get(user_id)
+    user = ChatUser.query.get(session['chat_user_id'])
     if not user:
+        session.clear()
         return jsonify({'error': 'User not found'}), 404
 
-    user.role = 'admin'
+    # Perform deletion
+    db.session.delete(user)
     db.session.commit()
 
-    return jsonify({'success': True, 'message': f'{user.username} is now an admin'})
+    # Clear session
+    session.clear()
+
+    return jsonify({'success': True, 'message': 'Account deleted successfully'})
 
 
 @app.route('/api/chat/export/<int:room_id>')
