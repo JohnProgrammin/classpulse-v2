@@ -93,7 +93,9 @@
             border-radius: 8px;
             padding: 4px;
             z-index: 100;
-            min-width: 140px;
+            min-width: 160px;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
 
@@ -551,10 +553,10 @@
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 <span>Create Group</span>
             </button>
-            <button onclick="document.getElementById('createCourseModal').classList.remove('hidden')"
+            <button onclick="showCreateCourse()"
                 class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
                 <i data-lucide="book-open" class="w-4 h-4"></i>
-                <span>Create Course</span>
+                <span>Register Course</span>
             </button>
             {% endif %}
             <button onclick="openAiDm()"
@@ -2168,27 +2170,37 @@
             // Delete for everyone: own messages OR admin on any non-locked msg
             deleteForEveryoneBtn.classList.toggle('hidden', !(isOwn && !lockedType) && !isAdmin);
 
+            // Show menu first to calculate dimensions
+            menu.classList.remove('hidden');
+
+            // Re-render icons after unhiding
+            lucide.createIcons();
+
             // Position the menu
             const rect = event.target.getBoundingClientRect();
-            const menuHeight = 120; // approximate
-            const menuWidth = 140;
+            const menuHeight = menu.offsetHeight;
+            const menuWidth = menu.offsetWidth;
 
             let top = rect.bottom + 4;
             let left = rect.left;
 
-            // Adjust if near edges
+            // Adjust if near bottom of viewport
             if (top + menuHeight > window.innerHeight) {
                 top = rect.top - menuHeight - 4;
+                // If it still doesn't fit on top, pin to bottom with margin
+                if (top < 10) top = window.innerHeight - menuHeight - 10;
             }
+
+            // Adjust if near right of viewport
             if (left + menuWidth > window.innerWidth) {
-                left = window.innerWidth - menuWidth - 8;
+                left = window.innerWidth - menuWidth - 10;
             }
 
-            menu.style.top = `${top}px`;
-            menu.style.left = `${left}px`;
-            menu.classList.remove('hidden');
+            // Min left margin
+            if (left < 10) left = 10;
 
-            lucide.createIcons();
+            menu.style.top = `${Math.max(10, top)}px`;
+            menu.style.left = `${left}px`;
         }
 
         function replyToMessage() {

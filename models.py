@@ -35,8 +35,8 @@ class Lecturer(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     
-    # Relationships
-    courses = db.relationship('Course', backref='lecturer', lazy=True, cascade='all, delete-orphan')
+    # Relationships handled by ChatUser now
+    pass
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -67,7 +67,7 @@ class Course(db.Model):
     name = db.Column(db.String(200))
     description = db.Column(db.Text)
     group_id = db.Column(db.String(100), unique=True, index=True)
-    lecturer_id = db.Column(db.Integer, db.ForeignKey('lecturers.id'), nullable=False)
+    lecturer_id = db.Column(db.Integer, db.ForeignKey('chat_users.id'), nullable=False)
 
     # New fields
     semester = db.Column(db.String(50))
@@ -422,6 +422,7 @@ class ChatUser(UserMixin, db.Model):
     # Relationships
     memberships = db.relationship('ChatMember', backref='user', lazy=True, cascade='all, delete-orphan')
     messages = db.relationship('ChatMessage', backref='sender', lazy=True, cascade='all, delete-orphan')
+    courses = db.relationship('Course', backref='creator', lazy=True)  # Link to courses created/managed by this user
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

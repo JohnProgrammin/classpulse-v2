@@ -7,7 +7,7 @@ from datetime import datetime
 import secrets
 from flask import request
 from flask_socketio import emit, join_room, leave_room, rooms
-from models import db, ChatUser, ChatRoom, ChatMember, ChatMessage, MessageReaction, AIDocument, Course
+from models import db, ChatUser, ChatRoom, ChatMember, ChatMessage, MessageReaction, AIDocument, Course, PendingQuestion
 
 
 def generate_invite_code():
@@ -407,7 +407,8 @@ def register_socket_events(socketio):
         new_course = Course(
             name=name,
             code=code,
-            description=f"Registered by {user.username}"
+            description=f"Registered by {user.username}",
+            lecturer_id=user.id
         )
         db.session.add(new_course)
         db.session.commit()
@@ -1201,7 +1202,7 @@ def handle_group_ai_reply(student, room, student_message, original_ai_msg, stude
 
         # Get the slice outside the f-string to help the linter
         context_slice = context_lines[-6:] if context_lines else []
-        context_text = chr(10).join(context_slice) if context_slice else "No recent messages."
+        context_text = '\n'.join(list(context_slice)) if context_slice else "No recent messages."
 
         # Build topic restriction if teaching group
         topic_rules = ""
@@ -1521,8 +1522,8 @@ def handle_ai_response(user, room, user_message, socketio):
             docs_section = "\n\n=== UPLOADED DOCUMENTS (in memory) ===\n"
             for doc in uploaded_docs:
                 # Truncate very large docs to keep prompt manageable
-                doc_preview = doc.content[:3000] + ("...[truncated]" if len(doc.content) > 3000 else "")
-                docs_section += f"\n--- {doc.filename} (uploaded {doc.uploaded_at.strftime('%Y-%m-%d')}) ---\n{doc_preview}\n"
+                doc_preview = str(doc.content)[:3000] + ("...[truncated]" if len(str(doc.content)) > 3000 else "")
+                docs_section += f"\n--- {doc.filename} ---\n{doc_preview}\n"
 
         # System prompt — adapts based on user role
         role_label = "Admin" if user.role == 'admin' else ("Lecturer" if user.role == 'lecturer' else "Student")
@@ -1581,10 +1582,19 @@ Format: [CREATE_PERM_GROUP:GroupName]
 
 === RULES ===
 - Commands go at the END of your reply, after any conversational text.
-- Only use a command when the admin actually asks you to do something.
+- ONLY use a command when the admin actually asks you to do something.
 - You can use multiple commands in one response if asked.
 - Don't hallucinate group names — stick to what exists.
-- Keep the conversational part short and natural."""
+- Keep the conversational part short and natural.
+- IMPORTANT: Always give a short verbal confirmation of what you've done (e.g. "Done! I've created the 'Physics 101' group for you.") before the tags.
+- If you did a duplicate of something (e.g. asked to create a group that already exists), tell the user it already exists instead of using the command.
+
+=== STUDENT INTERACTION & IMPORTANCE ===
+- Not every reply from a student is a question. Some are greetings, expressions of thanks, or casual conversation.
+- Distinguish between casual chat and genuine questions that require an answer.
+- If a student asks a serious question that you cannot answer or that requires the lecturer's attention, append [NEED_LECTURER] to the VERY END of your message (after any commands).
+- Only use [NEED_LECTURER] for high-importance queries or when you are truly unsure.
+- If a message is just "thanks", "okay", or a greeting, respond normally and do NOT flag it."""
 
         # Initialize Groq client
         ai_user = get_or_create_ai_user()
@@ -1668,6 +1678,12 @@ Format: [CREATE_PERM_GROUP:GroupName]
 
         for group_name, group_desc in create_group_commands:
             try:
+                # Duplicate prevention: check if group exists
+                existing = ChatRoom.query.filter(ChatRoom.name.ilike(group_name)).first()
+                if existing:
+                    print(f"[AI CREATE_GROUP] Group already exists: {group_name}")
+                    continue
+
                 new_room = ChatRoom(
                     name=group_name,
                     description=group_desc,
@@ -1681,6 +1697,9 @@ Format: [CREATE_PERM_GROUP:GroupName]
                 # Add admin as member
                 member = ChatMember(room_id=new_room.id, user_id=user.id, role='admin')
                 db.session.add(member)
+                
+                # Commit here to ensure membership is visible for joining
+                db.session.commit()
 
                 # System message in the new group
                 sys_msg = ChatMessage(
@@ -1689,11 +1708,11 @@ Format: [CREATE_PERM_GROUP:GroupName]
                     message_type='system'
                 )
                 db.session.add(sys_msg)
-                db.session.flush()
+                db.session.commit()
 
                 created_groups.append((group_name, new_room.invite_code))
 
-                # Push new group to admin's sidebar without navigating away
+                # Push new group to admin's sidebar
                 socketio.emit('ai_created_group', {
                     'room_id': new_room.id,
                     'name': new_room.name,
@@ -1703,11 +1722,19 @@ Format: [CREATE_PERM_GROUP:GroupName]
                 print(f"[AI CREATE_GROUP] Created: {group_name}")
             except Exception as e:
                 print(f"[ERROR] Failed to create group '{group_name}': {e}")
+                db.session.rollback()
 
         # Execute CREATE_PERM_GROUP commands
         create_perm_group_commands = parse_create_perm_group_command(response)
+        created_perm_groups = []
         for group_name in create_perm_group_commands:
             try:
+                # Duplicate prevention
+                existing = ChatRoom.query.filter(ChatRoom.name.ilike(group_name)).first()
+                if existing:
+                    print(f"[AI CREATE_PERM_GROUP] Group already exists: {group_name}")
+                    continue
+
                 new_room = ChatRoom(
                     name=group_name,
                     room_type='group',
@@ -1720,6 +1747,7 @@ Format: [CREATE_PERM_GROUP:GroupName]
                 # Add admin as member
                 member = ChatMember(room_id=new_room.id, user_id=user.id, role='admin')
                 db.session.add(member)
+                db.session.commit()
 
                 # System message
                 sys_msg = ChatMessage(
@@ -1728,7 +1756,9 @@ Format: [CREATE_PERM_GROUP:GroupName]
                     message_type='system'
                 )
                 db.session.add(sys_msg)
-                db.session.flush()
+                db.session.commit()
+
+                created_perm_groups.append((group_name, new_room.invite_code))
 
                 # Notify sidebar
                 socketio.emit('ai_created_group', {
@@ -1739,9 +1769,11 @@ Format: [CREATE_PERM_GROUP:GroupName]
                 print(f"[AI CREATE_PERM_GROUP] Created: {group_name}")
             except Exception as e:
                 print(f"[ERROR] Failed to create perm group '{group_name}': {e}")
+                db.session.rollback()
 
         # Execute CREATE_COURSE commands
         create_course_commands = parse_create_course_command(response)
+        created_courses = []
         for c_name, c_code in create_course_commands:
             try:
                 # Check if course exists
@@ -1750,13 +1782,19 @@ Format: [CREATE_PERM_GROUP:GroupName]
                     new_course = Course(
                         name=c_name,
                         code=c_code.upper(),
-                        description=f"Course created by AI at request of {user.username}"
+                        description=f"Course created by AI at request of {user.username}",
+                        lecturer_id=user.id,
+                        is_active=True
                     )
                     db.session.add(new_course)
                     db.session.commit()
+                    created_courses.append((c_name, c_code))
                     print(f"[AI CREATE_COURSE] Created: {c_name} ({c_code})")
+                else:
+                    print(f"[AI CREATE_COURSE] Course already exists: {c_code}")
             except Exception as e:
                 print(f"[ERROR] Failed to create course '{c_name}': {e}")
+                db.session.rollback()
 
         # Execute LOCK / UNLOCK commands
         lock_commands = parse_lock_command(response, groups)
@@ -1905,69 +1943,8 @@ Format: [CREATE_PERM_GROUP:GroupName]
             except Exception as e:
                 print(f"[ERROR] Failed to delete teaching group '{group_name}': {e}")
 
-        # Execute CREATE_COURSE commands
-        course_commands = parse_create_course_command(response)
-        created_courses = []
-        for course_name, course_code in course_commands:
-            try:
-                # Check if course already exists
-                existing = Course.query.filter(
-                    (Course.code.ilike(course_code)) | (Course.name.ilike(course_name))
-                ).first()
-                if existing:
-                    print(f"[AI CREATE_COURSE] Course already exists: {course_code}")
-                    continue
-
-                # Create the course (linked to admin/lecturer if exists)
-                new_course = Course(
-                    name=course_name,
-                    code=course_code,
-                    is_active=True
-                )
-                db.session.add(new_course)
-                db.session.commit()
-                created_courses.append((course_name, course_code))
-                print(f"[AI CREATE_COURSE] Created course: {course_name} ({course_code})")
-            except Exception as e:
-                print(f"[ERROR] Failed to create course '{course_name}': {e}")
-
-        # Execute CREATE_PERM_GROUP commands
-        perm_group_commands = parse_create_perm_group_command(response)
-        created_perm_groups = []
-        for group_name in perm_group_commands:
-            try:
-                # Generate invite code
-                import secrets
-                invite_code = secrets.token_hex(3).upper()
-
-                # Create permanent group
-                new_room = ChatRoom(
-                    name=group_name,
-                    room_type='group',
-                    invite_code=invite_code,
-                    created_by=user.id,
-                    is_active=True
-                )
-                db.session.add(new_room)
-                db.session.commit()
-
-                # Add admin as member
-                admin_member = ChatMember(user_id=user.id, room_id=new_room.id)
-                db.session.add(admin_member)
-                db.session.commit()
-
-                created_perm_groups.append((group_name, invite_code))
-
-                # Emit to admin's socket so group appears in sidebar
-                socketio.emit('group_created', {
-                    'room_id': new_room.id,
-                    'name': new_room.name,
-                    'invite_code': invite_code
-                }, room=f'user_{user.id}')
-
-                print(f"[AI CREATE_PERM_GROUP] Created group: {group_name} (code: {invite_code})")
-            except Exception as e:
-                print(f"[ERROR] Failed to create permanent group '{group_name}': {e}")
+        # Append info for created courses to response cleanup or handle it here
+                pass
 
         # Clean response for display (replace command tags with confirmation)
         display_response = clean_response_for_display(response)
@@ -1984,6 +1961,13 @@ Format: [CREATE_PERM_GROUP:GroupName]
             display_response = display_response.replace(
                 f'👥 Group "{gname}" created',
                 f'👥 Group "{gname}" created — invite code: {code}'
+            )
+
+        # Append info for created courses
+        for cname, ccode in created_courses:
+            display_response = display_response.replace(
+                f'📖 Course "{cname}" ({ccode}) registered',
+                f'📖 Course "{cname}" ({ccode}) has been successfully registered.'
             )
 
         # Warn about failed broadcasts
@@ -2004,27 +1988,62 @@ Format: [CREATE_PERM_GROUP:GroupName]
                     display_response += f"• Most active: {top_names}\n"
                 display_response += f"_(Ask me for detailed stats if needed)_"
 
-        # Save AI response
-        ai_message = ChatMessage(
-            room_id=room.id,
-            sender_id=ai_user.id,
-            content=display_response,
-            message_type='ai_response'
-        )
-        db.session.add(ai_message)
-        db.session.commit()
+        # Check for [NEED_LECTURER] tag in raw response (before display cleaning)
+        if '[NEED_LECTURER]' in response:
+            try:
+                # Remove from display response if it somehow got through
+                display_response = display_response.replace('[NEED_LECTURER]', '').strip()
+                
+                # If this is a course group, find the course
+                target_course_id = room.course_id
+                
+                # Check if this student already has a pending question for this course
+                existing_q = PendingQuestion.query.filter_by(
+                    course_id=target_course_id,
+                    student_name=user.username,
+                    status='pending'
+                ).first()
+                
+                if not existing_q and target_course_id:
+                    new_q = PendingQuestion(
+                        course_id=target_course_id,
+                        student_phone=getattr(user, 'phone_number', 'ChatUser'),
+                        student_name=user.display_name or user.username,
+                        question=user_message,
+                        priority='high',
+                        status='pending'
+                    )
+                    db.session.add(new_q)
+                    db.session.commit()
+                    print(f"[AI FLAG] Created PendingQuestion for {user.username}")
+            except Exception as e:
+                print(f"[ERROR] Failed to create PendingQuestion: {e}")
 
-        # Emit AI response
-        socketio.emit('new_message', {
-            'id': ai_message.id,
-            'room_id': room.id,
-            'content': display_response,
-            'sender_id': ai_user.id,
-            'sender_name': 'ClassPulse AI',
-            'sender_pic': '__bot__',
-            'message_type': 'ai_response',
-            'created_at': ai_message.created_at.isoformat()
-        }, room=f'room_{room.id}')
+        # Final AI reply to the room
+        try:
+            ai_msg = ChatMessage(
+                room_id=room.id,
+                sender_id=ai_user.id,
+                content=display_response,
+                message_type='ai_response',
+                related_course_id=getattr(room, 'course_id', None)
+            )
+            db.session.add(ai_msg)
+            db.session.commit()
+
+            socketio.emit('new_message', {
+                'id': ai_msg.id,
+                'room_id': room.id,
+                'sender_id': ai_user.id,
+                'sender_name': ai_user.display_name or ai_user.username,
+                'sender_pic': ai_user.profile_pic or '__bot__',
+                'content': ai_msg.content,
+                'message_type': ai_msg.message_type,
+                'created_at': ai_msg.created_at.isoformat()
+            }, room=f'room_{room.id}')
+        except Exception as e:
+            print(f"[ERROR] Failed to save AI response: {e}")
+            db.session.rollback()
 
     except Exception as e:
         print(f"[ERROR] AI response error: {e}")
