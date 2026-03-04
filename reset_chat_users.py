@@ -8,7 +8,7 @@ Preserves: Lecturers, Courses, FAQs, Messages (WhatsApp side).
 from app import app, db
 from models import (
     ChatUser, ChatRoom, ChatMember, ChatMessage,
-    MessageReaction, AIDocument, TeachingSession
+    MessageReaction, MessageReadReceipt, AIDocument, TeachingSession
 )
 
 with app.app_context():
@@ -16,6 +16,7 @@ with app.app_context():
 
     # Order matters: delete children before parents to avoid FK violations
     deleted_reactions   = MessageReaction.query.delete()
+    deleted_receipts    = MessageReadReceipt.query.delete()
     deleted_teaching    = TeachingSession.query.delete()
     deleted_messages    = ChatMessage.query.delete()
     deleted_members     = ChatMember.query.delete()
@@ -29,6 +30,7 @@ with app.app_context():
     print(f"[OK] Deleted {deleted_rooms} chat rooms")
     print(f"[OK] Deleted {deleted_members} room memberships")
     print(f"[OK] Deleted {deleted_messages} chat messages")
+    print(f"[OK] Deleted {deleted_receipts} message receipts")
     print(f"[OK] Deleted {deleted_reactions} message reactions")
     print(f"[OK] Deleted {deleted_documents} AI documents")
     print(f"[OK] Deleted {deleted_teaching} teaching sessions")

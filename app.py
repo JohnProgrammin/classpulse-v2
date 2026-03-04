@@ -176,7 +176,26 @@ def chat_app():
         return redirect(url_for('chat_login'))
 
     memberships = ChatMember.query.filter_by(user_id=user.id).all()
-    rooms = [m.room for m in memberships if m.room.is_active]
+    rooms_data = []
+    
+    for m in memberships:
+        room = m.room
+        if not room.is_active:
+            continue
+            
+        # Add other_user_id for DMs
+        other_user_id = None
+        if room.room_type == 'dm':
+            other_member = ChatMember.query.filter(
+                ChatMember.room_id == room.id,
+                ChatMember.user_id != user.id
+            ).first()
+            if other_member:
+                other_user_id = other_member.user_id
+        
+        # Attach temporarily to the room object for the template
+        room.other_user_id = other_user_id
+        rooms_data.append(room)
 
     courses = []
     if user.is_admin():
@@ -184,7 +203,7 @@ def chat_app():
 
     return render_template('chat.html',
         user=user,
-        rooms=rooms,
+        rooms=rooms_data,
         courses=courses
     )
 

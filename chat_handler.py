@@ -120,6 +120,9 @@ Write a practical, engaging lesson for Day {day_num}. Make it relatable with rea
 
 def register_socket_events(socketio):
     """Register all Socket.IO event handlers"""
+    # Map of sids to user_ids for presence tracking
+    connection_map = {}
+
 
     @socketio.on('connect')
     def handle_connect():
@@ -130,6 +133,17 @@ def register_socket_events(socketio):
     def handle_disconnect():
         """Handle client disconnection"""
         print(f"[CHAT] Client disconnected: {request.sid}")
+        user_id = connection_map.pop(request.sid, None)
+        if user_id:
+            # Check if user has other active connections
+            if user_id not in connection_map.values():
+                # Update DB
+                user = ChatUser.query.get(user_id)
+                if user:
+                    user.is_online = False
+                    user.last_seen = datetime.utcnow()
+                    db.session.commit()
+                emit('presence_update', {'user_id': user_id, 'status': 'offline'}, broadcast=True)
 
     @socketio.on('authenticate')
     def handle_authenticate(data):
@@ -144,10 +158,15 @@ def register_socket_events(socketio):
             emit('error', {'message': 'User not found'})
             return
 
-        # Update user status
-        user.is_online = True
-        user.last_seen = datetime.utcnow()
-        db.session.commit()
+        # Presence mapping
+        is_first_connection = user_id not in connection_map.values()
+        connection_map[request.sid] = user_id
+        
+        if is_first_connection:
+            user.is_online = True
+            user.last_seen = datetime.utcnow()
+            db.session.commit()
+            emit('presence_update', {'user_id': user_id, 'status': 'online'}, broadcast=True)
 
         # Join all rooms the user is a member of
         memberships = ChatMember.query.filter_by(user_id=user_id).all()
@@ -179,6 +198,10 @@ def register_socket_events(socketio):
 
         join_room(f'room_{room_id}')
 
+        # Mark as read
+        membership.last_read_at = datetime.utcnow()
+        db.session.commit()
+
         # Get recent messages
         messages = ChatMessage.query.filter_by(room_id=room_id)\
             .order_by(ChatMessage.created_at.desc())\
@@ -208,6 +231,13 @@ def register_socket_events(socketio):
             for r in m.reactions:
                 reaction_map.setdefault(r.emoji, []).append(r.user_id)
             data['reactions'] = [{'emoji': e, 'count': len(uids), 'user_ids': uids} for e, uids in reaction_map.items()]
+            
+            # Read status
+            data['status'] = m.status
+            from models import MessageReadReceipt
+            read_by = MessageReadReceipt.query.filter_by(message_id=m.id).count()
+            data['read_count'] = read_by
+            
             return data
 
         room = ChatRoom.query.get(room_id)
@@ -287,6 +317,7 @@ def register_socket_events(socketio):
             'sender_name': user.display_name or user.username,
             'sender_pic': user.profile_pic,
             'message_type': 'text',
+            'status': message.status,
             'created_at': message.created_at.isoformat()
         }
         emit('new_message', message_data, room=f'room_{room_id}')
@@ -720,9 +751,51 @@ def register_socket_events(socketio):
         """User stopped typing"""
         user_id = data.get('user_id')
         room_id = data.get('room_id')
-        emit('stop_typing', {
+        emit('stop_typing', {'user_id': user_id, 'room_id': room_id}, room=f'room_{room_id}', include_self=False)
+
+    @socketio.on('mark_read')
+    def handle_mark_read(data):
+        """Mark messages as read for a user in a room"""
+        user_id = data.get('user_id')
+        room_id = data.get('room_id')
+        
+        from models import MessageReadReceipt, ChatMember, ChatMessage
+        
+        # Update membership last_read_at
+        membership = ChatMember.query.filter_by(user_id=user_id, room_id=room_id).first()
+        if membership:
+            membership.last_read_at = datetime.utcnow()
+            
+        # Get unread message IDs for this user in this room (excluding own)
+        # Using a subquery for better performance
+        read_receipts_subquery = db.session.query(MessageReadReceipt.message_id).filter_by(user_id=user_id).subquery()
+        
+        unread_messages = ChatMessage.query.filter(
+            ChatMessage.room_id == room_id,
+            ChatMessage.sender_id != user_id
+        ).filter(
+            ~ChatMessage.id.in_(read_receipts_subquery)
+        ).all()
+        
+        new_receipts = []
+        for msg in unread_messages:
+            new_receipts.append(MessageReadReceipt(message_id=msg.id, user_id=user_id))
+            
+            # If DM, mark as read
+            room = ChatRoom.query.get(room_id)
+            if room and room.room_type in ('dm', 'ai_dm'):
+                msg.status = 'read'
+        
+        if new_receipts:
+            db.session.add_all(new_receipts)
+        
+        db.session.commit()
+        
+        # Notify others in the room that messages were read
+        emit('messages_read', {
+            'user_id': user_id,
             'room_id': room_id,
-            'user_id': user_id
+            'read_at': datetime.utcnow().isoformat()
         }, room=f'room_{room_id}', include_self=False)
 
     @socketio.on('toggle_reaction')
@@ -963,6 +1036,41 @@ def register_socket_events(socketio):
             'total_days': teach_session.total_days,
             'stats': stats
         })
+
+    @socketio.on('search_messages')
+    def handle_search_messages(data):
+        """Search for messages containing a query string across all user's rooms"""
+        user_id = data.get('user_id')
+        query = data.get('query', '').strip()
+        
+        if not user_id or not query:
+            emit('search_results', {'results': []})
+            return
+            
+        # Get all rooms the user is a member of
+        user_rooms = db.session.query(ChatMember.room_id).filter_by(user_id=user_id).all()
+        room_ids = [r.room_id for r in user_rooms]
+        
+        # Search messages in those rooms
+        messages = ChatMessage.query.filter(
+            ChatMessage.room_id.in_(room_ids),
+            ChatMessage.content.ilike(f'%{query}%'),
+            ChatMessage.message_type != 'deleted'
+        ).order_by(ChatMessage.created_at.desc()).limit(50).all()
+        
+        results = []
+        for m in messages:
+            results.append({
+                'id': m.id,
+                'room_id': m.room_id,
+                'room_name': m.room.name if m.room.name else (f"AI Assistant" if m.room.room_type == 'ai_dm' else "Direct Message"),
+                'room_type': m.room.room_type,
+                'content': m.content,
+                'sender_name': m.sender.display_name if m.sender else 'System',
+                'created_at': m.created_at.isoformat()
+            })
+            
+        emit('search_results', {'results': results})
 
     @socketio.on('toggle_lock')
     def handle_toggle_lock(data):

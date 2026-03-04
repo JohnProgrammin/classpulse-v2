@@ -560,8 +560,21 @@
             </button>
         </div>
 
+        <!-- Search Bar -->
+        <div class="px-4 py-3 border-b border-white/10">
+            <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40"></i>
+                <input type="text" id="globalSearchInput" placeholder="Search messages..."
+                    class="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-blue transition-colors">
+                <button id="clearSearchBtn"
+                    class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- Room List -->
-        <div class="flex-1 overflow-y-auto p-2">
+        <div id="roomSidebarContent" class="flex-1 overflow-y-auto p-2">
             <div id="roomList" class="space-y-1">
                 {% for room in rooms %}
                 <button onclick="selectRoom({{ room.id }})"
@@ -577,8 +590,13 @@
                             <i data-lucide="users" class="w-5 h-5"></i>
                         </div>
                         {% else %}
-                        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                        <div class="relative w-10 h-10 bg-white/10 rounded-full flex items-center justify-center avatar-container"
+                            data-other-user-id="{{ room.other_user_id }}">
                             <i data-lucide="message-circle" class="w-5 h-5"></i>
+                            {% if room.other_user_id %}
+                            <div class="presence-dot absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full z-10 hidden"
+                                data-user-id="{{ room.other_user_id }}"></div>
+                            {% endif %}
                         </div>
                         {% endif %}
                         <div class="flex-1 min-w-0">
@@ -595,6 +613,14 @@
                     </div>
                 </button>
                 {% endfor %}
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="searchResults" class="hidden flex-1 overflow-y-auto p-2 bg-black/20">
+            <p class="text-[10px] uppercase tracking-wider text-white/30 px-3 py-2 mb-1 font-bold">Search Results</p>
+            <div id="searchResultsList" class="space-y-1">
+                <!-- Results go here -->
             </div>
         </div>
     </div>
@@ -844,10 +870,10 @@
         // User data
         const currentUser = {
             id: {{ user.id }},
-        username: '{{ user.username }}',
-            displayName: '{{ user.display_name or user.username }}',
-                role: '{{ user.role }}',
-                    profilePic: {% if user.profile_pic %} '{{ user.profile_pic }}'{% else %} null{% endif %}
+        username: "{{ user.username }}",
+            display_name: "{{ user.display_name or user.username }}",
+                role: "{{ user.role }}",
+                    profile_pic: "{{ user.profile_pic }}"
         };
 
         // Socket connection
@@ -863,6 +889,8 @@
         let typingUsers = []; // List of {user_id, display_name}
         let typingTimeout = null;
         let isTyping = false;
+        let onlineUsers = new Set();
+
 
         // ————— Unread badge helpers —————
         function updateUnreadBadge(roomId) {
@@ -892,18 +920,25 @@
             return colors[Math.abs(hash) % colors.length];
         }
 
-        function renderAvatar(name, picUrl, size) {
+        function renderAvatar(name, picUrl, size, userId) {
             size = size || 'w-8 h-8';
-            if (picUrl === '__bot__') {
-                return `<div class="${size} rounded-full bg-purple-600/30 border border-purple-500/30 flex items-center justify-center shrink-0">
+            const isOnline = userId && onlineUsers.has(parseInt(userId));
+            const onlineStatusClass = isOnline ? '' : 'hidden'; // For dynamic toggling later if needed
+            const onlineDot = isOnline ? `<div class="presence-dot absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full z-10" data-user-id="${userId}"></div>` : '';
+
+            let avatarHtml = '';
+            if (picUrl === '__bot__' || name === 'ClassPulse AI') {
+                avatarHtml = `<div class="${size} rounded-full bg-purple-600/30 border border-purple-500/30 flex items-center justify-center shrink-0">
                     <i data-lucide="bot" class="w-4 h-4 text-purple-400"></i></div>`;
+            } else if (picUrl) {
+                avatarHtml = `<img src="/static/${picUrl}" alt="${escapeHtml(name)}" class="${size} rounded-full object-cover shrink-0">`;
+            } else {
+                const initial = name ? name.charAt(0).toUpperCase() : '?';
+                const color = getAvatarColor(name || '');
+                avatarHtml = `<div class="${size} rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0" style="background-color:${color}">${initial}</div>`;
             }
-            if (picUrl) {
-                return `<img src="/static/${picUrl}" alt="${escapeHtml(name)}" class="${size} rounded-full object-cover shrink-0">`;
-            }
-            const initial = name ? name.charAt(0).toUpperCase() : '?';
-            const color = getAvatarColor(name || '');
-            return `<div class="${size} rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0" style="background-color:${color}">${initial}</div>`;
+
+            return `<div class="relative flex-shrink-0">${avatarHtml}${onlineDot}</div>`;
         }
 
         // Initialize
@@ -912,6 +947,9 @@
 
             // Authenticate with socket
             socket.emit('authenticate', { user_id: currentUser.id });
+
+            // Get initial online users
+            socket.emit('get_online_users', {});
 
             // Setup event listeners
             setupSocketEvents();
@@ -967,6 +1005,10 @@
                 if (data.room_id === currentRoom?.id) {
                     if (!getHiddenMessages().includes(data.id)) {
                         appendMessage(data);
+                        // Mark as read if we are in the room
+                        if (data.sender_id !== currentUser.id) {
+                            socket.emit('mark_read', { user_id: currentUser.id, room_id: currentRoom.id });
+                        }
                     }
                 } else {
                     // Increment unread count for other rooms
@@ -1083,6 +1125,138 @@
                 if (data.room_id === currentRoom?.id) {
                     removeTypingUser(data.user_id);
                 }
+            });
+
+            socket.on('search_results', (data) => {
+                displaySearchResults(data.results);
+            });
+
+            socket.on('presence_update', (data) => {
+                if (data.status === 'online') {
+                    onlineUsers.add(parseInt(data.user_id));
+                } else {
+                    onlineUsers.delete(parseInt(data.user_id));
+                }
+                updatePresenceIndicators(data.user_id, data.status === 'online');
+            });
+
+            socket.on('online_users_list', (data) => {
+                onlineUsers = new Set(data.online_user_ids.map(id => parseInt(id)));
+                // Update all indicators
+                document.querySelectorAll('.presence-dot').forEach(el => el.classList.add('hidden'));
+                onlineUsers.forEach(id => updatePresenceIndicators(id, true));
+            });
+        }
+
+        function updatePresenceIndicators(userId, isOnline) {
+            // Update sidebar dots
+            const sidebarDots = document.querySelectorAll(`.avatar-container[data-other-user-id="${userId}"] .presence-dot`);
+            sidebarDots.forEach(dot => {
+                dot.classList.toggle('hidden', !isOnline);
+            });
+
+            // Update individual message avatars if visible
+            const messageAvatars = document.querySelectorAll(`.message-wrapper[data-sender-id="${userId}"] .relative`);
+            messageAvatars.forEach(container => {
+                let dot = container.querySelector('.presence-dot');
+                if (isOnline && !dot) {
+                    dot = document.createElement('div');
+                    dot.className = 'presence-dot absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full z-10';
+                    dot.setAttribute('data-user-id', userId);
+                    container.appendChild(dot);
+                } else if (!isOnline && dot) {
+                    dot.remove();
+                }
+            });
+
+            // Update chat header if it's the current DM
+            if (currentRoom) {
+                const sidebarItem = document.querySelector(`.room-item[data-room-id="${currentRoom.id}"]`);
+                const otherUserId = sidebarItem?.querySelector('.avatar-container')?.getAttribute('data-other-user-id');
+                if (parseInt(otherUserId) === parseInt(userId)) {
+                    const headerIcon = document.getElementById('chatIcon');
+                    let dot = headerIcon.querySelector('.presence-dot');
+                    if (isOnline && !dot) {
+                        dot = document.createElement('div');
+                        dot.className = 'presence-dot absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-black rounded-full z-10';
+                        headerIcon.classList.add('relative');
+                        headerIcon.appendChild(dot);
+                    } else if (!isOnline && dot) {
+                        dot.remove();
+                    }
+                }
+            }
+        }
+
+        function setupSearchHandlers() {
+            const searchInput = document.getElementById('globalSearchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const roomContent = document.getElementById('roomSidebarContent');
+            const searchResults = document.getElementById('searchResults');
+            let searchTimeout;
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+
+                if (query.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                    searchResults.classList.add('hidden');
+                    roomContent.classList.remove('hidden');
+                    return;
+                }
+
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    if (query.length >= 2) {
+                        socket.emit('search_messages', { user_id: currentUser.id, query: query });
+                    }
+                }, 300);
+            });
+
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearBtn.classList.add('hidden');
+                searchResults.classList.add('hidden');
+                roomContent.classList.remove('hidden');
+            });
+        }
+
+        function displaySearchResults(results) {
+            const list = document.getElementById('searchResultsList');
+            const roomContent = document.getElementById('roomSidebarContent');
+            const searchResults = document.getElementById('searchResults');
+
+            list.innerHTML = '';
+            roomContent.classList.add('hidden');
+            searchResults.classList.remove('hidden');
+
+            if (results.length === 0) {
+                list.innerHTML = `<div class="p-4 text-center text-white/40 text-sm">No results found</div>`;
+                return;
+            }
+
+            results.forEach(res => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full p-3 rounded-lg text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-0';
+                btn.onclick = () => {
+                    selectRoom(res.room_id);
+                    // On mobile, we might want to scroll to that message specifically?
+                    // For now, just opening the room is a huge win.
+                };
+
+                btn.innerHTML = `
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] text-blue font-bold truncate max-w-[120px]">${escapeHtml(res.room_name)}</span>
+                            <span class="text-[10px] text-white/30">${formatTime(res.created_at)}</span>
+                        </div>
+                        <span class="text-xs font-semibold text-white/70 mb-0.5">${escapeHtml(res.sender_name)}</span>
+                        <p class="text-xs text-white/50 line-clamp-2">${escapeHtml(res.content)}</p>
+                    </div>
+                `;
+                list.appendChild(btn);
             });
         }
 
@@ -1209,8 +1383,24 @@
 
             currentRoom = { id: roomId, name: name, room_type: roomType };
 
-            // Join room via socket
-            socket.emit('join_room', { user_id: currentUser.id, room_id: roomId });
+            // Update header presence dot for DM
+            const headerIcon = document.getElementById('chatIcon');
+            const otherUserId = roomType === 'dm' ? document.querySelector(`.room-item[data-room-id="${roomId}"] .avatar-container`)?.getAttribute('data-other-user-id') : null;
+
+            if (otherUserId && onlineUsers.has(parseInt(otherUserId))) {
+                let dot = headerIcon.querySelector('.presence-dot');
+                if (!dot) {
+                    dot = document.createElement('div');
+                    dot.className = 'presence-dot absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-black rounded-full z-10';
+                    headerIcon.classList.add('relative');
+                    headerIcon.appendChild(dot);
+                }
+            } else {
+                headerIcon.querySelector('.presence-dot')?.remove();
+            }
+
+            // Mark as read immediately on entering
+            socket.emit('mark_read', { user_id: currentUser.id, room_id: roomId });
 
             showChatView(name, subtitle, roomType);
         }
@@ -1321,12 +1511,15 @@
                     <span class="swipe-reply-hint"><i data-lucide="reply" class="w-4 h-4"></i></span>
                     <div class="msg-bubble-wrap">
                         <div class="flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : ''}">
-                            ${!isOwn ? renderAvatar(msg.sender_name || 'Unknown', msg.sender_pic, 'w-8 h-8') : ''}
+                            ${!isOwn ? renderAvatar(msg.sender_name || 'Unknown', msg.sender_pic, 'w-8 h-8', msg.sender_id) : ''}
                             <div class="bubble-inner min-w-0 ${bgClass} rounded-2xl px-4 py-3">
                                 ${!isOwn ? `<p class="text-xs ${isAi ? 'text-purple-400' : isBroadcast ? 'text-green-400' : 'text-white/60'} mb-1">${escapeHtml(msg.sender_name || 'Unknown')}${isAi ? ' (AI)' : isBroadcast ? ' (Broadcast)' : ''}</p>` : ''}
                                 ${replyHtml}
                                 <p class="message-content text-sm whitespace-pre-wrap">${escapeHtml(msg.content)}</p>
-                                <p class="message-time text-xs text-white/40 mt-1">${formatTime(msg.created_at)}${editedHtml}</p>
+                                <div class="flex items-center justify-end gap-1 mt-1">
+                                    <p class="message-time text-[10px] text-white/40">${formatTime(msg.created_at)}${editedHtml}</p>
+                                    ${isOwn ? renderStatusTicks(msg.status) : ''}
+                                </div>
                             </div>
                             <div class="message-actions flex items-center gap-1 mb-2">
                                 <button onclick="openEmojiPicker(event, ${msg.id})" class="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white transition-colors">
@@ -1350,6 +1543,30 @@
         function scrollToBottom() {
             const container = document.getElementById('messagesContainer');
             container.scrollTop = container.scrollHeight;
+        }
+
+        function renderStatusTicks(status) {
+            if (status === 'read') {
+                return `
+                    <div class="flex items-center -space-x-2 ml-1" title="Read">
+                        <i data-lucide="check" class="w-3 h-3 text-blue-400"></i>
+                        <i data-lucide="check" class="w-3 h-3 text-blue-400"></i>
+                    </div>
+                `;
+            } else if (status === 'delivered') {
+                return `
+                    <div class="flex items-center -space-x-2 ml-1" title="Delivered">
+                        <i data-lucide="check" class="w-3 h-3 text-white/40"></i>
+                        <i data-lucide="check" class="w-3 h-3 text-white/40"></i>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="ml-1" title="Sent">
+                        <i data-lucide="check" class="w-3 h-3 text-white/40"></i>
+                    </div>
+                `;
+            }
         }
 
         // ————— Emoji Reactions —————

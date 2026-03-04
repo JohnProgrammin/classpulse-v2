@@ -519,6 +519,9 @@ class ChatMessage(db.Model):
     is_edited = db.Column(db.Boolean, default=False)
     edited_at = db.Column(db.DateTime)
 
+    # Status: 'sent', 'delivered', 'read'
+    status = db.Column(db.String(20), default='sent')
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     def __repr__(self):
@@ -579,4 +582,25 @@ class TeachingSession(db.Model):
     creator = db.relationship('ChatUser')
 
     def __repr__(self):
-        return f'<TeachingSession "{self.topic}" day {self.current_day}/{self.total_days}>'
+        return f'<TeachingSession {self.id}>'
+
+
+class MessageReadReceipt(db.Model):
+    """Tracks who has read which message"""
+    __tablename__ = 'message_read_receipts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey('chat_messages.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('chat_users.id'), nullable=False)
+    read_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship for convenience
+    message = db.relationship('ChatMessage', backref=db.backref('read_receipts', lazy='dynamic'))
+    user = db.relationship('ChatUser', backref=db.backref('read_receipts', lazy='dynamic'))
+
+    __table_args__ = (
+        db.UniqueConstraint('message_id', 'user_id', name='unique_user_message_read'),
+    )
+
+    def __repr__(self):
+        return f'<ReadReceipt msg:{self.message_id} user:{self.user_id}>'
