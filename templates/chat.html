@@ -586,7 +586,7 @@
         <div id="roomSidebarContent" class="flex-1 overflow-y-auto p-2">
             <div id="roomList" class="space-y-1">
                 {% for room in rooms %}
-                <button onclick="selectRoom({{ room.id }})"
+                <button data-room-btn="{{ room.id }}"
                     class="room-item w-full p-3 rounded-lg text-left hover:bg-white/10 transition-colors"
                     data-room-id="{{ room.id }}">
                     <div class="flex items-center space-x-3">
@@ -855,6 +855,34 @@
                     </button>
                     <button type="submit" class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
                         Join
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Course Modal -->
+    <div id="createCourseModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold mb-4">Register New Course</h3>
+            <form id="createCourseForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">Course Name</label>
+                    <input type="text" id="courseName" required placeholder="e.g. Data Structures"
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
+                </div>
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">Course Code</label>
+                    <input type="text" id="courseCode" required placeholder="e.g. CSC301"
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue uppercase">
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" onclick="hideCreateCourse()"
+                        class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
+                        Register
                     </button>
                 </div>
             </form>
@@ -1377,7 +1405,39 @@
                     });
                 }
             });
+            // Delegate room selection to container to avoid many listeners
+            document.getElementById('roomList').addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-room-btn]');
+                if (btn) {
+                    const roomId = parseInt(btn.getAttribute('data-room-btn'));
+                    selectRoom(roomId);
+                }
+            });
+
+            // Create course form
+            const createCourseForm = document.getElementById('createCourseForm');
+            if (createCourseForm) {
+                createCourseForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('courseName').value.trim();
+                    const code = document.getElementById('courseCode').value.trim().toUpperCase();
+
+                    if (name && code) {
+                        socket.emit('create_course', {
+                            user_id: currentUser.id,
+                            name: name,
+                            code: code
+                        });
+                    }
+                });
+            }
         }
+
+        socket.on('course_created', (data) => {
+            console.log("Course created:", data);
+            hideCreateCourse();
+            // Optional: alert or show toast
+        });
 
         function selectRoom(roomId) {
             closeSidebar();  // auto-close sidebar on mobile after picking a room
@@ -2009,6 +2069,15 @@
         function hideJoinGroup() {
             document.getElementById('joinGroupModal').classList.add('hidden');
             document.getElementById('joinGroupForm').reset();
+        }
+
+        function showCreateCourse() {
+            document.getElementById('createCourseModal').classList.remove('hidden');
+        }
+
+        function hideCreateCourse() {
+            document.getElementById('createCourseModal').classList.add('hidden');
+            document.getElementById('createCourseForm').reset();
         }
 
         function showRoomInfo() {

@@ -335,8 +335,8 @@ def register_socket_events(socketio):
         course_id = data.get('course_id')  # Optional link to course
 
         user = ChatUser.query.get(user_id)
-        if not user or not user.is_admin():
-            emit('error', {'message': 'Only admins can create groups'})
+        if not user or not user.is_lecturer():
+            emit('error', {'message': 'Only staff members can create groups'})
             return
 
         if not name:
@@ -381,6 +381,43 @@ def register_socket_events(socketio):
             'invite_code': room.invite_code,
             'course_id': room.course_id
         })
+
+    @socketio.on('create_course')
+    def handle_create_course(data):
+        """Register a new course (staff only)"""
+        user_id = data.get('user_id')
+        name = data.get('name', '').strip()
+        code = data.get('code', '').strip().upper()
+
+        user = ChatUser.query.get(user_id)
+        if not user or not user.is_lecturer():
+            emit('error', {'message': 'Only staff members can register courses'})
+            return
+
+        if not name or not code:
+            emit('error', {'message': 'Course name and code required'})
+            return
+
+        # Check if code already exists
+        existing = Course.query.filter_by(code=code).first()
+        if existing:
+            emit('error', {'message': f'Course code {code} is already registered.'})
+            return
+
+        new_course = Course(
+            name=name,
+            code=code,
+            description=f"Registered by {user.username}"
+        )
+        db.session.add(new_course)
+        db.session.commit()
+
+        print(f"[CHAT] Course created: {name} ({code})")
+        emit('course_created', {
+            'id': new_course.id,
+            'name': new_course.name,
+            'code': new_course.code
+        }, broadcast=True)
 
     @socketio.on('join_with_code')
     def handle_join_with_code(data):
@@ -1162,6 +1199,10 @@ def handle_group_ai_reply(student, room, student_message, original_ai_msg, stude
                 continue
             context_lines.append(f"{sender}: {m.content[:120]}")
 
+        # Get the slice outside the f-string to help the linter
+        context_slice = context_lines[-6:] if context_lines else []
+        context_text = chr(10).join(context_slice) if context_slice else "No recent messages."
+
         # Build topic restriction if teaching group
         topic_rules = ""
         if teaching_topic:
@@ -1186,7 +1227,7 @@ IMPORTANT: If the question is something you truly cannot answer (needs admin's r
 
 GROUP: {room.name}
 RECENT CONTEXT:
-{chr(10).join(context_lines[-6:]) if context_lines else "No recent messages."}
+{context_text}
 
 THE MESSAGE THE STUDENT REPLIED TO:
 "{original_ai_msg.content}"
@@ -1200,9 +1241,9 @@ Reply now:"""
         # Emit AI typing event
         socketio.emit('typing', {
             'room_id': room.id,
-            'user_id': ai_user.id,
-            'username': ai_user.username,
-            'display_name': ai_user.display_name or ai_user.username
+            'user_id': ai_user.id if ai_user else 0,
+            'username': ai_user.username if ai_user else "ai",
+            'display_name': (ai_user.display_name or ai_user.username) if ai_user else "AI"
         }, room=f'room_{room.id}')
 
         groq_client = Groq(api_key=Config.GROQ_API_KEY)
@@ -1330,6 +1371,20 @@ def parse_create_group_command(response):
     pattern = r'\[CREATE_GROUP:([^|]+)\|([^\]]*)\]'
     matches = re.findall(pattern, response)
     return [(name.strip(), desc.strip()) for name, desc in matches]
+
+
+def parse_create_course_command(response):
+    """Parse [CREATE_COURSE:CourseName|CourseCode] commands from AI response"""
+    import re
+    pattern = r'\[CREATE_COURSE:([^|\]]+)\|([^\]]+)\]'
+    return re.findall(pattern, response)
+
+
+def parse_create_perm_group_command(response):
+    """Parse [CREATE_PERM_GROUP:GroupName] commands from AI response"""
+    import re
+    pattern = r'\[CREATE_PERM_GROUP:([^\]]+)\]'
+    return re.findall(pattern, response)
 
 
 def parse_delete_group_command(response):
@@ -1540,7 +1595,7 @@ Format: [CREATE_PERM_GROUP:GroupName]
 
             # Build messages for API
             messages = [{"role": "system", "content": system_prompt}]
-            messages.extend(history[-6:])  # Last 6 messages for context
+            messages.extend(history[-6:] if history else [])  # Last 6 messages for context
             messages.append({"role": "user", "content": user_message})
 
             # Emit AI typing event
@@ -1648,6 +1703,60 @@ Format: [CREATE_PERM_GROUP:GroupName]
                 print(f"[AI CREATE_GROUP] Created: {group_name}")
             except Exception as e:
                 print(f"[ERROR] Failed to create group '{group_name}': {e}")
+
+        # Execute CREATE_PERM_GROUP commands
+        create_perm_group_commands = parse_create_perm_group_command(response)
+        for group_name in create_perm_group_commands:
+            try:
+                new_room = ChatRoom(
+                    name=group_name,
+                    room_type='group',
+                    invite_code=generate_invite_code(),
+                    created_by=user.id
+                )
+                db.session.add(new_room)
+                db.session.flush()
+
+                # Add admin as member
+                member = ChatMember(room_id=new_room.id, user_id=user.id, role='admin')
+                db.session.add(member)
+
+                # System message
+                sys_msg = ChatMessage(
+                    room_id=new_room.id,
+                    content=f"Permanent group created by {user.display_name or user.username}",
+                    message_type='system'
+                )
+                db.session.add(sys_msg)
+                db.session.flush()
+
+                # Notify sidebar
+                socketio.emit('ai_created_group', {
+                    'room_id': new_room.id,
+                    'name': new_room.name,
+                    'invite_code': new_room.invite_code
+                }, room=f'room_{room.id}')
+                print(f"[AI CREATE_PERM_GROUP] Created: {group_name}")
+            except Exception as e:
+                print(f"[ERROR] Failed to create perm group '{group_name}': {e}")
+
+        # Execute CREATE_COURSE commands
+        create_course_commands = parse_create_course_command(response)
+        for c_name, c_code in create_course_commands:
+            try:
+                # Check if course exists
+                existing_course = Course.query.filter_by(code=c_code.upper()).first()
+                if not existing_course:
+                    new_course = Course(
+                        name=c_name,
+                        code=c_code.upper(),
+                        description=f"Course created by AI at request of {user.username}"
+                    )
+                    db.session.add(new_course)
+                    db.session.commit()
+                    print(f"[AI CREATE_COURSE] Created: {c_name} ({c_code})")
+            except Exception as e:
+                print(f"[ERROR] Failed to create course '{c_name}': {e}")
 
         # Execute LOCK / UNLOCK commands
         lock_commands = parse_lock_command(response, groups)
