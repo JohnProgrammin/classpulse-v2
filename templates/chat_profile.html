@@ -282,18 +282,40 @@
                 Save Changes
             </button>
 
-            <!-- Danger Zone -->
+            <!-- Admin Privileges -->
             {% if user.role != 'admin' %}
+            <div class="mt-8 pt-8 border-t border-white/10">
+                <h3 class="text-white/60 text-sm font-semibold mb-3 uppercase tracking-wider">Admin Privileges</h3>
+                <div class="flex gap-2">
+                    <input type="text" id="adminCode" placeholder="Enter admin code"
+                        class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500/50 transition-colors">
+                    <button type="button" onclick="upgradeToAdmin()"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-colors">
+                        Activate
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Danger Zone -->
             <div class="mt-12 pt-8 border-t border-white/10">
                 <h3 class="text-red-500 text-sm font-semibold mb-3 uppercase tracking-wider">Danger Zone</h3>
+                {% if user.role == 'admin' %}
+                <p class="text-white/40 text-xs mb-4 italic">Administrator accounts cannot be deleted for system safety.
+                </p>
+                <button type="button" disabled
+                    class="w-full py-3 bg-white/5 border border-white/10 text-white/20 rounded-lg text-sm font-semibold cursor-not-allowed">
+                    Delete My Account (Disabled)
+                </button>
+                {% else %}
                 <p class="text-white/40 text-xs mb-4">Once you delete your account, there is no going back. Please be
                     certain.</p>
                 <button type="button" onclick="confirmDeleteAccount()"
                     class="w-full py-3 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-lg text-sm font-semibold transition-colors">
                     Delete My Account
                 </button>
+                {% endif %}
             </div>
-            {% endif %}
         </form>
     </main>
 
@@ -471,6 +493,36 @@
             dragStart = null;
             const img = document.getElementById('cropImg');
             if (img) img.classList.remove('dragging');
+        }
+
+        // ————— Admin Upgrade —————
+        function upgradeToAdmin() {
+            const code = document.getElementById('adminCode').value.trim();
+            if (!code) {
+                alert("Please enter an admin code.");
+                return;
+            }
+
+            fetch('/api/chat/upgrade-admin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ admin_code: code })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Account upgraded to admin successfully!");
+                        window.location.reload();
+                    } else {
+                        alert("Error upgrading account: " + (data.error || "Unknown error"));
+                    }
+                })
+                .catch(err => {
+                    console.error("Upgrade error:", err);
+                    alert("A network error occurred. Please try again.");
+                });
         }
 
         // ————— Account Deletion —————

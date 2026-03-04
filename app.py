@@ -135,9 +135,8 @@ def chat_register():
             flash('Email already registered', 'error')
             return render_template('chat_register.html')
 
-        # If this is the very first user to register, make them an admin
-        user_count = ChatUser.query.count()
-        role = 'admin' if user_count == 0 else 'user'
+        # All users start as regular users
+        role = 'user'
 
         user = ChatUser(
             username=username,
@@ -272,6 +271,27 @@ def get_chat_rooms():
 
 
     return jsonify({'success': True, 'message': f'{user.username} is now an admin'})
+
+
+@app.route('/api/chat/upgrade-admin', methods=['POST'])
+def upgrade_admin():
+    """Upgrade user to admin using a code"""
+    if 'chat_user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    data = request.get_json()
+    code = data.get('admin_code', '')
+
+    if code == 'CP-ADMIN-2026':
+        user = ChatUser.query.get(session['chat_user_id'])
+        if user:
+            user.role = 'admin'
+            db.session.commit()
+            session['chat_role'] = 'admin'
+            return jsonify({'success': True, 'message': 'Account upgraded to admin'})
+        return jsonify({'error': 'User not found'}), 404
+    else:
+        return jsonify({'error': 'Invalid admin code'}), 400
 
 
 @app.route('/api/chat/delete-account', methods=['POST'])
