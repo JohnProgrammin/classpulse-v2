@@ -432,6 +432,12 @@ class ChatUser(UserMixin, db.Model):
     def is_admin(self):
         return self.role == 'admin'
 
+    def is_lecturer(self):
+        return self.role in ['lecturer', 'admin']
+
+    def is_student(self):
+        return self.role == 'student'
+
     def __repr__(self):
         return f'<ChatUser {self.username}>'
 

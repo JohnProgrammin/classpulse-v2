@@ -533,7 +533,11 @@
                 <div>
                     <p class="text-white/90 text-sm font-medium">{{ user.display_name or user.username }}</p>
                     {% if user.is_admin() %}
-                    <span class="text-blue text-xs">Admin</span>
+                    <span class="text-blue text-[10px] font-bold uppercase tracking-wider">Admin</span>
+                    {% elif user.is_lecturer() %}
+                    <span class="text-green-400 text-[10px] font-bold uppercase tracking-wider">Lecturer</span>
+                    {% else %}
+                    <span class="text-white/40 text-[10px] font-bold uppercase tracking-wider">Student</span>
                     {% endif %}
                 </div>
             </a>
@@ -541,11 +545,16 @@
 
         <!-- Actions -->
         <div class="p-4 border-b border-white/10 space-y-2">
-            {% if user.is_admin() %}
+            {% if user.is_lecturer() %}
             <button onclick="showCreateGroup()"
                 class="w-full py-2 px-4 bg-blue hover:bg-blue-dark rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 <span>Create Group</span>
+            </button>
+            <button onclick="document.getElementById('createCourseModal').classList.remove('hidden')"
+                class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                <i data-lucide="book-open" class="w-4 h-4"></i>
+                <span>Create Course</span>
             </button>
             {% endif %}
             <button onclick="openAiDm()"
@@ -958,6 +967,14 @@
             // On mobile, auto-open sidebar so user can pick a room
             if (window.innerWidth < 1024 && !currentRoom) {
                 toggleSidebar();
+            }
+
+            // Persistence: Re-select last active room
+            const savedRoomId = localStorage.getItem('cp_current_room');
+            if (savedRoomId) {
+                setTimeout(() => {
+                    selectRoom(parseInt(savedRoomId));
+                }, 100);
             }
         });
 
@@ -1382,6 +1399,7 @@
             const roomType = isAi ? 'ai_dm' : 'group';
 
             currentRoom = { id: roomId, name: name, room_type: roomType };
+            localStorage.setItem('cp_current_room', roomId);
 
             // Update header presence dot for DM
             const headerIcon = document.getElementById('chatIcon');
@@ -1398,6 +1416,9 @@
             } else {
                 headerIcon.querySelector('.presence-dot')?.remove();
             }
+
+            // Join room via socket (FETCHES HISTORY)
+            socket.emit('join_room', { user_id: currentUser.id, room_id: roomId });
 
             // Mark as read immediately on entering
             socket.emit('mark_read', { user_id: currentUser.id, room_id: roomId });
@@ -1421,10 +1442,11 @@
                 iconDiv.className = 'w-10 h-10 bg-white/10 rounded-full flex items-center justify-center';
             }
 
-            // Show export button only for group rooms (admin)
+            // Show export button only for group rooms (admin/lecturer)
             const exportBtn = document.getElementById('exportBtn');
             if (exportBtn) {
-                exportBtn.classList.toggle('hidden', roomType !== 'group');
+                const isStaff = currentUser.role === 'admin' || currentUser.role === 'lecturer';
+                exportBtn.classList.toggle('hidden', roomType !== 'group' || !isStaff);
             }
 
             // Show mic & doc buttons only in AI DM

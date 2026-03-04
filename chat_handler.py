@@ -1186,7 +1186,7 @@ IMPORTANT: If the question is something you truly cannot answer (needs admin's r
 
 GROUP: {room.name}
 RECENT CONTEXT:
-{chr(10).join(context_lines[-6:])}
+{chr(10).join(context_lines[-6:]) if context_lines else "No recent messages."}
 
 THE MESSAGE THE STUDENT REPLIED TO:
 "{original_ai_msg.content}"
@@ -1332,6 +1332,13 @@ def parse_create_group_command(response):
     return [(name.strip(), desc.strip()) for name, desc in matches]
 
 
+def parse_delete_group_command(response):
+    """Parse [DELETE_GROUP:GroupName] commands from AI response"""
+    import re
+    pattern = r'\[DELETE_GROUP:([^\]]+)\]'
+    return re.findall(pattern, response)
+
+
 def parse_teach_command(response):
     """Parse [TEACH:Topic|Days] commands. Returns list of (topic, days) tuples."""
     import re
@@ -1463,8 +1470,10 @@ def handle_ai_response(user, room, user_message, socketio):
                 docs_section += f"\n--- {doc.filename} (uploaded {doc.uploaded_at.strftime('%Y-%m-%d')}) ---\n{doc_preview}\n"
 
         # System prompt — adapts based on user role
-        is_admin_user = user.role == 'admin'
-        system_prompt = f"""You are ClassPulse AI — {'the admin assistant' if is_admin_user else 'a helpful AI assistant'} for the ClassPulse education platform. You talk like a smart, direct friend. No corporate speak, no filler.
+        role_label = "Admin" if user.role == 'admin' else ("Lecturer" if user.role == 'lecturer' else "Student")
+        is_staff = user.role in ['admin', 'lecturer']
+        
+        system_prompt = f"""You are ClassPulse AI — the intelligent assistant for the ClassPulse education platform. You talk like a smart, direct friend. No corporate speak, no filler.
 
 PERSONALITY:
 - Skip the "Sure!" and "Of course!" openers. Just get to the point.
@@ -1474,7 +1483,9 @@ PERSONALITY:
 - When you don't know something, say so plainly.
 
 WHO YOU'RE TALKING TO:
-{user.display_name or user.username} — the admin. They run ClassPulse.
+Name: {user.display_name or user.username}
+Role: {role_label}
+{"(Staff member with management permissions)" if is_staff else "(Student user)"}
 
 PLATFORM STATE:
 - Courses: {course_list}
@@ -1482,88 +1493,36 @@ PLATFORM STATE:
 {docs_section}
 
 === SYSTEM COMMANDS ===
-You can actually DO things in the system. Use these tags ONLY when the admin asks you to take action. Place them at the END of your message.
+You can take actions in the system. Use these tags ONLY when the user asks for them. Place them at the END of your message.
 
 --- BROADCAST (send a message to a group) ---
 Format: [BROADCAST:GroupName]message text[/BROADCAST]
-- Write the message as if the admin typed it themselves. First person = the admin.
-- Don't prefix with "I say" or reference yourself.
-- You may add one short advice line for students if useful.
-- GroupName must match one of the available groups exactly.
-
-Example input: "Tell the 300lv group class is pushed to Thursday"
-Example output: "Done.
-
-[BROADCAST:300lv Data Structures]Hey everyone, class is pushed to Thursday. Plan accordingly.[/BROADCAST]"
+- ONLY available for Admin/Lecturers. Write as them, in first person.
+- GroupName must match exactly.
 
 --- CREATE GROUP (create a new group chat) ---
-Format: [CREATE_GROUP:Group Name|Description of the group]
-- Write a good description — concise, tells students what the group is for.
-- Use this ONLY when admin explicitly asks to create a group.
-
-Example input: "Make a group for my final year project students"
-Example output: "On it.
-
-[CREATE_GROUP:Final Year Project|Space for final year project students to collaborate, share progress, and get support from the lecturer.]"
+Format: [CREATE_GROUP:Group Name|Description]
+- ONLY available for Admin/Lecturers.
 
 --- TEACH (create a temporary teaching group) ---
 Format: [TEACH:Topic|Days]
-- Creates a new group chat where the AI will teach students the given topic day by day.
-- Topic: what to teach (e.g. "Python basics", "Database design").
-- Days: how many days the teaching lasts (integer, 1–30). The group auto-closes after that many days.
-- The AI will post one practical, relatable lesson each day.
-- Use this ONLY when the admin explicitly asks you to create a teaching group.
+- ONLY available for Admin/Lecturers. Starts an AI-led daily teaching session.
 
-Example input: "Create a 5-day teaching group on Python basics"
-Example output: "On it — setting up a 5-day Python basics teaching group now.
+--- DELETE GROUP / TEACHING (permanently remove) ---
+Format: [DELETE_GROUP:GroupName] or [DELETE_TEACH:GroupName]
+- ONLY available for Admin/Lecturers. Use for removing groups or closing sessions early.
 
-[TEACH:Python basics|5]"
-
---- DELETE TEACHING GROUP (close and remove a teaching group early) ---
-Format: [DELETE_TEACH:GroupName]
-- Permanently closes and deactivates the teaching group.
-- Use this ONLY when the admin explicitly asks to delete/end/close a teaching group early.
-- GroupName must match one of the existing teaching groups.
-
-Example input: "Delete the Python basics teaching group"
-Example output: "Done — closing that teaching session now.
-
-[DELETE_TEACH:📚 Python basics]"
-
---- LOCK / UNLOCK GROUP (prevent students from sending messages) ---
+--- LOCK / UNLOCK GROUP (management) ---
 Format: [LOCK:GroupName] or [UNLOCK:GroupName]
-- LOCK stops all non-admin members from posting. Admin can still post.
-- UNLOCK lifts the lock so everyone can post again.
-- GroupName must match one of the available groups exactly.
+- ONLY available for Admin/Lecturers.
 
-Example input: "Lock the 300lv group"
-Example output: "Locked.
-
-[LOCK:300lv Data Structures]"
-
---- CREATE COURSE (register a new course in the system) ---
+--- CREATE COURSE (registration) ---
 Format: [CREATE_COURSE:CourseName|CourseCode]
-- Creates a new course that can be linked to group chats.
-- CourseName: the full name of the course (e.g. "Data Structures and Algorithms")
-- CourseCode: the course code (e.g. "CSC301", "MTH201")
-- Use this when the admin wants to register/add a new course.
+- ONLY available for Admin/Lecturers.
 
-Example input: "Register a new course called Machine Learning with code CSC420"
-Example output: "Done — I've registered that course.
-
-[CREATE_COURSE:Machine Learning|CSC420]"
-
---- CREATE PERMANENT GROUP (create a permanent group chat) ---
+--- CREATE PERMANENT GROUP ---
 Format: [CREATE_PERM_GROUP:GroupName]
-- Creates a permanent group chat (unlike teaching groups which expire).
-- GroupName: the name of the group to create.
-- The admin will automatically be added to the group.
-- Use this when the admin wants to create a regular/permanent group chat.
-
-Example input: "Create a permanent group called 400lv Final Year Students"
-Example output: "Creating that group now.
-
-[CREATE_PERM_GROUP:400lv Final Year Students]"
+- ONLY available for Admin/Lecturers.
 
 === RULES ===
 - Commands go at the END of your reply, after any conversational text.
@@ -1700,9 +1659,30 @@ Example output: "Creating that group now.
                     'room_id': target_group.id,
                     'locked': target_group.locked
                 }, room=f'room_{target_group.id}')
-                print(f"[AI {action.upper()}] {target_group.name}")
             except Exception as e:
-                print(f"[ERROR] Failed to {action} '{target_group.name}': {e}")
+                print(f"[ERROR] Failed to toggle lock on '{target_group.name}': {e}")
+
+        # Execute DELETE_GROUP commands
+        delete_group_commands = parse_delete_group_command(response)
+        for group_name in delete_group_commands:
+            try:
+                # Find group by name (case-insensitive) or code
+                res_group = ChatRoom.query.filter(
+                    (ChatRoom.name.ilike(group_name)) |
+                    (ChatRoom.invite_code.ilike(group_name))
+                ).first()
+                
+                if res_group:
+                    target_id = res_group.id
+                    # Notify all members before deletion
+                    socketio.emit('room_removed', {'room_id': target_id}, room=f'room_{target_id}')
+                    
+                    # Delete room (cascade will handle members and messages)
+                    db.session.delete(res_group)
+                    db.session.commit()
+                    print(f"[AI DELETE_GROUP] Deleted: {group_name}")
+            except Exception as e:
+                print(f"[ERROR] Failed to delete group '{group_name}': {e}")
 
         # Execute TEACH commands
         from models import TeachingSession

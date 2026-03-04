@@ -135,8 +135,10 @@ def chat_register():
             flash('Email already registered', 'error')
             return render_template('chat_register.html')
 
-        # All users start as regular users
-        role = 'user'
+        # Capture role from form
+        role = request.form.get('role', 'student').lower()
+        if role not in ['student', 'lecturer']:
+            role = 'student'
 
         user = ChatUser(
             username=username,
