@@ -701,6 +701,30 @@ def register_socket_events(socketio):
             'message_id': data.get('message_id')
         })
 
+    @socketio.on('typing')
+    def handle_typing(data):
+        """User started typing"""
+        user_id = data.get('user_id')
+        room_id = data.get('room_id')
+        user = ChatUser.query.get(user_id)
+        if user:
+            emit('typing', {
+                'room_id': room_id,
+                'user_id': user_id,
+                'username': user.username,
+                'display_name': user.display_name or user.username
+            }, room=f'room_{room_id}', include_self=False)
+
+    @socketio.on('stop_typing')
+    def handle_stop_typing(data):
+        """User stopped typing"""
+        user_id = data.get('user_id')
+        room_id = data.get('room_id')
+        emit('stop_typing', {
+            'room_id': room_id,
+            'user_id': user_id
+        }, room=f'room_{room_id}', include_self=False)
+
     @socketio.on('toggle_reaction')
     def handle_toggle_reaction(data):
         """Toggle an emoji reaction on a message"""
@@ -1064,6 +1088,15 @@ STUDENT ({student.display_name or student.username}) WROTE:
 
 Reply now:"""
 
+        ai_user = get_or_create_ai_user()
+        # Emit AI typing event
+        socketio.emit('typing', {
+            'room_id': room.id,
+            'user_id': ai_user.id,
+            'username': ai_user.username,
+            'display_name': ai_user.display_name or ai_user.username
+        }, room=f'room_{room.id}')
+
         groq_client = Groq(api_key=Config.GROQ_API_KEY)
         completion = groq_client.chat.completions.create(
             messages=[
@@ -1076,6 +1109,12 @@ Reply now:"""
         )
 
         ai_reply_text = completion.choices[0].message.content
+
+        # Stop AI typing event
+        socketio.emit('stop_typing', {
+            'room_id': room.id,
+            'user_id': ai_user.id
+        }, room=f'room_{room.id}')
 
         # Check if AI flagged this as needing admin attention
         needs_admin = '[NEED_ADMIN]' in ai_reply_text
@@ -1425,6 +1464,7 @@ Example output: "Creating that group now.
 - Keep the conversational part short and natural."""
 
         # Initialize Groq client
+        ai_user = get_or_create_ai_user()
         if not Config.GROQ_API_KEY:
             response = "I'm having trouble connecting to my brain right now. The AI service isn't configured properly."
         else:
@@ -1435,6 +1475,14 @@ Example output: "Creating that group now.
             messages.extend(history[-6:])  # Last 6 messages for context
             messages.append({"role": "user", "content": user_message})
 
+            # Emit AI typing event
+            socketio.emit('typing', {
+                'room_id': room.id,
+                'user_id': ai_user.id,
+                'username': ai_user.username,
+                'display_name': ai_user.display_name or ai_user.username
+            }, room=f'room_{room.id}')
+
             chat_completion = groq_client.chat.completions.create(
                 messages=messages,
                 model="llama-3.3-70b-versatile",
@@ -1443,6 +1491,12 @@ Example output: "Creating that group now.
             )
 
             response = chat_completion.choices[0].message.content
+
+            # Stop AI typing event
+            socketio.emit('stop_typing', {
+                'room_id': room.id,
+                'user_id': ai_user.id
+            }, room=f'room_{room.id}')
 
         # Check for broadcast commands and execute them
         broadcasts = parse_broadcast_command(response, groups)
