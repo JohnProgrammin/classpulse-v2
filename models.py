@@ -421,7 +421,7 @@ class ChatUser(UserMixin, db.Model):
 
     # Relationships
     memberships = db.relationship('ChatMember', backref='user', lazy=True, cascade='all, delete-orphan')
-    messages = db.relationship('ChatMessage', backref='sender', lazy=True)
+    messages = db.relationship('ChatMessage', backref='sender', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

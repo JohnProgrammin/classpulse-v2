@@ -285,6 +285,9 @@ def delete_chat_account():
         session.clear()
         return jsonify({'error': 'User not found'}), 404
 
+    if user.role == 'admin':
+        return jsonify({'error': 'Admins cannot delete their own accounts'}), 403
+
     # Perform deletion
     db.session.delete(user)
     db.session.commit()

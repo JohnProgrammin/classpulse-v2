@@ -283,6 +283,7 @@
             </button>
 
             <!-- Danger Zone -->
+            {% if user.role != 'admin' %}
             <div class="mt-12 pt-8 border-t border-white/10">
                 <h3 class="text-red-500 text-sm font-semibold mb-3 uppercase tracking-wider">Danger Zone</h3>
                 <p class="text-white/40 text-xs mb-4">Once you delete your account, there is no going back. Please be
@@ -292,6 +293,7 @@
                     Delete My Account
                 </button>
             </div>
+            {% endif %}
         </form>
     </main>
 
