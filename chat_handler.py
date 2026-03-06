@@ -7,7 +7,7 @@ from datetime import datetime
 import secrets
 from flask import request
 from flask_socketio import emit, join_room, leave_room, rooms
-from models import db, ChatUser, ChatRoom, ChatMember, ChatMessage, MessageReaction, AIDocument, Course, PendingQuestion
+from models import db, ChatUser, ChatRoom, ChatMember, ChatMessage, AIDocument, Course, PendingQuestion
 
 
 def generate_invite_code():
@@ -226,11 +226,7 @@ def register_socket_events(socketio):
                     'content': m.reply_to.content[:100] + ('...' if len(m.reply_to.content) > 100 else ''),
                     'sender_name': m.reply_to.sender.display_name if m.reply_to.sender else 'Unknown'
                 }
-            # Aggregate reactions
-            reaction_map = {}
-            for r in m.reactions:
-                reaction_map.setdefault(r.emoji, []).append(r.user_id)
-            data['reactions'] = [{'emoji': e, 'count': len(uids), 'user_ids': uids} for e, uids in reaction_map.items()]
+            data['reactions'] = []
             
             # Read status
             data['status'] = m.status
@@ -273,56 +269,56 @@ def register_socket_events(socketio):
         user_id = data.get('user_id')
         room_id = data.get('room_id')
         content = data.get('content', '').strip()
+        client_id = data.get('client_id')
 
-        if not content:
+        if not content or not room_id:
             return
 
         user = ChatUser.query.get(user_id)
         room = ChatRoom.query.get(room_id)
 
         if not user or not room:
-            emit('error', {'message': 'Invalid user or room'})
             return
 
-        # Verify membership
-        membership = ChatMember.query.filter_by(
-            user_id=user_id, room_id=room_id
-        ).first()
-
-        if not membership:
+        # Check if user is member
+        member = ChatMember.query.filter_by(user_id=user_id, room_id=room_id).first()
+        if not member:
             emit('error', {'message': 'Not a member of this room'})
             return
 
-        # Block non-admins when room is locked
-        if room.locked and membership.role != 'admin' and not user.is_admin():
-            emit('error', {'message': 'This group is locked by the lecturer.'})
+        # If group is locked and user is not admin
+        if room.room_type == 'group' and room.locked and not user.is_lecturer():
+            emit('error', {'message': 'This group is locked.'})
             return
 
-        # Create the message
-        message = ChatMessage(
+        new_msg = ChatMessage(
             room_id=room_id,
             sender_id=user_id,
             content=content,
             message_type='text'
         )
-        db.session.add(message)
+        db.session.add(new_msg)
         db.session.commit()
 
-        # Broadcast to room
-        message_data = {
-            'id': message.id,
+        # Update last active
+        member.last_read_at = datetime.utcnow()
+        db.session.commit()
+
+        broadcast_data = {
+            'id': new_msg.id,
             'room_id': room_id,
-            'content': content,
             'sender_id': user_id,
             'sender_name': user.display_name or user.username,
             'sender_pic': user.profile_pic,
+            'content': content,
+            'created_at': new_msg.created_at.isoformat(),
             'message_type': 'text',
-            'status': message.status,
-            'created_at': message.created_at.isoformat()
+            'status': 'sent',
+            'client_id': client_id
         }
-        emit('new_message', message_data, room=f'room_{room_id}')
 
-        # Check if this is an AI DM — any user can chat with AI
+        emit('new_message', broadcast_data, room=f"room_{room_id}")
+        print(f"[CHAT] Message sent by {user.username} in room {room_id}")
         if room.room_type == 'ai_dm':
             handle_ai_response(user, room, content, socketio)
 
@@ -481,12 +477,17 @@ def register_socket_events(socketio):
 
     @socketio.on('start_ai_dm')
     def handle_start_ai_dm(data):
-        """Start or get AI DM room (any authenticated user)"""
+        """Start or get AI DM room — lecturers and admins only"""
         user_id = data.get('user_id')
 
         user = ChatUser.query.get(user_id)
         if not user:
             emit('error', {'message': 'User not found'})
+            return
+
+        # Block students — AI is for lecturers/admins only
+        if user.role not in ['lecturer', 'admin', 'system']:
+            emit('error', {'message': 'AI chat is only available for lecturers. Use the “Upgrade to Lecturer” option in your profile to get access.'})
             return
 
         # Check for existing AI DM room
@@ -541,9 +542,9 @@ def register_socket_events(socketio):
             room_id=room.id,
             sender_id=ai_user.id,
             content="Hello! I'm your ClassPulse AI assistant. You can:\n\n"
-                   "• Register courses (e.g., 'Register CSC301 Software Engineering')\n"
-                   "• Broadcast to groups (e.g., 'Send to CSC301: Class is cancelled today')\n"
-                   "• Schedule messages\n"
+                   "• Create groups (e.g., 'Create a group called Physics 101')\n"
+                   "• Broadcast to groups (e.g., 'Send to Physics 101: Assignment due Friday')\n"
+                   "• Register courses, create teaching sessions\n"
                    "• Ask me anything about your courses\n\n"
                    "How can I help you today?",
             message_type='ai_response'
@@ -691,75 +692,69 @@ def register_socket_events(socketio):
         room_id = data.get('room_id')
         content = data.get('content', '').strip()
         reply_to_id = data.get('reply_to_id')
+        client_id = data.get('client_id')
 
-        if not content:
+        if not content or not room_id or not reply_to_id:
             return
 
         user = ChatUser.query.get(user_id)
         room = ChatRoom.query.get(room_id)
-        reply_to = ChatMessage.query.get(reply_to_id) if reply_to_id else None
+        parent_msg = ChatMessage.query.get(reply_to_id)
 
-        if not user or not room:
-            emit('error', {'message': 'Invalid user or room'})
+        if not user or not room or not parent_msg:
             return
 
-        # Verify membership
-        membership = ChatMember.query.filter_by(
-            user_id=user_id, room_id=room_id
-        ).first()
-
-        if not membership:
-            emit('error', {'message': 'Not a member of this room'})
+        # Check if user is member
+        member = ChatMember.query.filter_by(user_id=user_id, room_id=room_id).first()
+        if not member:
             return
 
-        # Block non-admins when room is locked
-        if room.locked and membership.role != 'admin' and not user.is_admin():
-            emit('error', {'message': 'This group is locked by the lecturer.'})
+        # If group is locked and user is not admin
+        if room.room_type == 'group' and room.locked and not user.is_lecturer():
+            emit('error', {'message': 'This group is locked.'})
             return
 
-        # Create the message with reply reference
-        message = ChatMessage(
+        new_msg = ChatMessage(
             room_id=room_id,
             sender_id=user_id,
             content=content,
             message_type='text',
             reply_to_id=reply_to_id
         )
-        db.session.add(message)
+        db.session.add(new_msg)
         db.session.commit()
 
-        # Build reply context
-        reply_data = None
-        if reply_to:
-            reply_data = {
-                'id': reply_to.id,
-                'content': reply_to.content[:100] + ('...' if len(reply_to.content) > 100 else ''),
-                'sender_name': reply_to.sender.display_name if reply_to.sender else 'Unknown'
-            }
+        # Get reply_to info for broadcast
+        reply_to_data = {
+            'id': parent_msg.id,
+            'sender_name': parent_msg.sender.display_name or parent_msg.sender.username,
+            'content': parent_msg.content[:100]
+        }
 
-        # Broadcast to room
-        message_data = {
-            'id': message.id,
+        broadcast_data = {
+            'id': new_msg.id,
             'room_id': room_id,
-            'content': content,
             'sender_id': user_id,
             'sender_name': user.display_name or user.username,
             'sender_pic': user.profile_pic,
+            'content': content,
+            'created_at': new_msg.created_at.isoformat(),
             'message_type': 'text',
-            'created_at': message.created_at.isoformat(),
-            'reply_to': reply_data
+            'status': 'sent',
+            'reply_to': reply_to_data,
+            'client_id': client_id
         }
-        emit('new_message', message_data, room=f'room_{room_id}')
 
-        # Check if this is an AI DM — any user can chat with AI
+        emit('new_message', broadcast_data, room=f"room_{room_id}")
+        print(f"[CHAT] Reply sent by {user.username} in room {room_id}")
         if room.room_type == 'ai_dm':
             handle_ai_response(user, room, content, socketio)
 
         # If replying to an AI message in a group, trigger AI reply
-        if room.room_type == 'group' and reply_to:
+        if room.room_type == 'group' and parent_msg:
             ai_user = get_or_create_ai_user()
-            if reply_to.sender_id == ai_user.id:
-                handle_group_ai_reply(user, room, content, reply_to, message, socketio)
+            if parent_msg.sender_id == ai_user.id:
+                handle_group_ai_reply(user, room, content, parent_msg, new_msg, socketio)
 
     @socketio.on('delete_for_me')
     def handle_delete_for_me(data):
@@ -836,41 +831,7 @@ def register_socket_events(socketio):
             'read_at': datetime.utcnow().isoformat()
         }, room=f'room_{room_id}', include_self=False)
 
-    @socketio.on('toggle_reaction')
-    def handle_toggle_reaction(data):
-        """Toggle an emoji reaction on a message"""
-        message_id = data.get('message_id')
-        user_id = data.get('user_id')
-        emoji = data.get('emoji')
-
-        if not all([message_id, user_id, emoji]):
-            return
-
-        message = ChatMessage.query.get(message_id)
-        if not message:
-            return
-
-        # Toggle: remove if exists, add if not
-        existing = MessageReaction.query.filter_by(
-            message_id=message_id, user_id=user_id, emoji=emoji
-        ).first()
-
-        if existing:
-            db.session.delete(existing)
-        else:
-            db.session.add(MessageReaction(message_id=message_id, user_id=user_id, emoji=emoji))
-        db.session.commit()
-
-        # Build updated reactions payload
-        all_reactions = MessageReaction.query.filter_by(message_id=message_id).all()
-        reaction_map = {}
-        for r in all_reactions:
-            reaction_map.setdefault(r.emoji, []).append(r.user_id)
-
-        emit('reaction_update', {
-            'message_id': message_id,
-            'reactions': [{'emoji': e, 'count': len(uids), 'user_ids': uids} for e, uids in reaction_map.items()]
-        }, room=f'room_{message.room_id}')
+        # Reaction system removed per user request
 
     @socketio.on('send_voice_note')
     def handle_send_voice_note(data):
@@ -1075,40 +1036,7 @@ def register_socket_events(socketio):
             'stats': stats
         })
 
-    @socketio.on('search_messages')
-    def handle_search_messages(data):
-        """Search for messages containing a query string across all user's rooms"""
-        user_id = data.get('user_id')
-        query = data.get('query', '').strip()
-        
-        if not user_id or not query:
-            emit('search_results', {'results': []})
-            return
-            
-        # Get all rooms the user is a member of
-        user_rooms = db.session.query(ChatMember.room_id).filter_by(user_id=user_id).all()
-        room_ids = [r.room_id for r in user_rooms]
-        
-        # Search messages in those rooms
-        messages = ChatMessage.query.filter(
-            ChatMessage.room_id.in_(room_ids),
-            ChatMessage.content.ilike(f'%{query}%'),
-            ChatMessage.message_type != 'deleted'
-        ).order_by(ChatMessage.created_at.desc()).limit(50).all()
-        
-        results = []
-        for m in messages:
-            results.append({
-                'id': m.id,
-                'room_id': m.room_id,
-                'room_name': m.room.name if m.room.name else (f"AI Assistant" if m.room.room_type == 'ai_dm' else "Direct Message"),
-                'room_type': m.room.room_type,
-                'content': m.content,
-                'sender_name': m.sender.display_name if m.sender else 'System',
-                'created_at': m.created_at.isoformat()
-            })
-            
-        emit('search_results', {'results': results})
+        # Global search removed per user request
 
     @socketio.on('toggle_lock')
     def handle_toggle_lock(data):
@@ -1214,17 +1142,34 @@ TEACHING GROUP RULES (this is a teaching session on "{teaching_topic}"):
 - Stay in teaching mode — helpful, educational, on-topic.
 """
 
-        system_prompt = f"""You are posting in a group chat on behalf of {admin_name}. Write your reply exactly as {admin_name} would — casual, direct, human. The student won't know an AI wrote this unless you give it away, so don't.
+        system_prompt = f"""You are posting a reply in a group chat on behalf of {admin_name}. Write exactly as {admin_name} would — casual, direct, human.
 
 STRICT RULES:
-- Write as {admin_name}. First person = {admin_name}. No "As {admin_name} says..." or "According to {admin_name}..."
-- Max 2 sentences. Cut anything that isn't essential.
-- If you can helpfully advise the student, do it in one sentence.
-- If you genuinely don't know, say: "I'll get back to you on that one" — nothing more.
+- Write as {admin_name}. First person = {admin_name}. No "As {admin_name} says..." wording.
+- Max 2 sentences. Cut anything non-essential.
+- If you can helpfully advise the student, do so in one sentence.
+- If you don't know, say: "I'll get back to you on that one" — nothing more.
 - Do NOT invent deadlines, policies, or grades.
-- Match the tone of the group — keep it real.
+- Match the group tone — keep it real.
 {topic_rules}
-IMPORTANT: If the question is something you truly cannot answer (needs admin's real input — like grades, schedule changes, personal matters, or course-specific details you don't have), add [NEED_ADMIN] at the very end of your reply. This will silently notify the admin. Do NOT use this for simple questions you can handle.
+
+QUESTION DETECTION — CRITICAL:
+Before responding, decide: is this actually a QUESTION that requires information?
+
+NOT a question (respond naturally, do NOT add [NEED_ADMIN]):
+- Greetings: "hi", "hello", "good morning"
+- Acknowledgements: "thanks", "ok", "got it", "understood", "cool"
+- Reactions: "lol", "😂", "wow"
+- Compliments: "great lesson", "this is helpful"
+
+IS a question (substantive information needed):
+- Asking about dates, deadlines, venues: "when is the exam?", "where is the class?"
+- Asking about grades or results: "when are results out?"
+- Asking about assignment requirements or submission
+- Technical questions about course content: "what does X mean?"
+- Administrative questions: "do we need to register?"
+
+Only add [NEED_ADMIN] at the VERY END if: (1) it is a real question AND (2) you truly cannot answer it with the context you have. Do NOT use it for casual chat.
 
 GROUP: {room.name}
 RECENT CONTEXT:
@@ -1641,6 +1586,24 @@ Format: [CREATE_PERM_GROUP:GroupName]
 
         for target_group, broadcast_message in broadcasts:
             try:
+                # --- Deduplication: skip if same message sent recently (within 10 min) ---
+                from datetime import timedelta
+                cutoff = datetime.utcnow() - timedelta(minutes=10)
+                recent_broadcasts = ChatMessage.query.filter(
+                    ChatMessage.room_id == target_group.id,
+                    ChatMessage.message_type == 'broadcast',
+                    ChatMessage.created_at >= cutoff
+                ).all()
+                normalized_new = broadcast_message.strip().lower()
+                already_sent = any(
+                    m.content.replace('\U0001f4e2 ', '').strip().lower() == normalized_new
+                    for m in recent_broadcasts
+                )
+                if already_sent:
+                    print(f"[BROADCAST DEDUP] Skipped duplicate to {target_group.name}: {broadcast_message[:50]}")
+                    broadcast_results.append((target_group.name, True, True))  # (name, ok, duplicate)
+                    continue
+
                 # AI already wrote it in admin's voice per the prompt — just tag it
                 framed_message = f"📢 {broadcast_message}"
 
@@ -1665,12 +1628,12 @@ Format: [CREATE_PERM_GROUP:GroupName]
                     'created_at': broadcast_msg.created_at.isoformat()
                 }, room=f'room_{target_group.id}')
 
-                broadcast_results.append((target_group.name, True))
+                broadcast_results.append((target_group.name, True, False))
                 print(f"[BROADCAST] Sent to {target_group.name}: {broadcast_message[:50]}...")
 
             except Exception as e:
                 print(f"[ERROR] Failed to broadcast to {target_group.name}: {e}")
-                broadcast_results.append((target_group.name, False))
+                broadcast_results.append((target_group.name, False, False))
 
         # Execute CREATE_GROUP commands
         create_group_commands = parse_create_group_command(response)
@@ -1970,11 +1933,14 @@ Format: [CREATE_PERM_GROUP:GroupName]
                 f'📖 Course "{cname}" ({ccode}) has been successfully registered.'
             )
 
-        # Warn about failed broadcasts
+        # Warn about failed broadcasts and note duplicates
         if broadcast_results:
-            failed_groups = [name for name, success in broadcast_results if not success]
+            failed_groups = [name for name, success, *_ in broadcast_results if not success]
+            dup_groups = [name for name, success, *rest in broadcast_results if success and rest and rest[0]]
             if failed_groups:
                 display_response += f"\n\n⚠️ Failed to send to: {', '.join(failed_groups)}"
+            if dup_groups:
+                display_response += f"\n\n⚠️ Skipped duplicate message to: {', '.join(dup_groups)} (already sent in the last 10 minutes)"
 
         # Append stats summary for deleted teaching groups
         if deleted_group_stats:

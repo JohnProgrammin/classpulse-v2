@@ -124,76 +124,7 @@
             color: #fbbf24;
         }
 
-        /* Emoji picker popup */
-        .emoji-picker {
-            position: fixed;
-            z-index: 60;
-            background: #1e1e1e;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 10px;
-            width: 260px;
-            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
-            display: none;
-        }
-
-        .emoji-picker.active {
-            display: block;
-        }
-
-        .emoji-picker .emoji-grid {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 2px;
-        }
-
-        .emoji-picker .emoji-btn {
-            background: none;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-            line-height: 1.2;
-            text-align: center;
-            transition: background 0.12s;
-        }
-
-        .emoji-picker .emoji-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        /* Reaction badges */
-        .reaction-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-top: 4px;
-        }
-
-        .reaction-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 14px;
-            padding: 2px 7px;
-            cursor: pointer;
-            font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.75);
-            transition: background 0.15s, border-color 0.15s;
-            user-select: none;
-        }
-
-        .reaction-badge:hover {
-            background: rgba(255, 255, 255, 0.14);
-        }
-
-        .reaction-badge.own {
-            border-color: #0066FF;
-            background: rgba(0, 102, 255, 0.15);
-        }
+        /* Emoji system removed */
 
         /* Unread badge */
         .unread-badge {
@@ -495,13 +426,96 @@
             60%,
             100% {
                 transform: translateY(0);
-                opacity: 0.5;
+                opacity: 0.4;
             }
 
             30% {
-                transform: translateY(-5px);
+                transform: translateY(-8px) scale(1.1);
                 opacity: 1;
             }
+        }
+
+        /* Sound System Styles (Invisible) */
+        #audio-elements {
+            display: none;
+        }
+
+        /* ===================== SKELETON UI ===================== */
+        @keyframes shimmer {
+            0% {
+                background-position: -400px 0;
+            }
+
+            100% {
+                background-position: 400px 0;
+            }
+        }
+
+        .skeleton-msg {
+            display: flex;
+            gap: 10px;
+            padding: 4px 0;
+            animation: popIn 0.3s ease-out both;
+        }
+
+        .skeleton-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.06) 75%);
+            background-size: 400px 100%;
+            animation: shimmer 1.4s infinite linear;
+        }
+
+        .skeleton-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .skeleton-line {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.06) 75%);
+            background-size: 400px 100%;
+            animation: shimmer 1.4s infinite linear;
+        }
+
+        .skeleton-line.short {
+            width: 55%;
+        }
+
+        .skeleton-line.medium {
+            width: 78%;
+        }
+
+        .skeleton-line.long {
+            width: 92%;
+        }
+
+        .skeleton-line.name {
+            height: 10px;
+            width: 30%;
+            margin-bottom: 2px;
+        }
+
+        /* Message pop-in animation */
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .message-enter {
+            animation: popIn 0.25s ease-out both;
         }
     </style>
 </head>
@@ -534,12 +548,10 @@
                 {% endif %}
                 <div>
                     <p class="text-white/90 text-sm font-medium">{{ user.display_name or user.username }}</p>
-                    {% if user.is_admin() %}
-                    <span class="text-blue text-[10px] font-bold uppercase tracking-wider">Admin</span>
-                    {% elif user.is_lecturer() %}
+                    {% if user.is_staff() %}
                     <span class="text-green-400 text-[10px] font-bold uppercase tracking-wider">Lecturer</span>
                     {% else %}
-                    <span class="text-white/40 text-[10px] font-bold uppercase tracking-wider">Student</span>
+                    <span class="text-white/40 text-[10px] font-bold uppercase tracking-wider">Member</span>
                     {% endif %}
                 </div>
             </a>
@@ -558,31 +570,27 @@
                 <i data-lucide="book-open" class="w-4 h-4"></i>
                 <span>Register Course</span>
             </button>
-            {% endif %}
             <button onclick="openAiDm()"
                 class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
                 <i data-lucide="bot" class="w-4 h-4"></i>
                 <span>Chat with AI</span>
             </button>
+            {% endif %}
             <button onclick="showJoinGroup()"
                 class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
                 <i data-lucide="user-plus" class="w-4 h-4"></i>
                 <span>Join Group</span>
             </button>
+            {% if not user.is_lecturer() %}
+            <button onclick="playSound('click'); showUpgradeLecturer()"
+                class="w-full py-2 px-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 text-white/60 hover:text-white">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                <span>Staff Access</span>
+            </button>
+            {% endif %}
         </div>
 
-        <!-- Search Bar -->
-        <div class="px-4 py-3 border-b border-white/10">
-            <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40"></i>
-                <input type="text" id="globalSearchInput" placeholder="Search messages..."
-                    class="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-blue transition-colors">
-                <button id="clearSearchBtn"
-                    class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-        </div>
+        <!-- Search Bar Removed -->
 
         <!-- Room List -->
         <div id="roomSidebarContent" class="flex-1 overflow-y-auto p-2">
@@ -627,13 +635,7 @@
             </div>
         </div>
 
-        <!-- Search Results -->
-        <div id="searchResults" class="hidden flex-1 overflow-y-auto p-2 bg-black/20">
-            <p class="text-[10px] uppercase tracking-wider text-white/30 px-3 py-2 mb-1 font-bold">Search Results</p>
-            <div id="searchResultsList" class="space-y-1">
-                <!-- Results go here -->
-            </div>
-        </div>
+        <!-- Search Results Removed -->
     </div>
 
     <!-- Main Chat Area -->
@@ -794,9 +796,40 @@
         </button>
     </div>
 
-    <!-- Emoji Picker -->
-    <div id="emojiPicker" class="emoji-picker">
-        <div class="emoji-grid" id="emojiGrid"></div>
+    <!-- Emoji Picker Removed -->
+
+    <!-- Upgrade to Lecturer Modal -->
+    <div id="upgradeLecturerModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50"
+        style="backdrop-filter:blur(4px);">
+        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm">
+            <div class="flex items-center gap-3 mb-5">
+                <div
+                    style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#0066FF,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Staff Access</h3>
+                    <p class="text-white/60 text-sm mb-6">Enter your secret staff code to unlock advanced features.</p>
+                </div>
+            </div>
+            <div style="margin-bottom:16px;">
+                <input type="text" id="lecturerCodeInput" placeholder="e.g. CP-LECTURER-2026"
+                    style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:white;font-size:14px;outline:none;letter-spacing:1px;"
+                    onfocus="this.style.borderColor='#0066FF'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <p id="lecturerCodeError" style="color:#f87171;font-size:12px;margin-top:8px;display:none;"></p>
+            </div>
+            <button onclick="playSound('click'); submitLecturerUpgrade()"
+                class="w-full py-3 bg-blue hover:bg-blue-dark rounded-xl font-bold transition-all transform active:scale-[0.98] shadow-lg shadow-blue/20">
+                Unlock Access
+            </button>
+            <button onclick="playSound('click'); closeUpgradeLecturer()"
+                class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-colors text-white/40 hover:text-white mt-2">
+                Cancel
+            </button>
+        </div>
     </div>
 
     <!-- Create Group Modal -->
@@ -998,19 +1031,16 @@
             if (window.innerWidth < 1024 && !currentRoom) {
                 toggleSidebar();
             }
-
-            // Persistence: Re-select last active room
-            const savedRoomId = localStorage.getItem('cp_current_room');
-            if (savedRoomId) {
-                setTimeout(() => {
-                    selectRoom(parseInt(savedRoomId));
-                }, 100);
-            }
         });
 
         function setupSocketEvents() {
             socket.on('authenticated', (data) => {
                 console.log('Authenticated:', data);
+                // Persistence: Re-select last active room once authenticated
+                const savedRoomId = localStorage.getItem('cp_current_room');
+                if (savedRoomId && !currentRoom) {
+                    selectRoom(parseInt(savedRoomId));
+                }
             });
 
             socket.on('error', (data) => {
@@ -1048,19 +1078,45 @@
                 }
             });
 
-            socket.on('new_message', (data) => {
-                if (data.room_id === currentRoom?.id) {
-                    if (!getHiddenMessages().includes(data.id)) {
-                        appendMessage(data);
-                        // Mark as read if we are in the room
-                        if (data.sender_id !== currentUser.id) {
-                            socket.emit('mark_read', { user_id: currentUser.id, room_id: currentRoom.id });
+            socket.on('new_message', (msg) => {
+                if (msg.room_id === currentRoom?.id) {
+                    // Check if this is a response to a message we just sent locally
+                    if (msg.client_id) {
+                        const tempEl = document.querySelector(`[data-message-id="${msg.client_id}"]`);
+                        if (tempEl) {
+                            // Update the temporary message element with real data
+                            tempEl.setAttribute('data-message-id', msg.id);
+
+                            // Update status ticks
+                            const statusContainer = tempEl.querySelector('.message-time').parentNode;
+                            const ticksEl = statusContainer.querySelector('div[title="Sending..."]');
+                            if (ticksEl) {
+                                ticksEl.outerHTML = renderStatusTicks('sent');
+                            }
+
+                            // Update any other attributes if needed
+                            lucide.createIcons();
+                            return; // Don't append a duplicate
                         }
                     }
-                } else {
+                    appendMessage(msg);
+                }
+
+                // Play sound if not own message
+                if (msg.sender_id !== currentUser.id) {
+                    playSound('receive');
+                }
+
+                const roomBtn = document.querySelector(`[data-room-id="${msg.room_id}"]`);
+                if (msg.room_id !== currentRoom?.id) {
                     // Increment unread count for other rooms
-                    unreadCounts[data.room_id] = (unreadCounts[data.room_id] || 0) + 1;
-                    updateUnreadBadge(data.room_id);
+                    unreadCounts[msg.room_id] = (unreadCounts[msg.room_id] || 0) + 1;
+                    updateUnreadBadge(msg.room_id);
+                } else {
+                    // Mark as read if we are in the room and it's not our own message
+                    if (msg.sender_id !== currentUser.id) {
+                        socket.emit('mark_read', { user_id: currentUser.id, room_id: currentRoom.id });
+                    }
                 }
             });
 
@@ -1132,12 +1188,7 @@
                 }
             });
 
-            socket.on('reaction_update', (data) => {
-                const row = document.querySelector(`[data-reactions="${data.message_id}"]`);
-                if (row) {
-                    row.innerHTML = renderReactions(data.reactions, data.message_id);
-                }
-            });
+            // Reaction update removed
 
             socket.on('teaching_stats', (data) => {
                 const statsEl = document.getElementById('teachingStatsContent');
@@ -1174,9 +1225,7 @@
                 }
             });
 
-            socket.on('search_results', (data) => {
-                displaySearchResults(data.results);
-            });
+            // Search results removed
 
             socket.on('presence_update', (data) => {
                 if (data.status === 'online') {
@@ -1235,77 +1284,9 @@
             }
         }
 
-        function setupSearchHandlers() {
-            const searchInput = document.getElementById('globalSearchInput');
-            const clearBtn = document.getElementById('clearSearchBtn');
-            const roomContent = document.getElementById('roomSidebarContent');
-            const searchResults = document.getElementById('searchResults');
-            let searchTimeout;
+        // Search handlers removed
 
-            searchInput.addEventListener('input', (e) => {
-                const query = e.target.value.trim();
-
-                if (query.length > 0) {
-                    clearBtn.classList.remove('hidden');
-                } else {
-                    clearBtn.classList.add('hidden');
-                    searchResults.classList.add('hidden');
-                    roomContent.classList.remove('hidden');
-                    return;
-                }
-
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    if (query.length >= 2) {
-                        socket.emit('search_messages', { user_id: currentUser.id, query: query });
-                    }
-                }, 300);
-            });
-
-            clearBtn.addEventListener('click', () => {
-                searchInput.value = '';
-                clearBtn.classList.add('hidden');
-                searchResults.classList.add('hidden');
-                roomContent.classList.remove('hidden');
-            });
-        }
-
-        function displaySearchResults(results) {
-            const list = document.getElementById('searchResultsList');
-            const roomContent = document.getElementById('roomSidebarContent');
-            const searchResults = document.getElementById('searchResults');
-
-            list.innerHTML = '';
-            roomContent.classList.add('hidden');
-            searchResults.classList.remove('hidden');
-
-            if (results.length === 0) {
-                list.innerHTML = `<div class="p-4 text-center text-white/40 text-sm">No results found</div>`;
-                return;
-            }
-
-            results.forEach(res => {
-                const btn = document.createElement('button');
-                btn.className = 'w-full p-3 rounded-lg text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-0';
-                btn.onclick = () => {
-                    selectRoom(res.room_id);
-                    // On mobile, we might want to scroll to that message specifically?
-                    // For now, just opening the room is a huge win.
-                };
-
-                btn.innerHTML = `
-                    <div class="flex flex-col">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-[10px] text-blue font-bold truncate max-w-[120px]">${escapeHtml(res.room_name)}</span>
-                            <span class="text-[10px] text-white/30">${formatTime(res.created_at)}</span>
-                        </div>
-                        <span class="text-xs font-semibold text-white/70 mb-0.5">${escapeHtml(res.sender_name)}</span>
-                        <p class="text-xs text-white/50 line-clamp-2">${escapeHtml(res.content)}</p>
-                    </div>
-                `;
-                list.appendChild(btn);
-            });
-        }
+        // Search display removed
 
         function setupFormHandlers() {
             // Message form
@@ -1318,6 +1299,9 @@
                 stopTyping();
 
                 if (content && currentRoom) {
+                    const tempId = 'temp-' + Date.now();
+                    playSound('send');
+
                     if (editingMessage) {
                         // Edit mode
                         socket.emit('edit_message', {
@@ -1328,19 +1312,49 @@
                         cancelEdit();
                     } else if (replyingTo) {
                         // Reply mode
+                        const tempMsg = {
+                            id: tempId,
+                            sender_id: currentUser.id,
+                            sender_name: currentUser.display_name,
+                            sender_pic: currentUser.profile_pic,
+                            content: content,
+                            message_type: 'text',
+                            created_at: new Date().toISOString(),
+                            status: 'sending',
+                            reply_to: {
+                                sender_name: replyingTo.sender_name,
+                                content: replyingTo.content
+                            }
+                        };
+                        appendMessage(tempMsg);
+
                         socket.emit('send_reply', {
                             user_id: currentUser.id,
                             room_id: currentRoom.id,
                             content: content,
-                            reply_to_id: replyingTo.id
+                            reply_to_id: replyingTo.id,
+                            client_id: tempId
                         });
                         cancelReply();
                     } else {
                         // Normal send
+                        const tempMsg = {
+                            id: tempId,
+                            sender_id: currentUser.id,
+                            sender_name: currentUser.display_name,
+                            sender_pic: currentUser.profile_pic,
+                            content: content,
+                            message_type: 'text',
+                            created_at: new Date().toISOString(),
+                            status: 'sending'
+                        };
+                        appendMessage(tempMsg);
+
                         socket.emit('send_message', {
                             user_id: currentUser.id,
                             room_id: currentRoom.id,
-                            content: content
+                            content: content,
+                            client_id: tempId
                         });
                     }
                     input.value = '';
@@ -1480,12 +1494,40 @@
             }
 
             // Join room via socket (FETCHES HISTORY)
+            showSkeletons();
             socket.emit('join_room', { user_id: currentUser.id, room_id: roomId });
 
             // Mark as read immediately on entering
             socket.emit('mark_read', { user_id: currentUser.id, room_id: roomId });
 
             showChatView(name, subtitle, roomType);
+        }
+
+        function showSkeletons() {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = `
+                <div class="skeleton-msg">
+                    <div class="skeleton-avatar"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line name"></div>
+                        <div class="skeleton-line medium"></div>
+                    </div>
+                </div>
+                <div class="skeleton-msg">
+                    <div class="skeleton-avatar"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line name"></div>
+                        <div class="skeleton-line long"></div>
+                    </div>
+                </div>
+                <div class="skeleton-msg">
+                    <div class="skeleton-avatar"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line name"></div>
+                        <div class="skeleton-line short"></div>
+                    </div>
+                </div>
+            `;
         }
 
         function showChatView(title, subtitle, roomType) {
@@ -1606,15 +1648,11 @@
                                 </div>
                             </div>
                             <div class="message-actions flex items-center gap-1 mb-2">
-                                <button onclick="openEmojiPicker(event, ${msg.id})" class="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white transition-colors">
-                                    <span style="font-size:1rem;line-height:1.5;">😊</span>
-                                </button>
                                 <button onclick="showContextMenu(event, ${msg.id})" class="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white transition-colors">
                                     <i data-lucide="more-vertical" class="w-4 h-4"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="reaction-row" data-reactions="${msg.id}">${renderReactions(msg.reactions || [], msg.id)}</div>
                     </div>
                 `;
             }
@@ -1630,7 +1668,13 @@
         }
 
         function renderStatusTicks(status) {
-            if (status === 'read') {
+            if (status === 'sending') {
+                return `
+                    <div class="ml-1" title="Sending...">
+                        <i data-lucide="clock" class="w-3 h-3 text-white/40 animate-pulse"></i>
+                    </div>
+                `;
+            } else if (status === 'read') {
                 return `
                     <div class="flex items-center -space-x-2 ml-1" title="Read">
                         <i data-lucide="check" class="w-3 h-3 text-blue-400"></i>
@@ -1653,92 +1697,17 @@
             }
         }
 
-        // ————— Emoji Reactions —————
-        const EMOJIS = [
-            '😀', '😊', '😂', '🤣', '😍', '🥰', '😘', '😎', '🤔', '🙄',
-            '😤', '😠', '😢', '😭', '🤩', '😃', '😏', '😑', '🤤', '😴',
-            '👍', '👎', '✊', '👏', '🙌', '👐', '🤝', '💪', '🙏', '👀',
-            '❤️', '💕', '💗', '💖', '💯', '🔥', '💢', '💥', '⭐', '🌟',
-            '✨', '🎉', '🎊', '👑', '🎯', '🚀', '😈', '💀', '🤖', '👻'
-        ];
-        let emojiPickerTarget = null;
-
-        (function initEmojiPicker() {
-            const grid = document.getElementById('emojiGrid');
-            EMOJIS.forEach(e => {
-                const btn = document.createElement('button');
-                btn.className = 'emoji-btn';
-                btn.textContent = e;
-                btn.onclick = (ev) => { ev.stopPropagation(); pickEmoji(e); };
-                grid.appendChild(btn);
-            });
-        })();
-
-        function openEmojiPicker(event, messageId) {
-            event.preventDefault();
-            event.stopPropagation();
-            emojiPickerTarget = messageId;
-
-            const picker = document.getElementById('emojiPicker');
-            const rect = event.target.getBoundingClientRect();
-
-            let top = rect.bottom + 4;
-            let left = rect.left - 100;
-
-            // Keep within viewport
-            if (top + 220 > window.innerHeight) top = rect.top - 224;
-            if (left < 8) left = 8;
-            if (left + 260 > window.innerWidth) left = window.innerWidth - 268;
-
-            picker.style.top = top + 'px';
-            picker.style.left = left + 'px';
-            picker.classList.add('active');
-
-            // Close context menu if open
-            document.getElementById('contextMenu').classList.add('hidden');
-        }
-
-        function closeEmojiPicker() {
-            document.getElementById('emojiPicker').classList.remove('active');
-            emojiPickerTarget = null;
-        }
-
-        function pickEmoji(emoji) {
-            if (emojiPickerTarget == null) return;
-            socket.emit('toggle_reaction', {
-                message_id: emojiPickerTarget,
-                user_id: currentUser.id,
-                emoji: emoji
-            });
-            closeEmojiPicker();
-        }
-
-        function renderReactions(reactions, messageId) {
-            if (!reactions || !reactions.length) return '';
-            return reactions.map(r => {
-                const isOwn = r.user_ids && r.user_ids.includes(currentUser.id);
-                return `<span class="reaction-badge${isOwn ? ' own' : ''}" onclick="toggleReactionBadge(event, ${messageId}, '${r.emoji}')">${r.emoji} <span>${r.count}</span></span>`;
-            }).join('');
-        }
-
-        function toggleReactionBadge(event, messageId, emoji) {
-            event.stopPropagation();
-            socket.emit('toggle_reaction', {
-                message_id: messageId,
-                user_id: currentUser.id,
-                emoji: emoji
-            });
-        }
+        // Emoji system removed
 
         // ————— Group Lock UI —————
         function updateLockUI() {
-            const isAdmin = currentUser.role === 'admin';
+            const isStaff = currentUser.role === 'admin' || currentUser.role === 'lecturer';
             const locked = currentRoom?.locked;
             const banner = document.getElementById('lockBanner');
             const input = document.getElementById('messageInput');
             const sendBtn = document.querySelector('#messageForm button[type="submit"]');
 
-            if (locked && !isAdmin) {
+            if (locked && !isStaff) {
                 banner.classList.remove('hidden');
                 input.disabled = true;
                 input.placeholder = 'Group is locked...';
@@ -2054,6 +2023,50 @@
             socket.emit('start_ai_dm', { user_id: currentUser.id });
         }
 
+        // --- Lecturer Upgrade Functions ---
+        function showUpgradeLecturer() {
+            document.getElementById('upgradeLecturerModal').classList.remove('hidden');
+            document.getElementById('lecturerCodeInput').focus();
+        }
+
+        function closeUpgradeLecturer() {
+            document.getElementById('upgradeLecturerModal').classList.add('hidden');
+            document.getElementById('lecturerCodeInput').value = '';
+            document.getElementById('lecturerCodeError').style.display = 'none';
+        }
+
+        async function submitLecturerUpgrade() {
+            const codeInput = document.getElementById('lecturerCodeInput');
+            const errorEl = document.getElementById('lecturerCodeError');
+            const code = codeInput.value.trim();
+
+            if (!code) {
+                errorEl.textContent = 'Please enter a code';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/chat/upgrade-lecturer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ secret_code: code })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // Success! Refresh the page to show new lecturer features
+                    location.reload();
+                } else {
+                    errorEl.textContent = data.message || 'Invalid code';
+                    errorEl.style.display = 'block';
+                }
+            } catch (err) {
+                errorEl.textContent = 'An error occurred. Please try again.';
+                errorEl.style.display = 'block';
+            }
+        }
+
         // Modal functions
         function showCreateGroup() {
             document.getElementById('createGroupModal').classList.remove('hidden');
@@ -2084,8 +2097,8 @@
 
         function showRoomInfo() {
             if (!currentRoom) return;
-            const isAdmin = currentUser.role === 'admin';
-            const lockToggleHtml = (isAdmin && currentRoom.room_type === 'group') ? `
+            const isStaff = currentUser.role === 'admin' || currentUser.role === 'lecturer';
+            const lockToggleHtml = (isStaff && currentRoom.room_type === 'group') ? `
                 <div class="flex items-center justify-between pt-2 border-t border-white/10">
                     <p class="text-white/60 text-sm">Lock Group</p>
                     <button id="lockToggleBtn" onclick="toggleGroupLock()"
@@ -2406,6 +2419,70 @@
             `;
         }
 
+
+        // --- Sound System (Web Audio API) ---
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        async function playSound(type) {
+            initAudio();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'send') {
+                // Short, snappy high pop
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'receive') {
+                // Lower, softer double-pop
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.08);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(350, now + 0.1);
+                osc2.frequency.exponentialRampToValueAtTime(250, now + 0.18);
+                gain2.gain.setValueAtTime(0.06, now + 0.1);
+                gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                osc2.start(now + 0.1);
+                osc2.stop(now + 0.18);
+            } else if (type === 'click') {
+                // Very short tick
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                gain.gain.setValueAtTime(0.02, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+                osc.start(now);
+                osc.stop(now + 0.03);
+            }
+        }
+
+        // Initialize audio on first user interaction
+        ['click', 'keydown', 'touchstart'].forEach(evt => {
+            window.addEventListener(evt, initAudio, { once: true });
+        });
 
         // Utilities
         function escapeHtml(text) {

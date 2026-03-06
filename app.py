@@ -127,6 +127,10 @@ def chat_register():
             flash('Username must be at least 3 characters', 'error')
             return render_template('chat_register.html')
 
+        if len(password) < 6:
+            flash('Password must be at least 6 characters', 'error')
+            return render_template('chat_register.html')
+
         if ChatUser.query.filter_by(username=username).first():
             flash('Username already taken', 'error')
             return render_template('chat_register.html')
@@ -135,22 +139,18 @@ def chat_register():
             flash('Email already registered', 'error')
             return render_template('chat_register.html')
 
-        # Capture role from form
-        role = request.form.get('role', 'student').lower()
-        if role not in ['student', 'lecturer']:
-            role = 'student'
-
+        # All users start as plain 'user' — role is upgraded separately via secret code
         user = ChatUser(
             username=username,
             email=email,
             display_name=display_name or username,
-            role=role
+            role='user'
         )
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
 
-        flash('Registration successful! Please login.', 'success')
+        flash('Account created! Please sign in.', 'success')
         return redirect(url_for('chat_login'))
 
     return render_template('chat_register.html')
@@ -291,28 +291,35 @@ def get_chat_rooms():
     return jsonify({'rooms': rooms})
 
 
-    return jsonify({'success': True, 'message': f'{user.username} is now an admin'})
+# Removed /api/chat/upgrade-admin per user request (consolidated to Lecturer)
 
 
-@app.route('/api/chat/upgrade-admin', methods=['POST'])
-def upgrade_admin():
-    """Upgrade user to admin using a code"""
+@app.route('/api/chat/upgrade-lecturer', methods=['POST'])
+def upgrade_lecturer():
+    """Upgrade a plain user account to lecturer role using a secret code"""
+    from config import Config
     if 'chat_user_id' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
 
-    data = request.get_json()
-    code = data.get('admin_code', '')
+    data = request.get_json() or {}
+    # Accept both client-side 'secret_code' and 'lecturer_code' for compatibility
+    code = (data.get('secret_code') or data.get('lecturer_code') or '').strip()
 
-    if code == 'CP-ADMIN-2026':
-        user = ChatUser.query.get(session['chat_user_id'])
-        if user:
-            user.role = 'admin'
-            db.session.commit()
-            session['chat_role'] = 'admin'
-            return jsonify({'success': True, 'message': 'Account upgraded to admin'})
-        return jsonify({'error': 'User not found'}), 404
-    else:
-        return jsonify({'error': 'Invalid admin code'}), 400
+    user = ChatUser.query.get(session['chat_user_id'])
+    if not user:
+        session.clear()
+        return jsonify({'status': 'error', 'message': 'User not found'}), 404
+
+    if user.role in ['lecturer', 'admin']:
+        return jsonify({'status': 'success', 'message': 'Already a lecturer or admin'})
+
+    if code == Config.LECTURER_SECRET_CODE:
+        user.role = 'lecturer'
+        db.session.commit()
+        session['chat_role'] = 'lecturer'
+        return jsonify({'status': 'success', 'message': 'Access granted! You now have lecturer privileges.'})
+
+    return jsonify({'status': 'error', 'message': 'Invalid access code. Please contact your administrator.'}), 400
 
 
 @app.route('/api/chat/delete-account', methods=['POST'])

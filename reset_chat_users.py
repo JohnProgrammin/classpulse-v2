@@ -8,14 +8,14 @@ Preserves: Lecturers, Courses, FAQs, Messages (WhatsApp side).
 from app import app, db
 from models import (
     ChatUser, ChatRoom, ChatMember, ChatMessage,
-    MessageReaction, MessageReadReceipt, AIDocument, TeachingSession
+    MessageReadReceipt, AIDocument, TeachingSession
 )
 
 with app.app_context():
     print("[*] Starting database reset for web-chat users...")
 
     # Order matters: delete children before parents to avoid FK violations
-    deleted_reactions   = MessageReaction.query.delete()
+    # deleted_reactions   = MessageReaction.query.delete()
     deleted_receipts    = MessageReadReceipt.query.delete()
     deleted_teaching    = TeachingSession.query.delete()
     deleted_messages    = ChatMessage.query.delete()

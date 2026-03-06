@@ -4,149 +4,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - ClassPulse Chat</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        blue: {
-                            DEFAULT: '#0066FF',
-                            dark: '#0052CC',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
+    <title>Create Account - ClassPulse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
         * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             font-family: 'Inter', sans-serif;
         }
 
         body {
-            background: #000000;
-            color: #FFFFFF;
+            min-height: 100vh;
+            background: #000;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient glow background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -30%;
+            left: -20%;
+            width: 70%;
+            height: 70%;
+            background: radial-gradient(ellipse, rgba(0, 102, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -30%;
+            right: -20%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(ellipse, rgba(120, 60, 255, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 440px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Logo area */
+        .logo-area {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #0066FF, #7c3aed);
+            border-radius: 14px;
+            margin-bottom: 16px;
+            font-size: 22px;
+            box-shadow: 0 8px 24px rgba(0, 102, 255, 0.3);
+        }
+
+        .logo-area h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .logo-area p {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        /* Flash messages */
+        .flash-messages {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .flash {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            border: 1px solid transparent;
+        }
+
+        .flash.success {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+        }
+
+        .flash.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .flash-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        /* Card */
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 20px;
+            padding: 32px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+            letter-spacing: 0.2px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 11px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            border-color: #0066FF;
+            background: rgba(0, 102, 255, 0.06);
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Password eye toggle */
+        .eye-btn {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.35);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.15s;
+        }
+
+        .eye-btn:hover {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        input[type="password"].has-toggle,
+        input[type="text"].has-toggle {
+            padding-right: 44px;
+        }
+
+        /* Submit */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #0066FF, #0052cc);
+            border: none;
+            border-radius: 11px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.2px;
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(0, 102, 255, 0.3);
+            margin-top: 6px;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.93;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* Footer links */
+        .footer-link {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 13.5px;
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .footer-link a {
+            color: #4d94ff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            margin: 20px 0;
         }
     </style>
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
-        <!-- Logo -->
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold">Join ClassPulse Chat</h1>
-            <p class="text-white/60 mt-2">Create an account to start chatting</p>
+<body>
+    <div class="wrapper">
+        <div class="logo-area">
+            <div class="logo-icon">⚡</div>
+            <h1>Create your account</h1>
+            <p>Join ClassPulse — it only takes a moment</p>
         </div>
 
-        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="mb-6 space-y-2">
+        <div class="flash-messages">
             {% for category, message in messages %}
-            <div class="bg-white/5 border border-white/10 px-4 py-3 rounded-lg flex items-center space-x-3">
-                {% if category == 'success' %}
-                <i data-lucide="check-circle" class="w-5 h-5 text-green-500"></i>
-                {% else %}
-                <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
-                {% endif %}
-                <p class="text-sm">{{ message }}</p>
+            <div class="flash {{ category }}">
+                <span class="flash-icon">{{ '✓' if category == 'success' else '!' }}</span>
+                {{ message }}
             </div>
             {% endfor %}
         </div>
         {% endif %}
         {% endwith %}
 
-        <!-- Register Form -->
-        <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
-            <form method="POST" class="space-y-5">
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Username</label>
-                    <input type="text" name="username" required minlength="3"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue transition-colors"
-                        placeholder="Choose a username">
+        <div class="card">
+            <form method="POST" autocomplete="on">
+                <div class="form-group">
+                    <label for="display_name">Display Name</label>
+                    <input type="text" id="display_name" name="display_name" placeholder="Your full name"
+                        autocomplete="name">
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Email</label>
-                    <input type="email" name="email" required
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue transition-colors"
-                        placeholder="your@email.com">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required minlength="3"
+                        placeholder="Lowercase, no spaces" autocomplete="username">
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Display Name</label>
-                    <input type="text" name="display_name"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue transition-colors"
-                        placeholder="How others will see you (optional)">
+                <div class="form-group">
+                    <label for="email">Email address</label>
+                    <input type="email" id="email" name="email" required placeholder="you@university.edu"
+                        autocomplete="email">
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">I am a...</label>
-                    <select name="role" required
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue transition-colors appearance-none cursor-pointer">
-                        <option value="student" class="bg-zinc-900">Student</option>
-                        <option value="lecturer" class="bg-zinc-900">Lecturer</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Password</label>
-                    <div class="relative">
-                        <input type="password" name="password" id="passwordInput" required minlength="6"
-                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue transition-colors pr-12"
-                            placeholder="At least 6 characters">
-                        <button type="button" onclick="togglePasswordVisibility('passwordInput', 'eyeIcon')"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors focus:outline-none">
-                            <i data-lucide="eye" id="eyeIcon" class="w-5 h-5"></i>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <input type="password" id="password" name="password" required minlength="6" class="has-toggle"
+                            placeholder="At least 6 characters" autocomplete="new-password">
+                        <button type="button" class="eye-btn" onclick="togglePw('password','eye1')"
+                            aria-label="Show password">
+                            <svg id="eye1" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
                         </button>
                     </div>
                 </div>
-
-                <button type="submit"
-                    class="w-full py-3 bg-blue hover:bg-blue-dark rounded-lg font-medium transition-colors">
-                    Create Account
-                </button>
+                <button type="submit" class="btn-submit">Create Account</button>
             </form>
-
-            <div class="mt-6 text-center">
-                <p class="text-white/60 text-sm">
-                    Already have an account?
-                    <a href="{{ url_for('chat_login') }}" class="text-blue hover:underline">Sign in</a>
-                </p>
-            </div>
         </div>
 
-        <!-- Back to Main -->
-        <div class="mt-6 text-center">
-            <a href="{{ url_for('index') }}" class="text-white/40 hover:text-white text-sm transition-colors">
-                Back to ClassPulse
-            </a>
+        <div class="footer-link">
+            Already have an account? <a href="{{ url_for('chat_login') }}">Sign in</a>
         </div>
     </div>
 
     <script>
-        lucide.createIcons();
-
-        function togglePasswordVisibility(inputId, iconId) {
+        function togglePw(inputId, iconId) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(iconId);
-
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.setAttribute('data-lucide', 'eye-off');
-            } else {
-                input.type = 'password';
-                icon.setAttribute('data-lucide', 'eye');
-            }
-            lucide.createIcons();
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            icon.innerHTML = isHidden
+                ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+                : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
         }
     </script>
 </body>

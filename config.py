@@ -27,3 +27,7 @@ class Config:
     # Token Budget
     DAILY_TOKEN_BUDGET = int(os.environ.get('DAILY_TOKEN_BUDGET', 100000))
     TOKEN_BUDGET_ENABLED = os.environ.get('TOKEN_BUDGET_ENABLED', 'False') == 'True'
+
+    # Role Upgrade Codes
+    LECTURER_SECRET_CODE = os.environ.get('LECTURER_SECRET_CODE', 'CP-LECTURER-2026')
+    ADMIN_SECRET_CODE = os.environ.get('ADMIN_SECRET_CODE', 'CP-ADMIN-2026')

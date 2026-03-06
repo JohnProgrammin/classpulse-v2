@@ -436,6 +436,9 @@ class ChatUser(UserMixin, db.Model):
     def is_lecturer(self):
         return self.role in ['lecturer', 'admin']
 
+    def is_staff(self):
+        return self.role in ['lecturer', 'admin']
+
     def is_student(self):
         return self.role == 'student'
 
@@ -535,25 +538,7 @@ class ChatMessage(db.Model):
         return f'<ChatMessage {self.id} in room {self.room_id}>'
 
 
-class MessageReaction(db.Model):
-    """Emoji reactions on messages"""
-    __tablename__ = 'message_reactions'
-
-    id = db.Column(db.Integer, primary_key=True)
-    message_id = db.Column(db.Integer, db.ForeignKey('chat_messages.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('chat_users.id'), nullable=False)
-    emoji = db.Column(db.String(10), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    __table_args__ = (
-        db.UniqueConstraint('message_id', 'user_id', 'emoji', name='unique_reaction'),
-    )
-
-    message = db.relationship('ChatMessage', backref='reactions')
-    user = db.relationship('ChatUser')
-
-    def __repr__(self):
-        return f'<MessageReaction {self.emoji} on msg {self.message_id}>'
+# MessageReaction removed per user request
 
 
 class AIDocument(db.Model):
