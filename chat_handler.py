@@ -7,7 +7,7 @@ from datetime import datetime
 import secrets
 from flask import request
 from flask_socketio import emit, join_room, leave_room, rooms
-from models import db, ChatUser, ChatRoom, ChatMember, ChatMessage, AIDocument, Course, PendingQuestion
+from models import db, ChatUser, ChatRoom, ChatMember, ChatMessage, AIDocument, Course, PendingQuestion, Assignment, AssignmentSubmission
 
 
 def generate_invite_code():
@@ -1086,6 +1086,194 @@ def register_socket_events(socketio):
             'message_type': 'system',
             'created_at': sys_msg.created_at.isoformat()
         }, room=f'room_{room_id}')
+
+    @socketio.on('get_room_members')
+    def handle_get_room_members(data):
+        """Returns the list of members in a room"""
+        room_id = data.get('room_id')
+        members = ChatMember.query.filter_by(room_id=room_id).all()
+        
+        member_list = []
+        for m in members:
+            u = ChatUser.query.get(m.user_id)
+            if u:
+                member_list.append({
+                    'id': u.id,
+                    'username': u.username,
+                    'display_name': u.display_name or u.username,
+                    'profile_pic': u.profile_pic,
+                    'role': m.role
+                })
+        
+        emit('room_members', {
+            'room_id': room_id,
+            'members': member_list
+        })
+
+    @socketio.on('update_room_avatar')
+    def handle_update_room_avatar(data):
+        """Update room profile picture (Admin only)"""
+        room_id = data.get('room_id')
+        image_data = data.get('image_data') # Base64
+        
+        room = ChatRoom.query.get(room_id)
+        if not room: return
+        
+        # Save image
+        import base64
+        import os
+        filename = f"room_{room_id}_{secrets.token_hex(4)}.jpg"
+        filepath = os.path.join('static', 'uploads', 'avatars', filename)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
+        with open(filepath, "wb") as f:
+            f.write(base64.b64decode(image_data))
+            
+        room.profile_pic = f"uploads/avatars/{filename}"
+        db.session.commit()
+        
+        emit('room_avatar_updated', {
+            'room_id': room_id,
+            'profile_pic': room.profile_pic
+        }, broadcast=True)
+
+    @socketio.on('delete_room')
+    def handle_delete_room(data):
+        """Permanently delete a room (Admin only)"""
+        room_id = data.get('room_id')
+        user_id = data.get('user_id')
+        
+        user = ChatUser.query.get(user_id)
+        room = ChatRoom.query.get(room_id)
+        
+        if not user or not room or not user.is_staff():
+            return
+            
+        # Notify clients before deletion
+        emit('room_removed', {'room_id': room_id}, broadcast=True)
+        
+        db.session.delete(room)
+        db.session.commit()
+
+    @socketio.on('create_assignment')
+    def handle_create_assignment(data):
+        """Lecturer creates a new assignment"""
+        user_id = data.get('user_id')
+        room_id = data.get('room_id')
+        title = data.get('title')
+        description = data.get('description')
+        due_date_str = data.get('due_date') # e.g. "2026-03-10T14:30"
+        
+        user = ChatUser.query.get(user_id)
+        room = ChatRoom.query.get(room_id)
+        
+        if not user or not room or not user.is_staff():
+            return
+            
+        due_date = None
+        if due_date_str:
+            from datetime import datetime
+            try:
+                due_date = datetime.fromisoformat(due_date_str)
+            except:
+                pass
+                
+        assignment = Assignment(
+            title=title,
+            description=description,
+            due_date=due_date,
+            room_id=room_id,
+            creator_id=user_id
+        )
+        db.session.add(assignment)
+        db.session.commit()
+        
+        # Notify room
+        emit('assignment_created', {
+            'room_id': room_id,
+            'assignment_id': assignment.id,
+            'title': title
+        }, room=str(room_id))
+        
+        # Also send a system message
+        sys_msg = ChatMessage(
+            room_id=room_id,
+            sender_id=None,
+            content=f"📝 New Assignment: {title}",
+            message_type='system'
+        )
+        db.session.add(sys_msg)
+        db.session.commit()
+        emit('new_message', {
+            'id': sys_msg.id,
+            'room_id': room_id,
+            'content': sys_msg.content,
+            'sender_id': None,
+            'message_type': 'system',
+            'created_at': sys_msg.created_at.isoformat()
+        }, room=str(room_id))
+
+    @socketio.on('get_assignments')
+    def handle_get_assignments(data):
+        """Fetch all assignments for a room"""
+        room_id = data.get('room_id')
+        assignments = Assignment.query.filter_by(room_id=room_id).order_by(Assignment.created_at.desc()).all()
+        
+        emit('assignments_list', {
+            'room_id': room_id,
+            'assignments': [{
+                'id': a.id,
+                'title': a.title,
+                'description': a.description,
+                'due_date': a.due_date.isoformat() if a.due_date else None,
+                'created_at': a.created_at.isoformat()
+            } for a in assignments]
+        })
+
+    @socketio.on('submit_assignment')
+    def handle_submit_assignment(data):
+        """Student submits an assignment"""
+        user_id = data.get('user_id')
+        assignment_id = data.get('assignment_id')
+        content = data.get('content')
+        
+        user = ChatUser.query.get(user_id)
+        assign = Assignment.query.get(assignment_id)
+        
+        if not user or not assign:
+            return
+            
+        submission = AssignmentSubmission(
+            assignment_id=assignment_id,
+            student_id=user_id,
+            content=content
+        )
+        db.session.add(submission)
+        db.session.commit()
+        
+        emit('submission_success', {
+            'assignment_id': assignment_id
+        })
+
+    @socketio.on('get_submissions')
+    def handle_get_submissions(data):
+        """Lecturer fetches all submissions for an assignment"""
+        assignment_id = data.get('assignment_id')
+        submissions = AssignmentSubmission.query.filter_by(assignment_id=assignment_id).order_by(AssignmentSubmission.submitted_at.desc()).all()
+        
+        emit('assignment_submissions_list', {
+            'assignment_id': assignment_id,
+            'submissions': [{
+                'id': s.id,
+                'student_id': s.student_id,
+                'student_name': s.student.display_name or s.student.username,
+                'student_pic': s.student.profile_pic,
+                'content': s.content,
+                'submitted_at': s.submitted_at.isoformat(),
+                'grade': s.grade,
+                'feedback': s.feedback
+            } for s in submissions]
+        })
 
 
 def handle_group_ai_reply(student, room, student_message, original_ai_msg, student_msg_obj, socketio):

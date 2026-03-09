@@ -29,9 +29,10 @@ login_manager.login_view = 'chat_login'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Create database tables
-with app.app_context():
-    db.create_all()
-    print("[OK] Database initialized")
+if not os.environ.get('TESTING'):
+    with app.app_context():
+        db.create_all()
+        print("[OK] Database initialized")
 
 # Register Socket.IO events for chat
 register_socket_events(socketio)
@@ -43,14 +44,17 @@ def scheduled_job_with_context():
     with app.app_context():
         process_teaching_sessions()
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(
-    func=scheduled_job_with_context,
-    trigger="interval",
-    seconds=60
-)
-scheduler.start()
-print("[OK] Scheduler started")
+if not os.environ.get('TESTING'):
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        func=scheduled_job_with_context,
+        trigger="interval",
+        seconds=60
+    )
+    scheduler.start()
+    print("[OK] Scheduler started")
+else:
+    print("[INFO] Testing mode detected: Scheduler disabled")
 
 
 # ==========================================

@@ -466,6 +466,7 @@ class ChatRoom(db.Model):
     # Link to course (optional - for broadcasting)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.id'))
 
+    profile_pic = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True)
     locked = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -596,3 +597,52 @@ class MessageReadReceipt(db.Model):
 
     def __repr__(self):
         return f'<ReadReceipt msg:{self.message_id} user:{self.user_id}>'
+
+
+class Assignment(db.Model):
+    """Assignments posted by lecturers in groups"""
+    __tablename__ = 'assignments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('chat_rooms.id'), nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('chat_users.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    due_date = db.Column(db.DateTime)
+    
+    # Document attached to assignment (optional)
+    document_filename = db.Column(db.String(255))
+    document_path = db.Column(db.String(255))
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    submissions = db.relationship('AssignmentSubmission', backref='assignment', lazy=True, cascade='all, delete-orphan')
+    room = db.relationship('ChatRoom', backref=db.backref('assignments', lazy=True))
+    creator_rel = db.relationship('ChatUser', foreign_keys=[creator_id])
+
+    def __repr__(self):
+        return f'<Assignment {self.title}>'
+
+
+class AssignmentSubmission(db.Model):
+    """Student submissions for assignments"""
+    __tablename__ = 'assignment_submissions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    assignment_id = db.Column(db.Integer, db.ForeignKey('assignments.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('chat_users.id'), nullable=False)
+    
+    # Submission content
+    content = db.Column(db.Text)
+    document_filename = db.Column(db.String(255))
+    document_path = db.Column(db.String(255))
+
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    grade = db.Column(db.String(10))
+    feedback = db.Column(db.Text)
+
+    student = db.relationship('ChatUser', backref=db.backref('submissions', lazy=True))
+
+    def __repr__(self):
+        return f'<Submission for Assignment {self.assignment_id} by Student {self.student_id}>'

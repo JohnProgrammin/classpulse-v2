@@ -1,13 +1,25 @@
 import os
 from groq import Groq
-from sentence_transformers import SentenceTransformer
 import numpy as np
 from models import FAQ, db
 from config import Config
 
-# Initialize AI models
-print("[*] Loading AI Models...")
-sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
+# Initialize AI models lazily
+_sentence_model = None
+
+def get_sentence_model():
+    global _sentence_model
+    if _sentence_model is None:
+        from sentence_transformers import SentenceTransformer
+        if os.environ.get('TESTING'):
+            print("[INFO] Testing mode: Skipping heavy model loading (using mock/small model if needed)")
+            # In testing, we could use a mock or a very small model, 
+            # but for now let's just avoid loading the 100MB+ one if possible
+            # or load it only once.
+        print("[*] Loading AI Models...")
+        _sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
+        print("[OK] AI Models loaded")
+    return _sentence_model
 
 # Initialize Groq client
 groq_client = None
@@ -30,14 +42,14 @@ def find_best_faq_match(question, course_id):
         return None, 0
     
     # Encode the user's question
-    question_embedding = sentence_model.encode(question.lower())
+    question_embedding = get_sentence_model().encode(question.lower())
     
     best_faq = None
     best_score = 0
     
     for faq in faqs:
         # Encode FAQ question
-        faq_embedding = sentence_model.encode(faq.question.lower())
+        faq_embedding = get_sentence_model().encode(faq.question.lower())
         
         # Calculate cosine similarity
         score = np.dot(question_embedding, faq_embedding) / (
@@ -116,7 +128,7 @@ def generate_smart_response(question, course):
         from models import CourseContext
         from personality_engine import AIPersonality
 
-        memory = ConversationMemory(course.id, encoder=sentence_model)
+        memory = ConversationMemory(course.id, encoder=get_sentence_model())
         personality = AIPersonality(course.id)
 
         # Check if question is off-topic

@@ -521,6 +521,26 @@
 </head>
 
 <body class="flex overflow-hidden bg-black" style="width: 100vw; height: 100dvh;">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="fixed top-20 right-6 z-50 space-y-2 message-enter">
+        {% for category, message in messages %}
+        <div class="bg-white/10 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-xl max-w-md shadow-2xl">
+            <div class="flex items-center space-x-3">
+                {% if category == 'success' %}
+                <i data-lucide="check-circle" class="w-5 h-5 text-blue"></i>
+                {% else %}
+                <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
+                {% endif %}
+                <p class="text-sm font-medium">{{ message }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
     <!-- Mobile backdrop -->
     <div id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
@@ -728,13 +748,40 @@
                     <i data-lucide="lock" class="w-4 h-4 text-red-400 shrink-0"></i>
                     <p class="text-red-400 text-sm">This group is locked by the lecturer.</p>
                 </div>
-                <!-- Voice recording indicator -->
-                <div id="recordingIndicator" class="hidden flex items-center gap-2 mb-2">
-                    <span class="inline-block w-2.5 h-2.5 bg-red-500 rounded-full"
-                        style="animation:pulse 1s infinite"></span>
-                    <span class="text-red-400 text-sm" id="recordingTimer">Recording 0:00</span>
+                <!-- Voice recording overlay (WhatsApp style) -->
+                <div id="recordingOverlay"
+                    class="hidden absolute inset-0 bg-white dark:bg-[#111b21] flex items-center px-4 z-40">
+                    <div class="flex items-center gap-4 w-full">
+                        <div class="flex items-center gap-2 text-red-500 animate-pulse">
+                            <i data-lucide="mic" class="w-5 h-5"></i>
+                            <span id="recordingTimerOverlay" class="font-medium text-lg">0:00</span>
+                        </div>
+                        <div class="flex-1 text-[#8696a0] text-sm overflow-hidden whitespace-nowrap">
+                            <div id="recordingWaveform" class="flex items-center gap-1 h-8 px-4">
+                                <!-- Waveform bars could go here -->
+                                <div class="flex-1 border-b border-dashed border-white/20"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button type="button" onclick="cancelRecording()"
+                                class="p-2 text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
+                                title="Cancel">
+                                <i data-lucide="trash-2" class="w-6 h-6"></i>
+                            </button>
+                            <button type="button" id="pauseRecordingBtn" onclick="stopRecording(true)"
+                                class="p-2 text-[#8696a0] hover:bg-white/5 rounded-full transition-colors" title="Stop">
+                                <i data-lucide="square" class="w-6 h-6"></i>
+                            </button>
+                            <button type="button" onclick="finalizeRecording()"
+                                class="w-12 h-12 bg-blue rounded-full flex items-center justify-center text-white shadow-lg shadow-blue/20"
+                                title="Send">
+                                <i data-lucide="send" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <form id="messageForm" style="display:flex;align-items:flex-end;gap:8px;width:100%;">
+
+                <form id="messageForm" class="relative" style="display:flex;align-items:flex-end;gap:8px;width:100%;">
                     <!-- Attach button (AI DM only) -->
                     <div id="leftActions" class="hidden" style="flex-shrink:0;">
                         <label
@@ -749,7 +796,7 @@
                         style="flex:1;min-width:0;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:24px;color:white;font-size:16px;resize:none;outline:none;"
                         placeholder="Type a message..."></textarea>
                     <!-- Mic button (AI DM only) -->
-                    <button type="button" id="micBtn" class="hidden" onclick="toggleRecording()"
+                    <button type="button" id="micBtn" class="hidden" onclick="startRecording()"
                         style="flex-shrink:0;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
                         <i data-lucide="mic" class="w-5 h-5 text-white/60"></i>
                     </button>
@@ -899,7 +946,7 @@
     <!-- Create Course Modal -->
     <div id="createCourseModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
         <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold mb-4">Register New Course</h3>
+            <h3 class="text-lg font-semibold mb-4 text-white">Register New Course</h3>
             <form id="createCourseForm" class="space-y-4">
                 <div>
                     <label class="block text-sm text-white/80 mb-2">Course Name</label>
@@ -924,28 +971,203 @@
         </div>
     </div>
 
-    <!-- Room Info Modal -->
-    <div id="roomInfoModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold mb-4">Room Info</h3>
-            <div id="roomInfoContent" class="space-y-4">
-                <!-- Content will be loaded here -->
-            </div>
-            <button onclick="hideRoomInfo()"
-                class="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
-                Close
-            </button>
+    <!-- Create Assignment Modal -->
+    <div id="createAssignmentModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-[60]">
+        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl">
+            <h3 class="text-xl font-semibold mb-4 text-white">Create New Assignment</h3>
+            <form id="createAssignmentForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-white/60 mb-1.5">Title</label>
+                    <input type="text" id="assignmentTitle" required placeholder="e.g. Week 1 Quiz"
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-blue transition-colors">
+                </div>
+                <div>
+                    <label class="block text-sm text-white/60 mb-1.5">Description / Instructions</label>
+                    <textarea id="assignmentDesc" rows="3" required placeholder="What should students do?"
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-blue transition-colors resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-white/60 mb-1.5">Due Date (Optional)</label>
+                    <input type="datetime-local" id="assignmentDue"
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-blue transition-colors text-white">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="hideCreateAssignment()"
+                        class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-xl transition-all transform active:scale-95 font-bold shadow-lg shadow-blue/20">
+                        Post Assignment
+                    </button>
+                </div>
+            </form>
         </div>
+    </div>
+
+    <!-- Submit Assignment Modal -->
+    <div id="submitAssignmentModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-[60]">
+        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-white">Submit Assignment</h3>
+                <button onclick="hideSubmitAssignment()" class="text-white/40 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <p id="submitAssignTitle" class="text-lg font-medium text-white"></p>
+                <p id="submitAssignDesc" class="text-sm text-white/60 mt-1"></p>
+            </div>
+            <form id="submitAssignmentForm" class="space-y-4">
+                <input type="hidden" id="submitAssignId">
+                <div>
+                    <label class="block text-sm text-white/60 mb-1.5">Your Response / Comments</label>
+                    <textarea id="submitContent" rows="4" placeholder="Type your submission here..."
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-blue transition-colors resize-none"></textarea>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit"
+                        class="w-full py-4 bg-blue hover:bg-blue-dark rounded-xl transition-all transform active:scale-95 font-bold shadow-lg shadow-blue/20">
+                        Turn In
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Submissions Modal -->
+    <div id="viewSubmissionsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-[60]">
+        <div
+            class="modal-inner bg-[#111b21] rounded-2xl w-full max-w-2xl h-full sm:h-auto sm:max-h-[80vh] flex flex-col overflow-hidden shadow-2xl border border-white/5">
+            <div class="p-4 bg-[#202c33] flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                    <button onclick="hideViewSubmissions()" class="text-white/60 hover:text-white">
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                    </button>
+                    <h3 class="text-xl font-medium text-white">Submissions</h3>
+                </div>
+                <div id="submissionCount" class="text-sm text-[#8696a0]"></div>
+            </div>
+            <div id="submissionsList" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Submissions populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Info Modal (WhatsApp Style) -->
+    <div id="roomInfoModal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 transition-all duration-300">
+        <div
+            class="modal-inner bg-[#111b21] rounded-none sm:rounded-2xl w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <!-- Header -->
+            <div class="p-4 bg-[#202c33] shrink-0 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button onclick="hideRoomInfo()" class="text-white/60 hover:text-white">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                    <h3 class="text-xl font-medium">Group info</h3>
+                </div>
+                <!-- Tabs -->
+                <div id="roomTabs" class="hidden flex gap-6">
+                    <button onclick="switchRoomTab('info')" id="roomTab-info"
+                        class="text-blue border-b-2 border-blue py-1 font-medium text-sm transition-all">Info</button>
+                    <button onclick="switchRoomTab('classroom')" id="roomTab-classroom"
+                        class="text-[#8696a0] border-b-2 border-transparent py-1 font-medium text-sm transition-all">Classroom</button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto bg-[#111b21] relative">
+                <!-- Section: Info -->
+                <div id="roomSection-info" class="space-y-2">
+                    <!-- Profile Pic Section -->
+                    <div class="flex flex-col items-center py-8 bg-[#111b21]">
+                        <div class="relative group">
+                            <div id="roomInfoAvatar"
+                                class="w-40 h-40 rounded-full bg-[#202c33] flex items-center justify-center overflow-hidden">
+                                <i data-lucide="users" class="w-20 h-20 text-[#6a7175]"></i>
+                            </div>
+                            <label id="roomAvatarLabel" for="roomAvatarUpload"
+                                class="absolute bottom-2 right-2 w-10 h-10 bg-blue rounded-full flex items-center justify-center cursor-pointer shadow-lg hidden">
+                                <i data-lucide="camera" class="w-5 h-5 text-white"></i>
+                                <input type="file" id="roomAvatarUpload" accept="image/*" class="hidden">
+                            </label>
+                        </div>
+                        <h2 id="roomInfoName" class="text-2xl font-medium mt-4 text-white"></h2>
+                        <p id="roomInfoSubtitle" class="text-[#8696a0] mt-1"></p>
+                    </div>
+
+                    <!-- Description Section -->
+                    <div class="bg-[#111b21] p-4 border-t border-white/5">
+                        <p class="text-blue text-sm mb-2">Description</p>
+                        <p id="roomInfoDesc" class="text-white/80 whitespace-pre-wrap"></p>
+                    </div>
+
+                    <!-- Members Section -->
+                    <div class="bg-[#111b21] border-t border-white/5">
+                        <div class="p-4 flex items-center justify-between">
+                            <p id="roomMemberCount" class="text-[#8696a0] text-sm"></p>
+                            <i data-lucide="search" class="w-5 h-5 text-[#8696a0]"></i>
+                        </div>
+                        <div id="roomMemberList" class="divide-y divide-white/5">
+                            <!-- Members populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Classroom -->
+                <div id="roomSection-classroom" class="hidden p-4 space-y-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-lg font-medium text-white">Assignments</h4>
+                        <button id="createAssignmentBtn" onclick="showCreateAssignment()"
+                            class="hidden px-3 py-1.5 bg-blue hover:bg-blue-dark text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            New Assignment
+                        </button>
+                    </div>
+
+                    <div id="assignmentList" class="space-y-3">
+                        <!-- Assignments populated here -->
+                        <div class="p-6 text-center text-[#8696a0] text-sm italic">
+                            No assignments yet.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Section (Teaching Groups) -->
+            <div id="teachingStatsSection" class="mt-2 bg-[#111b21] p-4 border-t border-white/5 hidden">
+                <p class="text-blue text-sm mb-2">📊 Student Activity</p>
+                <div id="teachingStatsContent" class="text-sm text-[#8696a0]"></div>
+            </div>
+
+            <!-- Admin Actions -->
+            <div id="roomAdminActions" class="mt-2 bg-[#111b21] p-4 border-t border-white/5 hidden space-y-4">
+                <div class="flex items-center justify-between">
+                    <p class="text-white/60 text-sm">Lock Group</p>
+                    <button id="lockToggleBtn" onclick="toggleGroupLock()"
+                        class="relative w-11 h-6 rounded-full transition-colors focus:outline-none bg-white/20">
+                        <span
+                            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform translate-x-0"></span>
+                    </button>
+                </div>
+                <button onclick="confirmDeleteGroup()"
+                    class="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    Delete Group
+                </button>
+            </div>
+        </div>
+    </div>
     </div>
 
     <script>
         // User data
         const currentUser = {
-            id: {{ user.id }},
-        username: "{{ user.username }}",
+            id: Number("{{ user.id }}"),
+            username: "{{ user.username }}",
             display_name: "{{ user.display_name or user.username }}",
-                role: "{{ user.role }}",
-                    profile_pic: "{{ user.profile_pic }}"
+            role: "{{ user.role }}",
+            profile_pic: "{{ user.profile_pic }}"
         };
 
         // Socket connection
@@ -1055,6 +1277,26 @@
                 updateLockUI();
                 updateTeachingCountdown();
                 displayMessages(data.messages);
+            });
+
+            socket.on('assignments_list', (data) => {
+                renderAssignments(data.assignments);
+            });
+
+            socket.on('assignment_created', (data) => {
+                if (currentRoom && data.room_id === currentRoom.id) {
+                    socket.emit('get_assignments', { room_id: currentRoom.id });
+                    showToast('New assignment posted!');
+                }
+            });
+
+            socket.on('submission_success', (data) => {
+                showToast('Assignment submitted successfully!');
+                hideSubmitAssignment();
+            });
+
+            socket.on('assignment_submissions_list', (data) => {
+                renderSubmissions(data.submissions);
             });
 
             socket.on('room_removed', (data) => {
@@ -1241,6 +1483,38 @@
                 // Update all indicators
                 document.querySelectorAll('.presence-dot').forEach(el => el.classList.add('hidden'));
                 onlineUsers.forEach(id => updatePresenceIndicators(id, true));
+            });
+
+            socket.on('room_members', (data) => {
+                const list = document.getElementById('roomMemberList');
+                const countEl = document.getElementById('roomMemberCount');
+                if (!list || !countEl) return;
+
+                countEl.textContent = `${data.members.length} member${data.members.length !== 1 ? 's' : ''}`;
+                list.innerHTML = data.members.map(m => `
+                    <div class="p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
+                        <div class="flex items-center gap-3">
+                            ${renderAvatar(m.display_name, m.profile_pic, 'w-10 h-10', m.id)}
+                            <div>
+                                <p class="text-white font-medium">${escapeHtml(m.display_name)}</p>
+                                <p class="text-[#8696a0] text-xs">${m.role === 'admin' ? 'Group Admin' : m.role === 'lecturer' ? 'Lecturer' : 'Student'}</p>
+                            </div>
+                        </div>
+                        ${m.id === currentUser.id ? '<span class="text-blue text-xs bg-blue/10 px-2 py-1 rounded">You</span>' : ''}
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            });
+
+            socket.on('room_avatar_updated', (data) => {
+                if (currentRoom && currentRoom.id === data.room_id) {
+                    currentRoom.profile_pic = data.profile_pic;
+                    const avatarContainer = document.getElementById('roomInfoAvatar');
+                    if (avatarContainer) {
+                        avatarContainer.innerHTML = `<img src="/static/${data.profile_pic}" alt="Group" class="w-full h-full object-cover">`;
+                    }
+                    // Also update sidebar if applicable (though sidebar usually shows generic icon)
+                }
             });
         }
 
@@ -1445,6 +1719,45 @@
                             code: code
                         });
                     }
+                });
+            }
+
+            // Create Assignment Form
+            const createAssignForm = document.getElementById('createAssignmentForm');
+            if (createAssignForm) {
+                createAssignForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (!currentRoom) return;
+
+                    const title = document.getElementById('assignmentTitle').value;
+                    const desc = document.getElementById('assignmentDesc').value;
+                    const dueDate = document.getElementById('assignmentDue').value;
+
+                    socket.emit('create_assignment', {
+                        user_id: currentUser.id,
+                        room_id: currentRoom.id,
+                        title: title,
+                        description: desc,
+                        due_date: dueDate
+                    });
+
+                    hideCreateAssignment();
+                });
+            }
+
+            // Submit Assignment Form
+            const submitAssignForm = document.getElementById('submitAssignmentForm');
+            if (submitAssignForm) {
+                submitAssignForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const assignId = document.getElementById('submitAssignId').value;
+                    const content = document.getElementById('submitContent').value;
+
+                    socket.emit('submit_assignment', {
+                        user_id: currentUser.id,
+                        assignment_id: assignId,
+                        content: content
+                    });
                 });
             }
         }
@@ -1794,38 +2107,58 @@
                 };
 
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-                    sendVoiceNote(audioBlob);
+                    if (audioChunks.length > 0) {
+                        const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                        if (finalizeOnStop) {
+                            sendVoiceNote(audioBlob);
+                        }
+                    }
                     stream.getTracks().forEach(t => t.stop());
                 };
 
                 mediaRecorder.start();
                 recordingSeconds = 0;
-                document.getElementById('recordingIndicator').classList.remove('hidden');
-                document.getElementById('micBtn').style.background = 'rgba(239,68,68,0.25)';
-                document.getElementById('micBtn').style.color = '#ef4444';
+                finalizeOnStop = true;
+
+                // UI updates
+                document.getElementById('recordingOverlay').classList.remove('hidden');
+                document.getElementById('recordingTimerOverlay').textContent = '0:00';
 
                 recordingTimerInterval = setInterval(() => {
                     recordingSeconds++;
                     const mins = Math.floor(recordingSeconds / 60);
                     const secs = recordingSeconds % 60;
-                    document.getElementById('recordingTimer').textContent = `Recording ${mins}:${secs.toString().padStart(2, '0')}`;
-                    if (recordingSeconds >= 60) stopRecording();
+                    document.getElementById('recordingTimerOverlay').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+                    // Max 2 minutes
+                    if (recordingSeconds >= 120) stopRecording(true);
                 }, 1000);
+
+                lucide.createIcons();
             } catch (err) {
-                alert('Could not access microphone: ' + err.message);
+                showToast('Could not access microphone');
+                console.error(err);
             }
         }
 
-        function stopRecording() {
+        let finalizeOnStop = true;
+
+        function stopRecording(finalize = true) {
+            finalizeOnStop = finalize;
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
             }
             clearInterval(recordingTimerInterval);
-            document.getElementById('recordingIndicator').classList.add('hidden');
-            const micBtn = document.getElementById('micBtn');
-            micBtn.style.background = '';
-            micBtn.style.color = '';
+            document.getElementById('recordingOverlay').classList.add('hidden');
+        }
+
+        function cancelRecording() {
+            stopRecording(false);
+            audioChunks = [];
+        }
+
+        function finalizeRecording() {
+            stopRecording(true);
         }
 
         function sendVoiceNote(audioBlob) {
@@ -2098,43 +2431,229 @@
         function showRoomInfo() {
             if (!currentRoom) return;
             const isStaff = currentUser.role === 'admin' || currentUser.role === 'lecturer';
-            const lockToggleHtml = (isStaff && currentRoom.room_type === 'group') ? `
-                <div class="flex items-center justify-between pt-2 border-t border-white/10">
-                    <p class="text-white/60 text-sm">Lock Group</p>
-                    <button id="lockToggleBtn" onclick="toggleGroupLock()"
-                            class="relative w-11 h-6 rounded-full transition-colors focus:outline-none ${currentRoom.locked ? 'bg-red-500' : 'bg-white/20'}">
-                        <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${currentRoom.locked ? 'translate-x-5' : 'translate-x-0'}"></span>
-                    </button>
-                </div>` : '';
+            const isGroup = currentRoom.room_type === 'group';
 
-            // Teaching group stats section (placeholder, filled by socket response)
-            const teachingStatsHtml = currentRoom.teaching ? `
-                <div class="pt-2 border-t border-white/10">
-                    <p class="text-white/60 text-sm mb-2">📊 Student Activity</p>
-                    <div id="teachingStatsContent" class="text-sm text-white/50">Loading...</div>
-                </div>` : '';
-
-            const content = document.getElementById('roomInfoContent');
-            content.innerHTML = `
-                <div class="space-y-3">
-                    <div>
-                        <p class="text-white/60 text-sm">Room Name</p>
-                        <p class="font-medium">${escapeHtml(currentRoom.name)}</p>
-                    </div>
-                    <div>
-                        <p class="text-white/60 text-sm">Type</p>
-                        <p class="font-medium">${currentRoom.room_type === 'ai_dm' ? 'AI Chat' : currentRoom.teaching ? 'Teaching Group' : 'Group Chat'}</p>
-                    </div>
-                    ${lockToggleHtml}
-                    ${teachingStatsHtml}
-                </div>
-            `;
-            document.getElementById('roomInfoModal').classList.remove('hidden');
-
-            // Request teaching stats if it's a teaching group
-            if (currentRoom.teaching) {
-                socket.emit('get_teaching_stats', { room_id: currentRoom.id });
+            // Tab handling
+            const roomTabs = document.getElementById('roomTabs');
+            if (isGroup) {
+                roomTabs.classList.remove('hidden');
+                switchRoomTab('info');
+            } else {
+                roomTabs.classList.add('hidden');
+                switchRoomTab('info');
             }
+
+            // Populate static info
+            document.getElementById('roomInfoName').textContent = currentRoom.name;
+            document.getElementById('roomInfoSubtitle').textContent = currentRoom.room_type === 'ai_dm' ? 'AI Assistant' : currentRoom.teaching ? 'Teaching Group' : 'Group Chat';
+            document.getElementById('roomInfoDesc').textContent = currentRoom.description || 'No description provided.';
+
+            // Profile Picture
+            const avatarContainer = document.getElementById('roomInfoAvatar');
+            if (currentRoom.profile_pic) {
+                avatarContainer.innerHTML = `<img src="/static/${currentRoom.profile_pic}" alt="Group" class="w-full h-full object-cover">`;
+            } else {
+                avatarContainer.innerHTML = `<i data-lucide="${currentRoom.room_type === 'ai_dm' ? 'bot' : 'users'}" class="w-20 h-20 text-[#6a7175]"></i>`;
+            }
+
+            // Admin features
+            const avatarLabel = document.getElementById('roomAvatarLabel');
+            const adminActions = document.getElementById('roomAdminActions');
+            const lockToggleBtn = document.getElementById('lockToggleBtn');
+
+            if (isStaff && isGroup) {
+                avatarLabel.classList.remove('hidden');
+                adminActions.classList.remove('hidden');
+                lockToggleBtn.className = `relative w-11 h-6 rounded-full transition-colors focus:outline-none ${currentRoom.locked ? 'bg-red-500' : 'bg-white/20'}`;
+                lockToggleBtn.querySelector('span').className = `absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${currentRoom.locked ? 'translate-x-5' : 'translate-x-0'}`;
+                document.getElementById('createAssignmentBtn').classList.remove('hidden');
+            } else {
+                avatarLabel.classList.add('hidden');
+                adminActions.classList.add('hidden');
+                document.getElementById('createAssignmentBtn').classList.add('hidden');
+            }
+
+            // Stats section
+            const statsSection = document.getElementById('teachingStatsSection');
+            if (currentRoom.teaching) {
+                statsSection.classList.remove('hidden');
+                document.getElementById('teachingStatsContent').textContent = 'Loading activity...';
+                socket.emit('get_teaching_stats', { room_id: currentRoom.id });
+            } else {
+                statsSection.classList.add('hidden');
+            }
+
+            // Request member list
+            if (isGroup) {
+                document.getElementById('roomMemberList').innerHTML = '<div class="p-4 text-center text-[#8696a0] text-sm">Loading members...</div>';
+                socket.emit('get_room_members', { room_id: currentRoom.id });
+                document.getElementById('roomMemberCount').textContent = 'Loading...';
+
+                // Request assignments
+                socket.emit('get_assignments', { room_id: currentRoom.id });
+            } else {
+                document.getElementById('roomMemberList').innerHTML = '';
+                document.getElementById('roomMemberCount').textContent = '';
+            }
+
+            document.getElementById('roomInfoModal').classList.remove('hidden');
+            lucide.createIcons();
+
+            // Avatar upload listener (once)
+            const avatarInput = document.getElementById('roomAvatarUpload');
+            if (!avatarInput.hasListener) {
+                avatarInput.addEventListener('change', function () {
+                    const file = this.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const base64 = e.target.result.split(',')[1];
+                        socket.emit('update_room_avatar', {
+                            room_id: currentRoom.id,
+                            image_data: base64
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+                avatarInput.hasListener = true;
+            }
+        }
+
+        function switchRoomTab(tab) {
+            const tabs = ['info', 'classroom'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`roomTab-${t}`);
+                const section = document.getElementById(`roomSection-${t}`);
+                if (btn && section) {
+                    if (t === tab) {
+                        btn.classList.add('text-blue', 'border-blue');
+                        btn.classList.remove('text-[#8696a0]', 'border-transparent');
+                        section.classList.remove('hidden');
+                    } else {
+                        btn.classList.remove('text-blue', 'border-blue');
+                        btn.classList.add('text-[#8696a0]', 'border-transparent');
+                        section.classList.add('hidden');
+                    }
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // --- Assignment Functions ---
+        function showCreateAssignment() {
+            document.getElementById('createAssignmentModal').classList.remove('hidden');
+            document.getElementById('assignmentTitle').focus();
+        }
+
+        function hideCreateAssignment() {
+            document.getElementById('createAssignmentModal').classList.add('hidden');
+            document.getElementById('createAssignmentForm').reset();
+        }
+
+        function showSubmitAssignment(id, title, desc) {
+            document.getElementById('submitAssignId').value = id;
+            document.getElementById('submitAssignTitle').textContent = title;
+            document.getElementById('submitAssignDesc').textContent = desc;
+            document.getElementById('submitAssignmentModal').classList.remove('hidden');
+        }
+
+        function hideSubmitAssignment() {
+            document.getElementById('submitAssignmentModal').classList.add('hidden');
+            document.getElementById('submitAssignmentForm').reset();
+        }
+
+        function renderAssignments(assignments) {
+            const list = document.getElementById('assignmentList');
+            if (!list) return;
+
+            if (assignments.length === 0) {
+                list.innerHTML = '<div class="p-6 text-center text-[#8696a0] text-sm italic">No assignments yet.</div>';
+                return;
+            }
+
+            list.innerHTML = assignments.map(a => {
+                const isStaff = currentUser.role === 'admin' || currentUser.role === 'lecturer';
+                const dueDate = a.due_date ? new Date(a.due_date).toLocaleString() : 'No due date';
+
+                return `
+                    <div class="p-4 bg-[#202c33] rounded-xl border border-white/5 space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h5 class="font-medium text-white">${escapeHtml(a.title)}</h5>
+                                <p class="text-xs text-[#8696a0] mt-0.5">Due: ${dueDate}</p>
+                            </div>
+                            ${isStaff ? `<span class="px-2 py-0.5 bg-blue/10 text-blue text-[10px] font-bold rounded uppercase">Lecturer View</span>` : ''}
+                        </div>
+                        <p class="text-sm text-white/70">${escapeHtml(a.description)}</p>
+                        <div class="flex gap-2">
+                            ${!isStaff ? `
+                                <button onclick="showSubmitAssignment(${a.id}, '${escapeHtml(a.title)}', '${escapeHtml(a.description)}')" 
+                                    class="flex-1 py-2 bg-blue/10 hover:bg-blue text-blue hover:text-white text-xs font-semibold rounded-lg transition-all">
+                                    Submit
+                                </button>
+                            ` : `
+                                <button onclick="viewSubmissions(${a.id})" 
+                                    class="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold rounded-lg transition-all">
+                                    View Submissions
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function viewSubmissions(assignmentId) {
+            document.getElementById('submissionsList').innerHTML = '<div class="p-8 text-center text-[#8696a0]">Loading submissions...</div>';
+            document.getElementById('submissionCount').textContent = '';
+            document.getElementById('viewSubmissionsModal').classList.remove('hidden');
+            socket.emit('get_submissions', { assignment_id: assignmentId });
+        }
+
+        function hideViewSubmissions() {
+            document.getElementById('viewSubmissionsModal').classList.add('hidden');
+        }
+
+        function renderSubmissions(submissions) {
+            const list = document.getElementById('submissionsList');
+            const countEl = document.getElementById('submissionCount');
+            if (!list) return;
+
+            countEl.textContent = `${submissions.length} submission${submissions.length !== 1 ? 's' : ''}`;
+
+            if (submissions.length === 0) {
+                list.innerHTML = '<div class="p-12 text-center text-[#8696a0] italic">No students have submitted yet.</div>';
+                return;
+            }
+
+            list.innerHTML = submissions.map(s => {
+                return `
+                    <div class="p-4 bg-[#202c33] rounded-xl border border-white/5 space-y-3">
+                        <div class="flex items-center gap-3">
+                            ${renderAvatar(s.student_name, s.student_pic, 'w-10 h-10', s.student_id)}
+                            <div>
+                                <h5 class="font-medium text-white">${escapeHtml(s.student_name)}</h5>
+                                <p class="text-[10px] text-[#8696a0]">${new Date(s.submitted_at).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-black/20 rounded-lg text-sm text-white/80 whitespace-pre-wrap">
+${escapeHtml(s.content)}
+                        </div>
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="gradeSubmission(${s.id})" class="flex-1 py-1.5 bg-blue/10 hover:bg-blue/20 text-blue text-xs font-semibold rounded-lg transition-all">
+                                Grade / Feedback
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function gradeSubmission(submissionId) {
+            // Placeholder for grading logic
+            showToast('Grading feature coming soon');
         }
 
         function hideRoomInfo() {
@@ -2147,8 +2666,23 @@
                 user_id: currentUser.id,
                 room_id: currentRoom.id
             });
-            // Close modal so user sees the system message
-            hideRoomInfo();
+            // Update toggle UI immediately for feedback (server will confirm)
+            const btn = document.getElementById('lockToggleBtn');
+            const dot = btn.querySelector('span');
+            const isNowLocked = !currentRoom.locked;
+            btn.className = `relative w-11 h-6 rounded-full transition-colors focus:outline-none ${isNowLocked ? 'bg-red-500' : 'bg-white/20'}`;
+            dot.className = `absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isNowLocked ? 'translate-x-5' : 'translate-x-0'}`;
+        }
+
+        function confirmDeleteGroup() {
+            if (!currentRoom) return;
+            if (confirm(`Are you sure you want to PERMANENTLY delete "${currentRoom.name}"? This cannot be undone.`)) {
+                socket.emit('delete_room', {
+                    user_id: currentUser.id,
+                    room_id: currentRoom.id
+                });
+                hideRoomInfo();
+            }
         }
 
         // Context Menu Functions
