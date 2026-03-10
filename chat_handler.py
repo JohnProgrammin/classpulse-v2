@@ -2081,8 +2081,8 @@ Format: [CREATE_PERM_GROUP:GroupName]
                         }
                         deleted_group_stats.append(stats_summary)
 
-                        # Deactivate the room
-                        target_room.is_active = False
+                        # Permanently delete the room
+                        db.session.delete(target_room)
                         db.session.commit()
 
                         # Emit room_removed to ALL clients so it disappears from sidebar

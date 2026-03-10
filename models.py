@@ -474,6 +474,8 @@ class ChatRoom(db.Model):
     # Relationships
     members = db.relationship('ChatMember', backref='room', lazy=True, cascade='all, delete-orphan')
     messages = db.relationship('ChatMessage', backref='room', lazy=True, cascade='all, delete-orphan')
+    teaching_session = db.relationship('TeachingSession', backref='room', lazy=True, cascade='all, delete-orphan', uselist=False)
+    assignments = db.relationship('Assignment', backref='room', lazy=True, cascade='all, delete-orphan')
     creator = db.relationship('ChatUser', foreign_keys=[created_by])
 
     def __repr__(self):
@@ -571,7 +573,6 @@ class TeachingSession(db.Model):
     close_date = db.Column(db.DateTime, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('chat_users.id'))
 
-    room = db.relationship('ChatRoom')
     creator = db.relationship('ChatUser')
 
     def __repr__(self):
@@ -618,7 +619,6 @@ class Assignment(db.Model):
 
     # Relationships
     submissions = db.relationship('AssignmentSubmission', backref='assignment', lazy=True, cascade='all, delete-orphan')
-    room = db.relationship('ChatRoom', backref=db.backref('assignments', lazy=True))
     creator_rel = db.relationship('ChatUser', foreign_keys=[creator_id])
 
     def __repr__(self):

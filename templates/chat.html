@@ -1266,7 +1266,7 @@
             });
 
             socket.on('error', (data) => {
-                alert(data.message);
+                showToast(data.message);
             });
 
             socket.on('room_joined', (data) => {
@@ -1376,7 +1376,7 @@
                 hideCreateGroup();
                 addRoomToList(data);
                 selectRoom(data.room_id);
-                alert(`Group created! Invite code: ${data.invite_code}`);
+                showToast(`Group created! Invite code: ${data.invite_code}`);
             });
 
             socket.on('joined_group', (data) => {
@@ -2183,7 +2183,7 @@
                     const file = this.files && this.files[0];
                     if (!file) return;
                     if (file.size > 2 * 1024 * 1024) {
-                        alert('Document must be 2 MB or less.');
+                        showToast('Document must be 2 MB or less.');
                         this.value = '';
                         return;
                     }
@@ -2303,12 +2303,33 @@
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = 'copyToast';
-                toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-white/90 text-black px-4 py-2 rounded-full text-sm font-medium shadow-lg z-50 opacity-0 transition-opacity';
+                toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-white/90 text-black px-4 py-2 rounded-full text-sm font-medium shadow-lg z-50 opacity-0 transition-opacity duration-300';
                 toast.textContent = '✓ Copied';
                 document.body.appendChild(toast);
             }
-            toast.style.opacity = '1';
-            setTimeout(() => { toast.style.opacity = '0'; }, 1500);
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.opacity = '1'; }, 10);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }, 3000);
+        }
+
+        function showToast(message) {
+            let toast = document.getElementById('customToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'customToast';
+                toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#202c33] border border-white/10 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-2xl z-[100] opacity-0 transition-opacity duration-300';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.opacity = '1'; }, 10);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }, 3000);
         }
 
         function triggerReplyFromSwipe(messageId) {
