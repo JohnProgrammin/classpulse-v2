@@ -3,189 +3,205 @@
 {% block title %}{{ course.code }} - ClassPulse{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-6 lg:px-8 py-12">
-    <div class="mb-12 fade-in">
-        <a href="{{ url_for('dashboard') }}" class="inline-flex items-center space-x-2 text-white/60 hover:text-white transition-colors mb-4 text-sm">
+<div class="max-w-5xl mx-auto px-6 py-16">
+    <!-- Header Section -->
+    <div class="mb-16 fade-in">
+        <a href="{{ url_for('dashboard') }}"
+            class="inline-flex items-center gap-2 text-medium-gray hover:text-medium-black transition-colors mb-6 text-xs font-bold uppercase tracking-widest">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>
-            <span>Back</span>
+            <span>Back to Dashboard</span>
         </a>
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-4xl font-bold mb-2">{{ course.code }}</h1>
-                <p class="text-white/60">{{ course.name }}</p>
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-5xl font-bold serif tracking-tight text-medium-black">{{ course.code }}</h1>
+                    {% if course.group_id %}
+                    <span
+                        class="px-3 py-1 bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-widest rounded-full">Active
+                        Sync</span>
+                    {% endif %}
+                </div>
+                <p class="text-2xl text-medium-gray serif italic">{{ course.name }}</p>
             </div>
-            {% if course.group_id %}
-            <div class="flex items-center space-x-2 px-4 py-2 bg-blue/20 border border-blue/30 rounded-lg">
-                <div class="w-2 h-2 bg-blue rounded-full animate-pulse"></div>
-                <span class="text-sm font-medium">Active</span>
+            <div class="flex items-center gap-3">
+                <button onclick="showAddFAQ()"
+                    class="px-6 py-3 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/10 flex items-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Add FAQ
+                </button>
             </div>
-            {% endif %}
         </div>
     </div>
-    
-    <!-- Tabs -->
-    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-2 mb-8 fade-in">
-        <div class="flex space-x-2 overflow-x-auto">
-            <button onclick="switchTab('knowledge')" id="tab-knowledge" class="tab-button active px-6 py-3 rounded-xl font-medium transition-colors whitespace-nowrap text-sm">
-                Knowledge base ({{ faqs|length }})
+
+    <!-- Navigation Tabs -->
+    <div class="border-b border-medium-divider mb-12 fade-in">
+        <div class="flex gap-10 overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('knowledge')" id="tab-knowledge"
+                class="tab-button border-b-2 py-4 font-bold text-sm transition-all uppercase tracking-widest active">
+                Knowledge Base ({{ faqs|length }})
             </button>
-            <button onclick="switchTab('pending')" id="tab-pending" class="tab-button px-6 py-3 rounded-xl font-medium transition-colors whitespace-nowrap text-sm">
+            <button onclick="switchTab('pending')" id="tab-pending"
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-sm transition-all uppercase tracking-widest">
                 Questions ({{ pending|length }})
             </button>
-            <button onclick="switchTab('scheduled')" id="tab-scheduled" class="tab-button px-6 py-3 rounded-xl font-medium transition-colors whitespace-nowrap text-sm">
+            <button onclick="switchTab('scheduled')" id="tab-scheduled"
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-sm transition-all uppercase tracking-widest">
                 Scheduled ({{ scheduled|length }})
             </button>
-            <button onclick="switchTab('history')" id="tab-history" class="tab-button px-6 py-3 rounded-xl font-medium transition-colors whitespace-nowrap text-sm">
+            <button onclick="switchTab('history')" id="tab-history"
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-sm transition-all uppercase tracking-widest">
                 History
             </button>
         </div>
     </div>
-    
-    <!-- Knowledge Base Tab -->
-    <div id="content-knowledge" class="tab-content">
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl font-bold">Knowledge base</h2>
-                <button onclick="showAddFAQ()" class="px-4 py-2 bg-blue hover:bg-blue-dark rounded-lg transition-colors text-sm font-medium">
-                    Add FAQ
-                </button>
-            </div>
-            
+
+    <!-- Tab Contents -->
+    <div class="fade-in">
+        <!-- Knowledge Base -->
+        <div id="content-knowledge" class="tab-content transition-all duration-300">
             {% if faqs %}
-            <div class="space-y-4">
+            <div class="grid gap-6">
                 {% for faq in faqs %}
-                <div class="bg-black/40 border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex-1">
-                            <h3 class="font-semibold mb-2">{{ faq.question }}</h3>
-                            <p class="text-white/60 text-sm mb-3">{{ faq.answer }}</p>
-                            <div class="text-xs text-white/40">
-                                Matched {{ faq.times_matched }} time{{ 's' if faq.times_matched != 1 else '' }}
+                <div
+                    class="bg-white border border-medium-divider rounded-2xl p-8 hover:shadow-xl hover:shadow-medium-divider/50 transition-all group">
+                    <div class="flex items-start justify-between gap-6">
+                        <div class="flex-1 space-y-4">
+                            <h3 class="text-2xl font-bold serif text-medium-black leading-tight">{{ faq.question }}</h3>
+                            <p class="text-medium-gray leading-relaxed text-lg">{{ faq.answer }}</p>
+                            <div class="flex items-center gap-4 pt-2">
+                                <div
+                                    class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand">
+                                    <i data-lucide="zap" class="w-3 h-3"></i>
+                                    <span>Matched {{ faq.times_matched }} times</span>
+                                </div>
                             </div>
                         </div>
-                        <button onclick="deleteFAQ({{ faq.id }})" class="w-8 h-8 hover:bg-white/10 rounded-lg flex items-center justify-center transition-colors">
-                            <i data-lucide="trash-2" class="w-4 h-4 text-white/40"></i>
+                        <button onclick="deleteFAQ({{ faq.id }})"
+                            class="w-10 h-10 text-medium-gray hover:text-red-500 hover:bg-red-50 rounded-full flex items-center justify-center transition-all">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-16">
-                <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="lightbulb" class="w-8 h-8 text-white/40"></i>
+            <div class="text-center py-24 bg-medium-divider/20 rounded-3xl border border-dashed border-medium-divider">
+                <div
+                    class="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6 transform -rotate-6">
+                    <i data-lucide="lightbulb" class="w-10 h-10 text-brand"></i>
                 </div>
-                <h3 class="text-lg font-semibold mb-2">No FAQs yet</h3>
-                <p class="text-white/60 text-sm mb-6">Build your knowledge base as you answer questions</p>
-                <button onclick="showAddFAQ()" class="px-6 py-3 bg-blue hover:bg-blue-dark rounded-lg font-medium transition-colors">
-                    Add your first FAQ
+                <h3 class="text-2xl font-bold serif mb-2 text-medium-black">Empty Knowledge Base</h3>
+                <p class="text-medium-gray max-w-sm mx-auto mb-8">Populate your FAQ to automate student responses via
+                    AI.</p>
+                <button onclick="showAddFAQ()"
+                    class="px-8 py-4 bg-medium-black hover:bg-black text-white rounded-full font-bold transition-all shadow-lg">
+                    Build your first FAQ
                 </button>
             </div>
             {% endif %}
         </div>
-    </div>
-    
-    <!-- Pending Questions Tab -->
-    <div id="content-pending" class="tab-content hidden">
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-            <h2 class="text-2xl font-bold mb-8">Pending questions</h2>
-            
+
+        <!-- Pending Questions -->
+        <div id="content-pending" class="tab-content hidden transition-all duration-300">
             {% if pending %}
-            <div class="space-y-4">
+            <div class="grid gap-6">
                 {% for question in pending %}
-                <div class="bg-black/40 border border-white/10 border-l-4 border-l-blue rounded-xl p-6">
-                    <div class="flex items-start justify-between gap-4">
+                <div
+                    class="bg-white border-l-4 border-brand shadow-sm rounded-r-2xl p-8 border-y border-r border-medium-divider">
+                    <div class="flex items-start justify-between gap-6">
                         <div class="flex-1">
-                            <h3 class="font-semibold mb-2">{{ question.question }}</h3>
-                            <div class="text-sm text-white/40 mb-4">
-                                {{ question.student_name }} • {{ question.asked_at.strftime('%b %d, %I:%M %p') }}
+                            <h3 class="text-2xl font-bold serif mb-4 text-medium-black leading-tight">"{{
+                                question.question }}"</h3>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-6 h-6 rounded-full bg-medium-divider flex items-center justify-center text-[10px] font-bold">
+                                    {{ question.student_name[0].upper() }}
+                                </div>
+                                <span class="text-xs font-bold text-medium-gray uppercase tracking-widest">{{
+                                    question.student_name }}</span>
+                                <span class="text-medium-divider">•</span>
+                                <span class="text-xs text-medium-gray">{{ question.asked_at.strftime('%b %d, %I:%M %p')
+                                    }}</span>
                             </div>
-                            <div class="bg-black/60 border border-white/10 rounded-lg p-4">
-                                <p class="text-xs text-white/40 mb-2">Reply via WhatsApp:</p>
-                                <code class="text-sm">Answer: Your response here</code>
+                            <div class="p-4 bg-medium-divider/50 rounded-xl border border-medium-divider border-dashed">
+                                <p class="text-[10px] uppercase font-bold text-medium-gray mb-2 tracking-widest">
+                                    WhatsApp Reply Template</p>
+                                <code class="text-sm text-brand font-bold">Answer: Your response here</code>
                             </div>
                         </div>
-                        <button onclick="dismissQuestion({{ question.id }})" class="w-8 h-8 hover:bg-white/10 rounded-lg flex items-center justify-center transition-colors">
-                            <i data-lucide="x" class="w-4 h-4 text-white/40"></i>
+                        <button onclick="dismissQuestion({{ question.id }})"
+                            class="text-medium-gray hover:text-medium-black transition-colors">
+                            <i data-lucide="x-circle" class="w-6 h-6"></i>
                         </button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-16">
-                <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="check-circle" class="w-8 h-8 text-white/40"></i>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">All clear</h3>
-                <p class="text-white/60 text-sm">No questions waiting for you</p>
+            <div class="text-center py-24 grayscale opacity-50">
+                <i data-lucide="coffee" class="w-16 h-16 mx-auto mb-6 text-medium-gray"></i>
+                <h3 class="text-xl font-bold serif">No pending questions</h3>
+                <p class="text-sm text-medium-gray">You're all caught up! Enjoy the silence.</p>
             </div>
             {% endif %}
         </div>
-    </div>
-    
-    <!-- Scheduled Tab -->
-    <div id="content-scheduled" class="tab-content hidden">
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-            <h2 class="text-2xl font-bold mb-8">Scheduled messages</h2>
-            
+
+        <!-- Scheduled -->
+        <div id="content-scheduled" class="tab-content hidden transition-all duration-300">
             {% if scheduled %}
             <div class="space-y-4">
                 {% for msg in scheduled %}
-                <div class="bg-black/40 border border-white/10 rounded-xl p-6">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex-1">
-                            <div class="font-semibold mb-2">{{ msg.scheduled_time.strftime('%b %d, %Y at %I:%M %p') }}</div>
-                            <p class="text-white/60 text-sm">{{ msg.message }}</p>
+                <div
+                    class="bg-white border border-medium-divider rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2 text-brand font-bold text-[10px] uppercase tracking-widest">
+                            <i data-lucide="clock" class="w-3 h-3"></i>
+                            <span>{{ msg.scheduled_time.strftime('%b %d, %Y at %I:%M %p') }}</span>
                         </div>
-                        <button onclick="cancelScheduled({{ msg.id }})" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors text-sm">
-                            Cancel
-                        </button>
+                        <p class="text-medium-black font-medium leading-relaxed">{{ msg.message }}</p>
                     </div>
+                    <button onclick="cancelScheduled({{ msg.id }})"
+                        class="px-6 py-2 border border-red-100 text-red-600 hover:bg-red-50 rounded-full text-xs font-bold transition-all uppercase tracking-widest">
+                        Cancel
+                    </button>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-16">
-                <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="calendar-x" class="w-8 h-8 text-white/40"></i>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">Nothing scheduled</h3>
-                <p class="text-white/60 text-sm mb-4">Schedule via WhatsApp:</p>
-                <code class="text-sm text-white/60 bg-black/40 px-4 py-2 rounded">Schedule 14:30: Your message</code>
+            <div class="text-center py-24 bg-medium-divider/10 rounded-3xl">
+                <h3 class="text-lg font-bold serif text-medium-black mb-2">No Scheduled Broadcasts</h3>
+                <p class="text-sm text-medium-gray mb-6">Schedule announcements using the 'Schedule' command on
+                    WhatsApp.</p>
+                <code
+                    class="text-xs bg-white px-4 py-2 rounded-lg border border-medium-divider text-brand">Schedule 14:30: Important Notice</code>
             </div>
             {% endif %}
         </div>
-    </div>
-    
-    <!-- History Tab -->
-    <div id="content-history" class="tab-content hidden">
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-            <h2 class="text-2xl font-bold mb-8">Message history</h2>
-            
+
+        <!-- History -->
+        <div id="content-history" class="tab-content hidden transition-all duration-300">
             {% if recent_messages %}
             <div class="space-y-3">
                 {% for msg in recent_messages %}
-                <div class="bg-black/40 border border-white/10 rounded-xl p-4">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <span class="text-sm font-medium text-blue">{{ msg.message_type|title }}</span>
-                            </div>
-                            <p class="text-white/80 text-sm">{{ msg.content }}</p>
+                <div
+                    class="bg-white border border-medium-divider rounded-xl p-6 hover:bg-medium-divider/20 transition-colors">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="space-y-2">
+                            <span
+                                class="px-2 py-0.5 bg-medium-divider text-medium-gray rounded text-[9px] font-bold uppercase tracking-widest">{{
+                                msg.message_type }}</span>
+                            <p class="text-medium-black text-sm leading-relaxed">{{ msg.content }}</p>
                         </div>
-                        <span class="text-xs text-white/40">{{ msg.sent_at.strftime('%b %d, %I:%M %p') }}</span>
+                        <span class="text-[10px] text-medium-gray font-medium">{{ msg.sent_at.strftime('%b %d, %I:%M
+                            %p') }}</span>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-16">
-                <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="inbox" class="w-8 h-8 text-white/40"></i>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">No messages yet</h3>
-                <p class="text-white/60 text-sm">Start broadcasting to see history</p>
+            <div class="text-center py-24">
+                <i data-lucide="archive" class="w-12 h-12 mx-auto mb-4 text-medium-divider"></i>
+                <p class="text-medium-gray font-bold text-sm uppercase tracking-widest">History is empty</p>
             </div>
             {% endif %}
         </div>
@@ -193,130 +209,160 @@
 </div>
 
 <!-- Add FAQ Modal -->
-<div id="addFAQModal" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 hidden items-center justify-center p-6">
-    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl max-w-2xl w-full p-8">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-2xl font-bold">Add FAQ</h3>
-            <button onclick="closeAddFAQ()" class="w-10 h-10 hover:bg-white/10 rounded-lg flex items-center justify-center transition-colors">
+<div id="addFAQModal"
+    class="fixed inset-0 bg-medium-black/40 backdrop-blur-sm z-50 hidden items-center justify-center p-6">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-10 shadow-2xl transform transition-all duration-300">
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="text-3xl font-bold serif text-medium-black">Add FAQ</h3>
+            <button onclick="closeAddFAQ()" class="text-medium-gray hover:text-medium-black transition-colors">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
         </div>
-        
-        <form id="addFAQForm" class="space-y-6">
-            <div>
-                <label class="block text-sm font-medium mb-2">Question</label>
-                <input 
-                    type="text" 
-                    id="faqQuestion" 
-                    class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl focus:border-blue outline-none transition-colors text-white"
-                    placeholder="What time is the exam?"
-                    required
-                >
+
+        <form id="addFAQForm" class="space-y-8">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-medium-gray uppercase tracking-widest mb-2">The
+                        Question</label>
+                    <input type="text" id="faqQuestion" required placeholder="What time is the lecture?"
+                        class="w-full text-xl font-bold serif border-b-2 border-medium-divider focus:border-brand outline-none pb-2 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-medium-gray uppercase tracking-widest mb-2">The
+                        Answer</label>
+                    <textarea id="faqAnswer" rows="3" required placeholder="Lectures start at 9am SHARP in Hall B."
+                        class="w-full text-lg leading-relaxed border-b border-medium-divider focus:border-brand outline-none pb-2 transition-colors resize-none"></textarea>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium mb-2">Answer</label>
-                <textarea 
-                    id="faqAnswer" 
-                    rows="4"
-                    class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl focus:border-blue outline-none transition-colors text-white resize-none"
-                    placeholder="The exam is on Friday at 10am in LT1"
-                    required
-                ></textarea>
+
+            <div class="flex flex-col gap-3 pt-4">
+                <button onclick="addFAQ()"
+                    class="w-full py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20">
+                    Publish to Knowledge Base
+                </button>
+                <button onclick="closeAddFAQ()"
+                    class="w-full py-3 text-medium-gray font-bold text-sm uppercase tracking-widest hover:text-medium-black transition-colors">
+                    Discard
+                </button>
             </div>
         </form>
-        
-        <div class="flex justify-end space-x-3 mt-6">
-            <button onclick="closeAddFAQ()" class="px-6 py-3 hover:bg-white/10 rounded-lg transition-colors">
-                Cancel
-            </button>
-            <button onclick="addFAQ()" class="px-6 py-3 bg-blue hover:bg-blue-dark rounded-lg font-medium transition-colors">
-                Add FAQ
-            </button>
-        </div>
     </div>
 </div>
 
 <script>
-const courseId = {{ course.id }};
+    const courseId = {{ course.id }};
 
-function switchTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.tab-button').forEach(el => {
-        el.classList.remove('active', 'bg-white/10', 'text-white');
-        el.classList.add('text-white/60');
-    });
-    
-    document.getElementById(`content-${tab}`).classList.remove('hidden');
-    const button = document.getElementById(`tab-${tab}`);
-    button.classList.add('active', 'bg-white/10', 'text-white');
-    button.classList.remove('text-white/60');
-    
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.add('hidden');
+            el.style.opacity = '0';
+        });
+
+        document.querySelectorAll('.tab-button').forEach(el => {
+            el.classList.remove('border-brand', 'text-medium-black');
+            el.classList.add('border-transparent', 'text-medium-gray');
+        });
+
+        const activeContent = document.getElementById(`content-${tab}`);
+        activeContent.classList.remove('hidden');
+        setTimeout(() => { activeContent.style.opacity = '1'; }, 10);
+
+        const activeButton = document.getElementById(`tab-${tab}`);
+        activeButton.classList.add('border-brand', 'text-medium-black');
+        activeButton.classList.remove('border-transparent', 'text-medium-gray');
+
+        lucide.createIcons();
+    }
+
+    function showAddFAQ() {
+        const modal = document.getElementById('addFAQModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            const modalDiv = modal.querySelector('div');
+            modalDiv.style.transform = 'scale(1)';
+            modalDiv.style.opacity = '1';
+        }, 10);
+        lucide.createIcons();
+    }
+
+    function closeAddFAQ() {
+        const modal = document.getElementById('addFAQModal');
+        const modalDiv = modal.querySelector('div');
+        modalDiv.style.transform = 'scale(0.95)';
+        modalDiv.style.opacity = '0';
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
+    }
+
+    function addFAQ() {
+        const question = document.getElementById('faqQuestion').value;
+        const answer = document.getElementById('faqAnswer').value;
+
+        if (!question || !answer) return;
+
+        fetch('/api/faq/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ course_id: courseId, question, answer })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) location.reload();
+            });
+    }
+
+    function deleteFAQ(faqId) {
+        if (confirm('Permanently remove this FAQ?')) {
+            fetch(`/api/faq/delete/${faqId}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                });
+        }
+    }
+
+    function dismissQuestion(questionId) {
+        if (confirm('Dismiss this question?')) {
+            fetch(`/api/question/dismiss/${questionId}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                });
+        }
+    }
+
+    function cancelScheduled(messageId) {
+        if (confirm('Cancel this scheduled broadcast?')) {
+            fetch(`/api/scheduled/cancel/${messageId}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                });
+        }
+    }
+
     lucide.createIcons();
-}
-
-function showAddFAQ() {
-    document.getElementById('addFAQModal').classList.remove('hidden');
-    document.getElementById('addFAQModal').classList.add('flex');
-    lucide.createIcons();
-}
-
-function closeAddFAQ() {
-    document.getElementById('addFAQModal').classList.add('hidden');
-    document.getElementById('addFAQModal').classList.remove('flex');
-}
-
-function addFAQ() {
-    const question = document.getElementById('faqQuestion').value;
-    const answer = document.getElementById('faqAnswer').value;
-    
-    fetch('/api/faq/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ course_id: courseId, question, answer })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) location.reload();
-    });
-}
-
-function deleteFAQ(faqId) {
-    if (confirm('Delete this FAQ?')) {
-        fetch(`/api/faq/delete/${faqId}`, { method: 'DELETE' })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) location.reload();
-        });
-    }
-}
-
-function dismissQuestion(questionId) {
-    if (confirm('Dismiss this question?')) {
-        fetch(`/api/question/dismiss/${questionId}`, { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) location.reload();
-        });
-    }
-}
-
-function cancelScheduled(messageId) {
-    if (confirm('Cancel this scheduled message?')) {
-        fetch(`/api/scheduled/cancel/${messageId}`, { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) location.reload();
-        });
-    }
-}
-
-lucide.createIcons();
 </script>
 
 <style>
-.tab-button.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .tab-button.border-brand {
+        border-bottom-width: 2px;
+    }
+
+    .tab-button {
+        border-bottom-color: transparent;
+    }
 </style>
 {% endblock %}

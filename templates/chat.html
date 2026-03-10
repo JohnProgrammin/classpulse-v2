@@ -26,15 +26,28 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap');
+
+        :root {
+            --medium-black: #242424;
+            --medium-gray: #6B6B6B;
+            --medium-divider: #F2F2F2;
+            --brand-green: #1A8917;
+            --sidebar-bg: #FFFFFF;
+        }
 
         * {
             font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .serif {
+            font-family: 'Source Serif Pro', serif;
         }
 
         body {
-            background: #000000;
-            color: #FFFFFF;
+            background: #FFFFFF;
+            color: var(--medium-black);
         }
 
         ::-webkit-scrollbar {
@@ -46,320 +59,18 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #333;
+            background: var(--medium-divider);
             border-radius: 3px;
         }
 
         .message-enter {
-            animation: slideIn 0.2s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Fix dropdown styling */
-        select {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: #FFFFFF;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 16px;
-            padding-right: 40px;
-        }
-
-        select option {
-            background-color: #1a1a1a;
-            color: #FFFFFF;
-            padding: 12px;
-        }
-
-        /* Context menu */
-        .context-menu {
-            position: fixed;
-            background: #1a1a1a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 4px;
-            z-index: 100;
-            min-width: 160px;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        }
-
-        .context-menu button {
-            width: 100%;
-            text-align: left;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .context-menu button:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .context-menu .delete-btn:hover {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-        }
-
-        .context-menu #deleteForMeBtn:hover {
-            background: rgba(251, 191, 36, 0.15);
-            color: #fbbf24;
-        }
-
-        /* Emoji system removed */
-
-        /* Unread badge */
-        .unread-badge {
-            display: none;
-            min-width: 20px;
-            height: 20px;
-            padding: 0 6px;
-            background: #0066FF;
-            color: white;
-            font-size: 0.7rem;
-            font-weight: 600;
-            border-radius: 10px;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .unread-badge.visible {
-            display: flex;
-        }
-
-        /* Swipe-to-reply (mobile) */
-        .message-wrapper {
-            position: relative;
-            transition: transform 0.15s ease-out;
-        }
-
-        .swipe-reply-hint {
-            position: absolute;
-            left: -40px;
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: 0;
-            transition: opacity 0.15s;
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .message-wrapper.swiping .swipe-reply-hint {
-            opacity: 1;
-        }
-
-        /* Reply preview bar */
-        .reply-preview {
-            background: rgba(255, 255, 255, 0.05);
-            border-left: 3px solid #0066FF;
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            border-radius: 0 8px 8px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* Message hover actions */
-        .message-wrapper {
-            position: relative;
-        }
-
-        .message-wrapper .message-actions {
-            opacity: 0;
-            transition: opacity 0.15s;
-            flex-shrink: 0;
-        }
-
-        .message-wrapper:hover .message-actions {
-            opacity: 1;
-        }
-
-        /* Touch devices: show actions on tap */
-        @media (hover: none) {
-            .message-wrapper .message-actions {
-                opacity: 1;
-            }
-        }
-
-        /* ===================== RESPONSIVE LAYOUT ===================== */
-        #sidebarBackdrop {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            z-index: 40;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            transition: opacity 0.3s;
-        }
-
-        #sidebarBackdrop.visible {
-            display: block;
-        }
-
-        .hamburger-btn {
-            display: none !important;
-        }
-
-        @media (max-width: 1023px) {
-            .hamburger-btn {
-                display: flex !important;
-            }
-
-            #sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                width: min(85vw, 320px);
-                z-index: 50;
-                transform: translateX(-100%);
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                background: #0c0c0c;
-            }
-
-            #sidebar.open {
-                transform: translateX(0);
-            }
-
-            /* bigger touch targets */
-            .context-menu button {
-                min-height: 44px;
-                padding: 10px 16px;
-            }
-
-            .message-actions button {
-                min-width: 36px;
-                min-height: 36px;
-                padding: 6px;
-            }
-
-            /* prevent iOS input zoom */
-            #messageInput,
-            select,
-            textarea {
-                font-size: 16px !important;
-            }
-
-            /* modals: full-width on small screens */
-            .modal-inner {
-                margin: 16px;
-                max-width: calc(100vw - 32px);
-            }
-        }
-
-        /* iOS safe-area bottom padding */
-        @supports (padding-bottom: env(safe-area-inset-bottom)) {
-            .input-area-wrapper {
-                padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
-            }
-        }
-
-        /* Auto-resize textarea */
-        #messageInput {
-            height: 48px;
-            max-height: 120px;
-            overflow-y: auto;
-            line-height: 1.4;
-            padding-top: 12px;
-            padding-bottom: 12px;
-        }
-
-        @media (max-width: 640px) {
-            #messageInput {
-                height: 44px;
-                max-height: 100px;
-                font-size: 16px !important;
-                /* Prevents iOS zoom */
-            }
-        }
-
-        /* Each message row must fill the container so percentage max-widths resolve */
-        .message-wrapper {
-            width: 100%;
-        }
-
-        /* Bubble wrapper: block container with width cap.
-           Inner flex row is a separate child so the cap
-           is a parent-determined width, not a nested flex guess. */
-        .msg-bubble-wrap {
-            max-width: 75%;
-            overflow: hidden;
-        }
-
-        @media (max-width: 640px) {
-            .msg-bubble-wrap {
-                max-width: calc(90vw - 28px);
-            }
-
-            .bubble-inner {
-                max-width: calc(90vw - 60px);
-            }
-        }
-
-        /* Bubble body: contain text, prevent viewport overflow */
-        .bubble-inner {
-            min-width: 0;
-            overflow: hidden;
-        }
-
-        /* Break long words / URLs inside bubbles */
-        .message-content {
-            word-break: break-word;
-            overflow-wrap: break-word;
-        }
-
-        /* Safety net: no horizontal scroll in message list */
-        #messagesContainer {
-            overflow-x: hidden;
-        }
-
-        /* Mobile input area */
-        @media (max-width: 640px) {
-            .input-area-wrapper {
-                padding: 8px !important;
-            }
-        }
-
-        #messageInput::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        #messageInput:focus {
-            border-color: #0066FF !important;
-        }
-
-        /* Typing Indicator — WhatsApp style */
-        .typing-bubble {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0 4px 4px 4px;
-            animation: fadeIn 0.2s ease-out;
+            animation: fadeIn 0.3s ease-out;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(4px);
+                transform: translateY(8px);
             }
 
             to {
@@ -368,476 +79,365 @@
             }
         }
 
-        .typing-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: white;
+        /* Dropdown styling */
+        select {
+            background-color: var(--medium-divider);
+            color: var(--medium-black);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 8px 12px;
+            appearance: none;
+            outline: none;
+            transition: border-color 0.2s;
         }
 
+        select:focus {
+            border-color: var(--medium-black);
+        }
+
+        /* Context menu */
+        .context-menu {
+            position: fixed;
+            background: #FFFFFF;
+            border: 1px solid var(--medium-divider);
+            border-radius: 8px;
+            padding: 4px;
+            z-index: 100;
+            min-width: 180px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .context-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--medium-black);
+            transition: background 0.2s;
+        }
+
+        .context-menu button:hover {
+            background: var(--medium-divider);
+        }
+
+        /* Unread badge */
+        .unread-badge {
+            display: none;
+            min-width: 8px;
+            height: 8px;
+            background: var(--brand-green);
+            border-radius: 50%;
+        }
+
+        .unread-badge.visible {
+            display: block;
+        }
+
+        /* Sidebar Item */
+        .room-item {
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .room-item.active {
+            background: var(--medium-divider);
+            border-left-color: var(--brand-green);
+        }
+
+        /* Message Bubbles */
+        .msg-bubble {
+            background: #FFFFFF;
+            border: 1px solid var(--medium-divider);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.5;
+            color: var(--medium-black);
+        }
+
+        .msg-self .msg-bubble {
+            background: #F8F9FA;
+            border-color: #E9ECEF;
+        }
+
+        /* Typing Indicator */
         .typing-pill {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 18px 18px 18px 4px;
-            width: fit-content;
-        }
-
-        .typing-name {
-            font-size: 0.72rem;
-            color: rgba(255, 255, 255, 0.45);
-            white-space: nowrap;
-        }
-
-        .typing-dots {
-            display: flex;
-            align-items: center;
-            gap: 3px;
+            gap: 6px;
+            padding: 4px 12px;
+            background: var(--medium-divider);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--medium-gray);
         }
 
         .typing-dot {
-            width: 6px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.5);
+            width: 4px;
+            height: 4px;
+            background: var(--medium-gray);
             border-radius: 50%;
-            animation: typingBounce 1.2s infinite ease-in-out;
+            animation: bounce 1s infinite alternate;
         }
 
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typingBounce {
-
-            0%,
-            60%,
-            100% {
-                transform: translateY(0);
+        @keyframes bounce {
+            to {
+                transform: translateY(-4px);
                 opacity: 0.4;
             }
-
-            30% {
-                transform: translateY(-8px) scale(1.1);
-                opacity: 1;
-            }
         }
 
-        /* Sound System Styles (Invisible) */
-        #audio-elements {
-            display: none;
-        }
-
-        /* ===================== SKELETON UI ===================== */
-        @keyframes shimmer {
-            0% {
-                background-position: -400px 0;
-            }
-
-            100% {
-                background-position: 400px 0;
-            }
-        }
-
+        /* Skeleton UI */
         .skeleton-msg {
             display: flex;
-            gap: 10px;
-            padding: 4px 0;
-            animation: popIn 0.3s ease-out both;
+            gap: 12px;
+            padding: 8px 0;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
         }
 
         .skeleton-avatar {
-            width: 34px;
-            height: 34px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            flex-shrink: 0;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.06) 75%);
-            background-size: 400px 100%;
-            animation: shimmer 1.4s infinite linear;
-        }
-
-        .skeleton-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            background: var(--medium-divider);
         }
 
         .skeleton-line {
             height: 12px;
             border-radius: 6px;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.06) 75%);
-            background-size: 400px 100%;
-            animation: shimmer 1.4s infinite linear;
-        }
-
-        .skeleton-line.short {
-            width: 55%;
-        }
-
-        .skeleton-line.medium {
-            width: 78%;
-        }
-
-        .skeleton-line.long {
-            width: 92%;
-        }
-
-        .skeleton-line.name {
-            height: 10px;
-            width: 30%;
-            margin-bottom: 2px;
-        }
-
-        /* Message pop-in animation */
-        @keyframes popIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px) scale(0.98);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .message-enter {
-            animation: popIn 0.25s ease-out both;
+            background: var(--medium-divider);
+            margin-bottom: 6px;
         }
     </style>
 </head>
 
-<body class="flex overflow-hidden bg-black" style="width: 100vw; height: 100dvh;">
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div class="fixed top-20 right-6 z-50 space-y-2 message-enter">
-        {% for category, message in messages %}
-        <div class="bg-white/10 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-xl max-w-md shadow-2xl">
-            <div class="flex items-center space-x-3">
-                {% if category == 'success' %}
-                <i data-lucide="check-circle" class="w-5 h-5 text-blue"></i>
-                {% else %}
-                <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
-                {% endif %}
-                <p class="text-sm font-medium">{{ message }}</p>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    {% endwith %}
-
+<body class="flex overflow-hidden bg-white" style="width: 100vw; height: 100dvh;">
     <!-- Mobile backdrop -->
-    <div id="sidebarBackdrop" onclick="closeSidebar()"></div>
+    <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden">
+    </div>
 
     <!-- Sidebar -->
-    <div id="sidebar" class="w-80 bg-white/5 border-r border-white/10 flex flex-col">
+    <div id="sidebar" class="w-80 bg-white border-r border-medium-divider flex flex-col z-50">
         <!-- Header -->
-        <div class="p-4 border-b border-white/10">
-            <div class="flex items-center justify-between">
-                <h1 class="text-lg font-semibold">ClassPulse Chat</h1>
-                <a href="{{ url_for('chat_logout') }}" class="text-white/40 hover:text-white transition-colors">
+        <div class="p-6 border-b border-medium-divider">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-xl font-bold serif tracking-tight">Messages</h1>
+                <a href="{{ url_for('chat_logout') }}"
+                    class="text-medium-gray hover:text-medium-black transition-colors" title="Logout">
                     <i data-lucide="log-out" class="w-5 h-5"></i>
                 </a>
             </div>
-            <!-- Profile link with avatar -->
-            <a href="{{ url_for('chat_profile') }}"
-                class="flex items-center gap-3 mt-3 hover:opacity-80 transition-opacity">
-                {% if user.profile_pic %}
-                <img src="/static/{{ user.profile_pic }}" alt="{{ user.display_name or user.username }}"
-                    class="w-9 h-9 rounded-full object-cover">
-                {% else %}
-                <div class="w-9 h-9 rounded-full bg-blue/20 flex items-center justify-center">
-                    <span class="text-sm font-semibold text-blue">{{ (user.display_name or user.username)[0].upper()
-                        }}</span>
+
+            <!-- User Profile (Minimalist) -->
+            <a href="{{ url_for('chat_profile') }}" class="flex items-center gap-3 group">
+                <div
+                    class="w-10 h-10 rounded-full bg-medium-divider flex items-center justify-center font-bold text-medium-black">
+                    {{ (user.display_name or user.username)[0].upper() }}
                 </div>
-                {% endif %}
-                <div>
-                    <p class="text-white/90 text-sm font-medium">{{ user.display_name or user.username }}</p>
-                    {% if user.is_staff() %}
-                    <span class="text-green-400 text-[10px] font-bold uppercase tracking-wider">Lecturer</span>
-                    {% else %}
-                    <span class="text-white/40 text-[10px] font-bold uppercase tracking-wider">Member</span>
-                    {% endif %}
+                <div class="min-w-0">
+                    <p class="text-sm font-bold text-medium-black group-hover:text-brand transition-colors truncate">
+                        {{ user.display_name or user.username }}
+                    </p>
+                    <p class="text-[10px] uppercase tracking-widest text-medium-gray font-bold">
+                        {{ 'Lecturer' if user.is_staff() else 'Student' }}
+                    </p>
                 </div>
             </a>
         </div>
 
-        <!-- Actions -->
-        <div class="p-4 border-b border-white/10 space-y-2">
-            {% if user.is_lecturer() %}
-            <button onclick="showCreateGroup()"
-                class="w-full py-2 px-4 bg-blue hover:bg-blue-dark rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Create Group</span>
-            </button>
-            <button onclick="showCreateCourse()"
-                class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
-                <i data-lucide="book-open" class="w-4 h-4"></i>
-                <span>Register Course</span>
-            </button>
-            <button onclick="openAiDm()"
-                class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
-                <i data-lucide="bot" class="w-4 h-4"></i>
-                <span>Chat with AI</span>
-            </button>
-            {% endif %}
-            <button onclick="showJoinGroup()"
-                class="w-full py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
-                <i data-lucide="user-plus" class="w-4 h-4"></i>
-                <span>Join Group</span>
-            </button>
-            {% if not user.is_lecturer() %}
-            <button onclick="playSound('click'); showUpgradeLecturer()"
-                class="w-full py-2 px-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 text-white/60 hover:text-white">
-                <i data-lucide="shield-check" class="w-4 h-4"></i>
-                <span>Staff Access</span>
-            </button>
-            {% endif %}
-        </div>
-
-        <!-- Search Bar Removed -->
-
         <!-- Room List -->
-        <div id="roomSidebarContent" class="flex-1 overflow-y-auto p-2">
-            <div id="roomList" class="space-y-1">
+        <div id="roomSidebarContent" class="flex-1 overflow-y-auto pt-4">
+            <div id="roomList" class="space-y-1 px-3">
                 {% for room in rooms %}
                 <button data-room-btn="{{ room.id }}"
-                    class="room-item w-full p-3 rounded-lg text-left hover:bg-white/10 transition-colors"
+                    class="room-item w-full p-4 rounded-xl text-left hover:bg-medium-divider transition-all flex items-center gap-4 group"
                     data-room-id="{{ room.id }}">
-                    <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-medium-divider rounded-full flex items-center justify-center shrink-0">
                         {% if room.room_type == 'ai_dm' %}
-                        <div class="w-10 h-10 bg-blue/20 rounded-full flex items-center justify-center">
-                            <i data-lucide="bot" class="w-5 h-5 text-blue"></i>
-                        </div>
+                        <i data-lucide="bot" class="w-6 h-6 text-brand"></i>
                         {% elif room.room_type == 'group' %}
-                        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-                            <i data-lucide="users" class="w-5 h-5"></i>
-                        </div>
+                        <i data-lucide="users" class="w-6 h-6 text-medium-gray"></i>
                         {% else %}
-                        <div class="relative w-10 h-10 bg-white/10 rounded-full flex items-center justify-center avatar-container"
-                            data-other-user-id="{{ room.other_user_id }}">
-                            <i data-lucide="message-circle" class="w-5 h-5"></i>
-                            {% if room.other_user_id %}
-                            <div class="presence-dot absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full z-10 hidden"
-                                data-user-id="{{ room.other_user_id }}"></div>
-                            {% endif %}
-                        </div>
+                        <i data-lucide="message-circle" class="w-6 h-6 text-medium-gray"></i>
                         {% endif %}
-                        <div class="flex-1 min-w-0">
-                            <p class="font-medium truncate">{{ room.name or 'Chat' }}</p>
-                            <p class="text-white/40 text-xs truncate">
-                                {% if room.room_type == 'group' %}
-                                Code: {{ room.invite_code }}
-                                {% elif room.room_type == 'ai_dm' %}
-                                AI Assistant
-                                {% endif %}
-                            </p>
-                        </div>
-                        <span class="unread-badge" data-badge-room="{{ room.id }}"></span>
                     </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-medium-black truncate">{{ room.name or 'New Chat' }}</p>
+                        <p class="text-xs text-medium-gray truncate">
+                            {% if room.room_type == 'group' %}
+                            Course: {{ room.invite_code }}
+                            {% else %}
+                            Active session
+                            {% endif %}
+                        </p>
+                    </div>
+                    <span class="unread-badge" data-badge-room="{{ room.id }}"></span>
                 </button>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Search Results Removed -->
+        <!-- Quick Actions -->
+        <div class="p-6 border-t border-medium-divider space-y-3">
+            {% if user.is_lecturer() %}
+            <button onclick="showCreateGroup()"
+                class="w-full py-2.5 bg-brand hover:bg-brand-dark text-white rounded-full text-xs font-bold transition-all">
+                Create Group
+            </button>
+            <button onclick="showCreateCourse()"
+                class="w-full py-2.5 border border-medium-divider hover:border-medium-black text-medium-black rounded-full text-xs font-bold transition-all">
+                Add Course
+            </button>
+            {% endif %}
+            <button onclick="showJoinGroup()"
+                class="w-full py-2.5 border border-medium-divider hover:border-medium-black text-medium-black rounded-full text-xs font-bold transition-all">
+                Join Group
+            </button>
+        </div>
     </div>
 
     <!-- Main Chat Area -->
-    <div class="flex-1 flex flex-col min-h-0 min-w-0 relative w-full h-full max-w-full">
-        <!-- No Room Selected -->
+    <div class="flex-1 flex flex-col min-h-0 min-w-0 relative bg-white">
+        <!-- No Room Selected View -->
         <div id="noRoomView" class="flex-1 flex flex-col">
-            <!-- Mobile header with hamburger -->
-            <div class="shrink-0 p-3 border-b border-white/10 hamburger-btn">
-                <button onclick="toggleSidebar()"
-                    style="align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.1);">
-                    <i data-lucide="menu" class="w-6 h-6 text-white"></i>
+            <div class="p-4 flex lg:hidden border-b border-medium-divider">
+                <button onclick="toggleSidebar()" class="p-2 hover:bg-medium-divider rounded-lg">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
             </div>
-            <div class="flex-1 flex items-center justify-center">
-                <div class="text-center">
-                    <i data-lucide="message-square" class="w-16 h-16 text-white/20 mx-auto mb-4"></i>
-                    <h2 class="text-xl font-medium text-white/60">Select a chat</h2>
-                    <p class="text-white/40 mt-2">Choose a room from the sidebar to start chatting</p>
+            <div class="flex-1 flex items-center justify-center p-12 text-center">
+                <div class="max-w-md fade-in">
+                    <i data-lucide="feather" class="w-16 h-16 text-medium-divider mx-auto mb-8"></i>
+                    <h2 class="text-3xl font-bold serif text-medium-black mb-4">A place for meaningful learning.</h2>
+                    <p class="text-medium-gray leading-relaxed mb-8">
+                        Select a conversation from the sidebar to continue your educational journey or start a new
+                        broadcast.
+                    </p>
+                    <button onclick="toggleSidebar()" class="btn-primary lg:hidden">
+                        Open sidebar
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Active Chat -->
-        <div id="chatView" class="flex-1 flex flex-col min-h-0 min-w-0 hidden relative h-full max-w-full">
-            <!-- Chat Header -->
-            <div class="shrink-0 p-3 sm:p-4 border-b border-white/10 flex items-center justify-between min-w-0 w-full">
-                <div class="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                    <!-- hamburger (mobile only) -->
-                    <button onclick="toggleSidebar()" class="hamburger-btn"
-                        style="align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;background:rgba(255,255,255,0.1);">
-                        <i data-lucide="menu" class="w-5 h-5 text-white"></i>
+        <!-- Active Chat View -->
+        <div id="chatView" class="flex-1 flex flex-col min-h-0 min-w-0 hidden">
+            <!-- Header -->
+            <header class="h-20 shrink-0 px-6 border-b border-medium-divider flex items-center justify-between">
+                <div class="flex items-center gap-4 min-w-0">
+                    <button onclick="toggleSidebar()" class="p-2 lg:hidden hover:bg-medium-divider rounded-lg">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
                     <div id="chatIcon"
-                        class="w-9 h-9 sm:w-10 sm:h-10 bg-white/10 rounded-full flex items-center justify-center shrink-0">
-                        <i data-lucide="users" class="w-5 h-5"></i>
+                        class="w-10 h-10 bg-medium-divider rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="users" class="w-5 h-5 text-medium-black"></i>
                     </div>
-                    <div class="min-w-0 flex-1 mr-2">
-                        <h2 id="chatTitle" class="font-medium truncate leading-tight">Chat</h2>
-                        <p id="chatSubtitle" class="text-white/40 text-xs truncate leading-tight"></p>
-                        <p id="teachingCountdown" class="text-orange-400 text-xs hidden truncate">⏱️ <span
-                                id="countdownText"></span></p>
+                    <div class="min-w-0">
+                        <h2 id="chatTitle" class="text-lg font-bold text-medium-black truncate serif">Class Chat</h2>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-brand rounded-full"></span>
+                            <p id="chatSubtitle" class="text-xs text-medium-gray font-medium truncate"></p>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-                    {% if user.is_admin() %}
-                    <button id="exportBtn" onclick="exportChat()"
-                        class="text-white/40 hover:text-white transition-colors hidden" title="Export chat">
-                        <i data-lucide="download" class="w-5 h-5"></i>
-                    </button>
-                    {% endif %}
-                    <button onclick="showRoomInfo()" class="text-white/40 hover:text-white transition-colors">
+                <div class="flex items-center gap-4">
+                    <button onclick="showRoomInfo()"
+                        class="text-medium-gray hover:text-medium-black p-2 transition-colors">
                         <i data-lucide="info" class="w-5 h-5"></i>
                     </button>
                 </div>
+            </header>
+
+            <!-- Messages Container -->
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth">
+                <!-- Messages populate here -->
             </div>
 
-            <!-- Messages -->
-            <div id="messagesContainer"
-                class="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-4 min-w-0 w-full relative">
-                <!-- Messages will be loaded here -->
-            </div>
+            <!-- Input Area -->
+            <div class="shrink-0 p-6 bg-white border-t border-medium-divider">
+                <div id="typingIndicators" class="mb-4 h-6"></div>
 
-            <!-- Message Input -->
-            <div class="shrink-0 p-3 sm:p-4 border-t border-white/10 input-area-wrapper w-full">
-                <!-- Typing Indicators -->
-                <div id="typingIndicators" class="mb-2 flex flex-col gap-1"></div>
-                <!-- Reply Preview -->
-                <div id="replyPreview" class="reply-preview hidden">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs text-blue">Replying to <span id="replyToName"></span></p>
-                        <p id="replyToContent" class="text-sm text-white/60 truncate"></p>
+                <!-- Feedback Banners -->
+                <div id="replyPreview"
+                    class="hidden mb-4 p-4 bg-medium-divider rounded-xl flex items-center justify-between">
+                    <div class="min-w-0">
+                        <p class="text-[10px] uppercase tracking-widest font-bold text-brand mb-1">Replying to <span
+                                id="replyToName"></span></p>
+                        <p id="replyToContent" class="text-sm text-medium-gray truncate"></p>
                     </div>
-                    <button onclick="cancelReply()" class="text-white/40 hover:text-white p-1">
+                    <button onclick="cancelReply()" class="p-2 hover:bg-white rounded-full">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
-                <!-- Edit Preview -->
-                <div id="editPreview" class="reply-preview hidden" style="border-left-color: #f59e0b;">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs text-amber-500">Editing message</p>
-                        <p id="editOriginalContent" class="text-sm text-white/60 truncate"></p>
-                    </div>
-                    <button onclick="cancelEdit()" class="text-white/40 hover:text-white p-1">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-                </div>
-                <!-- Lock banner (shown when group is locked and user is not admin) -->
+
                 <div id="lockBanner"
-                    class="hidden mb-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
-                    <i data-lucide="lock" class="w-4 h-4 text-red-400 shrink-0"></i>
-                    <p class="text-red-400 text-sm">This group is locked by the lecturer.</p>
-                </div>
-                <!-- Voice recording overlay (WhatsApp style) -->
-                <div id="recordingOverlay"
-                    class="hidden absolute inset-0 bg-white dark:bg-[#111b21] flex items-center px-4 z-40">
-                    <div class="flex items-center gap-4 w-full">
-                        <div class="flex items-center gap-2 text-red-500 animate-pulse">
-                            <i data-lucide="mic" class="w-5 h-5"></i>
-                            <span id="recordingTimerOverlay" class="font-medium text-lg">0:00</span>
-                        </div>
-                        <div class="flex-1 text-[#8696a0] text-sm overflow-hidden whitespace-nowrap">
-                            <div id="recordingWaveform" class="flex items-center gap-1 h-8 px-4">
-                                <!-- Waveform bars could go here -->
-                                <div class="flex-1 border-b border-dashed border-white/20"></div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <button type="button" onclick="cancelRecording()"
-                                class="p-2 text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
-                                title="Cancel">
-                                <i data-lucide="trash-2" class="w-6 h-6"></i>
-                            </button>
-                            <button type="button" id="pauseRecordingBtn" onclick="stopRecording(true)"
-                                class="p-2 text-[#8696a0] hover:bg-white/5 rounded-full transition-colors" title="Stop">
-                                <i data-lucide="square" class="w-6 h-6"></i>
-                            </button>
-                            <button type="button" onclick="finalizeRecording()"
-                                class="w-12 h-12 bg-blue rounded-full flex items-center justify-center text-white shadow-lg shadow-blue/20"
-                                title="Send">
-                                <i data-lucide="send" class="w-6 h-6"></i>
-                            </button>
-                        </div>
-                    </div>
+                    class="hidden mb-4 p-4 border border-medium-divider rounded-xl flex items-center gap-3 text-medium-gray">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                    <p class="text-sm font-medium">This class is currently in read-only mode.</p>
                 </div>
 
-                <form id="messageForm" class="relative" style="display:flex;align-items:flex-end;gap:8px;width:100%;">
-                    <!-- Attach button (AI DM only) -->
-                    <div id="leftActions" class="hidden" style="flex-shrink:0;">
+                <form id="messageForm" class="flex items-end gap-3 max-w-5xl mx-auto">
+                    <div id="leftActions" class="hidden shrink-0 pb-1">
                         <label
-                            style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);cursor:pointer;">
-                            <i data-lucide="paperclip" class="w-5 h-5 text-white/60"></i>
-                            <input type="file" id="docUpload" accept=".txt,.md,.csv,.json,.xml,.log,.py,.js,.html,.css"
-                                class="hidden">
+                            class="p-3 hover:bg-medium-divider rounded-full cursor-pointer flex items-center justify-center transition-colors">
+                            <i data-lucide="plus" class="w-5 h-5 text-medium-gray"></i>
+                            <input type="file" id="docUpload" class="hidden">
                         </label>
                     </div>
-                    <!-- Text input -->
-                    <textarea id="messageInput" rows="1"
-                        style="flex:1;min-width:0;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:24px;color:white;font-size:16px;resize:none;outline:none;"
-                        placeholder="Type a message..."></textarea>
-                    <!-- Mic button (AI DM only) -->
-                    <button type="button" id="micBtn" class="hidden" onclick="startRecording()"
-                        style="flex-shrink:0;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
-                        <i data-lucide="mic" class="w-5 h-5 text-white/60"></i>
-                    </button>
-                    <!-- Send button -->
-                    <button type="submit"
-                        style="flex-shrink:0;width:44px;height:44px;border-radius:50%;background:#0066FF;display:flex;align-items:center;justify-content:center;">
-                        <i data-lucide="send" class="w-5 h-5 text-white"></i>
-                    </button>
+                    <div class="flex-1 relative">
+                        <textarea id="messageInput" rows="1" placeholder="Type a message..."
+                            class="w-full px-0 py-3 bg-transparent border-none outline-none text-lg resize-none placeholder:text-medium-divider"></textarea>
+                    </div>
+                    <div class="flex items-center gap-2 pb-1 shrink-0">
+                        <button type="button" id="micBtn" onclick="startRecording()"
+                            class="p-3 hover:bg-medium-divider rounded-full transition-colors hidden text-medium-gray">
+                            <i data-lucide="mic" class="w-5 h-5"></i>
+                        </button>
+                        <button type="submit" class="p-3 text-brand hover:text-brand-dark transition-colors">
+                            <i data-lucide="send" class="w-6 h-6"></i>
+                        </button>
+                    </div>
                 </form>
-                <style>
-                    @keyframes pulse {
-
-                        0%,
-                        100% {
-                            opacity: 1;
-                        }
-
-                        50% {
-                            opacity: 0.4;
-                        }
-                    }
-                </style>
             </div>
         </div>
     </div>
 
     <!-- Context Menu -->
-    <div id="contextMenu" class="context-menu hidden">
-        <button onclick="replyToMessage()" class="text-white">
-            <i data-lucide="reply" class="w-4 h-4"></i>
+    <div id="contextMenu"
+        class="context-menu hidden bg-white border border-medium-divider shadow-2xl rounded-xl overflow-hidden py-1">
+        <button onclick="replyToMessage()"
+            class="w-full px-4 py-3 flex items-center gap-3 text-sm text-medium-black hover:bg-medium-divider transition-colors">
+            <i data-lucide="reply" class="w-4 h-4 text-medium-gray"></i>
             Reply
         </button>
-        <button onclick="editMessage()" id="editBtn" class="text-white hidden">
-            <i data-lucide="pencil" class="w-4 h-4"></i>
+        <button onclick="editMessage()" id="editBtn"
+            class="w-full px-4 py-3 flex items-center gap-3 text-sm text-medium-black hover:bg-medium-divider transition-colors hidden">
+            <i data-lucide="pencil" class="w-4 h-4 text-medium-gray"></i>
             Edit
         </button>
-        <button onclick="deleteForMe()" id="deleteForMeBtn" class="text-white hidden" style="color: #fbbf24;">
+        <button onclick="deleteForMe()" id="deleteForMeBtn"
+            class="w-full px-4 py-3 flex items-center gap-3 text-sm text-amber-600 hover:bg-amber-50 transition-colors hidden font-medium">
             <i data-lucide="eye-off" class="w-4 h-4"></i>
             Delete for me
         </button>
-        <button onclick="deleteForEveryone()" id="deleteForEveryoneBtn" class="text-white delete-btn hidden">
+        <button onclick="deleteForEveryone()" id="deleteForEveryoneBtn"
+            class="w-full px-4 py-3 flex items-center gap-3 text-sm text-red-600 hover:bg-red-50 transition-colors hidden font-medium">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
             Delete for everyone
         </button>
@@ -846,59 +446,60 @@
     <!-- Emoji Picker Removed -->
 
     <!-- Upgrade to Lecturer Modal -->
-    <div id="upgradeLecturerModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50"
-        style="backdrop-filter:blur(4px);">
-        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm">
-            <div class="flex items-center gap-3 mb-5">
-                <div
-                    style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#0066FF,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
+    <div id="upgradeLecturerModal"
+        class="fixed inset-0 bg-medium-black/20 backdrop-blur-sm flex items-center justify-center hidden z-50">
+        <div class="modal-inner bg-white border border-medium-divider rounded-2xl p-8 w-full max-w-sm shadow-2xl">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mb-6">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-brand"></i>
                 </div>
-                <div>
-                    <h3 class="text-xl font-bold mb-2">Staff Access</h3>
-                    <p class="text-white/60 text-sm mb-6">Enter your secret staff code to unlock advanced features.</p>
-                </div>
+                <h3 class="text-2xl font-bold serif mb-2 text-medium-black">Staff Access</h3>
+                <p class="text-medium-gray text-sm mb-8">Enter your secret staff code to unlock advanced features.</p>
             </div>
-            <div style="margin-bottom:16px;">
-                <input type="text" id="lecturerCodeInput" placeholder="e.g. CP-LECTURER-2026"
-                    style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:white;font-size:14px;outline:none;letter-spacing:1px;"
-                    onfocus="this.style.borderColor='#0066FF'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
-                <p id="lecturerCodeError" style="color:#f87171;font-size:12px;margin-top:8px;display:none;"></p>
+
+            <div class="space-y-4 mb-8">
+                <input type="text" id="lecturerCodeInput" placeholder="Enter secret code"
+                    class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none text-center font-bold tracking-widest uppercase">
+                <p id="lecturerCodeError" class="text-red-500 text-xs font-medium text-center hidden"></p>
             </div>
-            <button onclick="playSound('click'); submitLecturerUpgrade()"
-                class="w-full py-3 bg-blue hover:bg-blue-dark rounded-xl font-bold transition-all transform active:scale-[0.98] shadow-lg shadow-blue/20">
-                Unlock Access
-            </button>
-            <button onclick="playSound('click'); closeUpgradeLecturer()"
-                class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-colors text-white/40 hover:text-white mt-2">
-                Cancel
-            </button>
+
+            <div class="space-y-3">
+                <button onclick="submitLecturerUpgrade()"
+                    class="w-full py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20">
+                    Unlock Access
+                </button>
+                <button onclick="closeUpgradeLecturer()"
+                    class="w-full py-3 text-medium-gray hover:text-medium-black font-medium transition-colors">
+                    Cancel
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Create Group Modal -->
-    <div id="createGroupModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold mb-4">Create New Group</h3>
-            <form id="createGroupForm" class="space-y-4">
+    <div id="createGroupModal"
+        class="fixed inset-0 bg-medium-black/20 backdrop-blur-sm flex items-center justify-center hidden z-50">
+        <div class="modal-inner bg-white border border-medium-divider rounded-2xl p-8 w-full max-w-md shadow-2xl">
+            <h3 class="text-2xl font-bold serif mb-6 text-medium-black">Create New Group</h3>
+            <form id="createGroupForm" class="space-y-6">
                 <div>
-                    <label class="block text-sm text-white/80 mb-2">Group Name</label>
-                    <input type="text" id="groupName" required
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
+                    <label class="block text-sm font-bold text-medium-black mb-2 uppercase tracking-wide">Group
+                        Name</label>
+                    <input type="text" id="groupName" required placeholder="Enter group name"
+                        class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm text-white/80 mb-2">Description (optional)</label>
-                    <textarea id="groupDescription" rows="2"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue resize-none"></textarea>
+                    <label
+                        class="block text-sm font-bold text-medium-black mb-2 uppercase tracking-wide">Description</label>
+                    <textarea id="groupDescription" rows="2" placeholder="Optional description"
+                        class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none resize-none"></textarea>
                 </div>
                 {% if courses %}
                 <div>
-                    <label class="block text-sm text-white/80 mb-2">Link to Course (optional)</label>
+                    <label class="block text-sm font-bold text-medium-black mb-2 uppercase tracking-wide">Link to
+                        Course</label>
                     <select id="groupCourse"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
+                        class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none">
                         <option value="">No course link</option>
                         {% for course in courses %}
                         <option value="{{ course.id }}">{{ course.code }} - {{ course.name }}</option>
@@ -906,12 +507,13 @@
                     </select>
                 </div>
                 {% endif %}
-                <div class="flex space-x-3">
+                <div class="flex gap-4 pt-2">
                     <button type="button" onclick="hideCreateGroup()"
-                        class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                        class="flex-1 py-4 text-medium-gray hover:text-medium-black font-medium transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
+                    <button type="submit"
+                        class="flex-1 py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20">
                         Create
                     </button>
                 </div>
@@ -920,22 +522,26 @@
     </div>
 
     <!-- Join Group Modal -->
-    <div id="joinGroupModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold mb-4">Join Group</h3>
-            <form id="joinGroupForm" class="space-y-4">
+    <div id="joinGroupModal"
+        class="fixed inset-0 bg-medium-black/20 backdrop-blur-sm flex items-center justify-center hidden z-50">
+        <div class="modal-inner bg-white border border-medium-divider rounded-2xl p-8 w-full max-w-md shadow-2xl">
+            <h3 class="text-2xl font-bold serif mb-6 text-medium-black">Join Group</h3>
+            <form id="joinGroupForm" class="space-y-8">
                 <div>
-                    <label class="block text-sm text-white/80 mb-2">Invite Code</label>
+                    <label
+                        class="block text-sm font-bold text-medium-black mb-4 uppercase tracking-widest text-center">Invite
+                        Code</label>
                     <input type="text" id="inviteCode" required maxlength="6"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue uppercase text-center text-2xl tracking-widest"
+                        class="w-full px-6 py-6 bg-medium-divider border border-transparent rounded-2xl focus:bg-white focus:border-brand transition-all outline-none text-center text-4xl font-bold tracking-[0.5em] uppercase"
                         placeholder="ABC123">
                 </div>
-                <div class="flex space-x-3">
+                <div class="flex gap-4">
                     <button type="button" onclick="hideJoinGroup()"
-                        class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                        class="flex-1 py-4 text-medium-gray hover:text-medium-black font-medium transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
+                    <button type="submit"
+                        class="flex-1 py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20">
                         Join
                     </button>
                 </div>
@@ -944,26 +550,30 @@
     </div>
 
     <!-- Create Course Modal -->
-    <div id="createCourseModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold mb-4 text-white">Register New Course</h3>
-            <form id="createCourseForm" class="space-y-4">
+    <div id="createCourseModal"
+        class="fixed inset-0 bg-medium-black/20 backdrop-blur-sm flex items-center justify-center hidden z-50">
+        <div class="modal-inner bg-white border border-medium-divider rounded-2xl p-8 w-full max-w-md shadow-2xl">
+            <h3 class="text-2xl font-bold serif mb-6 text-medium-black">Register New Course</h3>
+            <form id="createCourseForm" class="space-y-6">
                 <div>
-                    <label class="block text-sm text-white/80 mb-2">Course Name</label>
+                    <label class="block text-sm font-bold text-medium-black mb-2 uppercase tracking-wide">Course
+                        Name</label>
                     <input type="text" id="courseName" required placeholder="e.g. Data Structures"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue">
+                        class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm text-white/80 mb-2">Course Code</label>
+                    <label class="block text-sm font-bold text-medium-black mb-2 uppercase tracking-wide">Course
+                        Code</label>
                     <input type="text" id="courseCode" required placeholder="e.g. CSC301"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue uppercase">
+                        class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none uppercase">
                 </div>
-                <div class="flex space-x-3">
+                <div class="flex gap-4 pt-2">
                     <button type="button" onclick="hideCreateCourse()"
-                        class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                        class="flex-1 py-4 text-medium-gray hover:text-medium-black font-medium transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-lg transition-colors">
+                    <button type="submit"
+                        class="flex-1 py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20">
                         Register
                     </button>
                 </div>
@@ -972,32 +582,35 @@
     </div>
 
     <!-- Create Assignment Modal -->
-    <div id="createAssignmentModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-[60]">
-        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl">
-            <h3 class="text-xl font-semibold mb-4 text-white">Create New Assignment</h3>
-            <form id="createAssignmentForm" class="space-y-4">
+    <div id="createAssignmentModal"
+        class="fixed inset-0 bg-medium-black/20 backdrop-blur-sm flex items-center justify-center hidden z-[60]">
+        <div class="modal-inner bg-white border border-medium-divider rounded-2xl p-8 w-full max-w-md shadow-2xl">
+            <h3 class="text-2xl font-bold serif mb-6 text-medium-black">Create New Assignment</h3>
+            <form id="createAssignmentForm" class="space-y-6">
                 <div>
-                    <label class="block text-sm text-white/60 mb-1.5">Title</label>
+                    <label class="block text-sm font-bold text-medium-black mb-2 uppercase tracking-wide">Title</label>
                     <input type="text" id="assignmentTitle" required placeholder="e.g. Week 1 Quiz"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-blue transition-colors">
+                        class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm text-white/60 mb-1.5">Description / Instructions</label>
+                    <label
+                        class="block text-sm font-bold text-medium-black mb-2 uppercase tracking-wide">Instructions</label>
                     <textarea id="assignmentDesc" rows="3" required placeholder="What should students do?"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-blue transition-colors resize-none"></textarea>
+                        class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none resize-none"></textarea>
                 </div>
                 <div>
-                    <label class="block text-sm text-white/60 mb-1.5">Due Date (Optional)</label>
+                    <label class="block text-sm font-bold text-medium-black mb-2 uppercase tracking-wide">Due
+                        Date</label>
                     <input type="datetime-local" id="assignmentDue"
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-blue transition-colors text-white">
+                        class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none text-medium-black uppercase text-xs font-bold">
                 </div>
-                <div class="flex gap-3 pt-2">
+                <div class="flex gap-4 pt-2">
                     <button type="button" onclick="hideCreateAssignment()"
-                        class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors font-medium">
+                        class="flex-1 py-4 text-medium-gray hover:text-medium-black font-medium transition-colors">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="flex-1 py-3 bg-blue hover:bg-blue-dark rounded-xl transition-all transform active:scale-95 font-bold shadow-lg shadow-blue/20">
+                        class="flex-1 py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20">
                         Post Assignment
                     </button>
                 </div>
@@ -1006,155 +619,187 @@
     </div>
 
     <!-- Submit Assignment Modal -->
-    <div id="submitAssignmentModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-[60]">
-        <div class="modal-inner bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xl font-semibold text-white">Submit Assignment</h3>
-                <button onclick="hideSubmitAssignment()" class="text-white/40 hover:text-white transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+    <div id="submitAssignmentModal"
+        class="fixed inset-0 bg-medium-black/20 backdrop-blur-sm flex items-center justify-center hidden z-[60]">
+        <div class="modal-inner bg-white border border-medium-divider rounded-2xl p-8 w-full max-w-md shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold serif text-medium-black">Submit Assignment</h3>
+                <button onclick="hideSubmitAssignment()"
+                    class="text-medium-gray hover:text-medium-black transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
             </div>
-            <div class="mb-4">
-                <p id="submitAssignTitle" class="text-lg font-medium text-white"></p>
-                <p id="submitAssignDesc" class="text-sm text-white/60 mt-1"></p>
+            <div class="mb-8 p-4 bg-medium-divider rounded-xl">
+                <p id="submitAssignTitle" class="text-lg font-bold text-medium-black serif"></p>
+                <p id="submitAssignDesc" class="text-sm text-medium-gray mt-2"></p>
             </div>
-            <form id="submitAssignmentForm" class="space-y-4">
+            <form id="submitAssignmentForm" class="space-y-6">
                 <input type="hidden" id="submitAssignId">
                 <div>
-                    <label class="block text-sm text-white/60 mb-1.5">Your Response / Comments</label>
+                    <label class="block text-sm font-bold text-medium-black mb-2 uppercase tracking-wide">Your
+                        Response</label>
                     <textarea id="submitContent" rows="4" placeholder="Type your submission here..."
-                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-blue transition-colors resize-none"></textarea>
+                        class="w-full px-4 py-3 bg-medium-divider border border-transparent rounded-xl focus:bg-white focus:border-brand transition-all outline-none resize-none"></textarea>
                 </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="submit"
-                        class="w-full py-4 bg-blue hover:bg-blue-dark rounded-xl transition-all transform active:scale-95 font-bold shadow-lg shadow-blue/20">
-                        Turn In
-                    </button>
-                </div>
+                <button type="submit"
+                    class="w-full py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20">
+                    Turn In
+                </button>
             </form>
         </div>
     </div>
 
     <!-- View Submissions Modal -->
-    <div id="viewSubmissionsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-[60]">
+    <div id="viewSubmissionsModal"
+        class="fixed inset-0 bg-medium-black/20 backdrop-blur-sm flex items-center justify-center hidden z-[60]">
         <div
-            class="modal-inner bg-[#111b21] rounded-2xl w-full max-w-2xl h-full sm:h-auto sm:max-h-[80vh] flex flex-col overflow-hidden shadow-2xl border border-white/5">
-            <div class="p-4 bg-[#202c33] flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-3">
-                    <button onclick="hideViewSubmissions()" class="text-white/60 hover:text-white">
+            class="modal-inner bg-white rounded-3xl w-full max-w-2xl h-full sm:h-auto sm:max-h-[85vh] flex flex-col overflow-hidden shadow-2xl border border-medium-divider">
+            <div class="p-6 bg-white border-b border-medium-divider flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-4">
+                    <button onclick="hideViewSubmissions()"
+                        class="text-medium-gray hover:text-medium-black transition-colors">
                         <i data-lucide="arrow-left" class="w-6 h-6"></i>
                     </button>
-                    <h3 class="text-xl font-medium text-white">Submissions</h3>
+                    <h3 class="text-2xl font-bold serif text-medium-black">Submissions</h3>
                 </div>
-                <div id="submissionCount" class="text-sm text-[#8696a0]"></div>
+                <div id="submissionCount" class="px-3 py-1 bg-brand/10 text-brand text-xs font-bold rounded-full"></div>
             </div>
-            <div id="submissionsList" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div id="submissionsList" class="flex-1 overflow-y-auto p-6 space-y-6 bg-medium-divider/20">
                 <!-- Submissions populated here -->
             </div>
         </div>
     </div>
 
-    <!-- Room Info Modal (WhatsApp Style) -->
+    <!-- Room Info Modal (Medium Style) -->
     <div id="roomInfoModal"
-        class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 transition-all duration-300">
+        class="fixed inset-0 bg-medium-black/20 backdrop-blur-sm flex items-center justify-center hidden z-50 transition-all duration-300">
         <div
-            class="modal-inner bg-[#111b21] rounded-none sm:rounded-2xl w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            class="modal-inner bg-white rounded-none sm:rounded-3xl w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-medium-divider">
             <!-- Header -->
-            <div class="p-4 bg-[#202c33] shrink-0 flex items-center justify-between">
+            <div class="p-6 bg-white shrink-0 flex items-center justify-between border-b border-medium-divider">
                 <div class="flex items-center gap-4">
-                    <button onclick="hideRoomInfo()" class="text-white/60 hover:text-white">
+                    <button onclick="hideRoomInfo()" class="text-medium-gray hover:text-medium-black transition-colors">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
-                    <h3 class="text-xl font-medium">Group info</h3>
+                    <h3 class="text-xl font-bold serif">Group Info</h3>
                 </div>
                 <!-- Tabs -->
                 <div id="roomTabs" class="hidden flex gap-6">
                     <button onclick="switchRoomTab('info')" id="roomTab-info"
-                        class="text-blue border-b-2 border-blue py-1 font-medium text-sm transition-all">Info</button>
+                        class="text-brand border-b-2 border-brand py-1 font-bold text-sm transition-all uppercase tracking-widest">Info</button>
                     <button onclick="switchRoomTab('classroom')" id="roomTab-classroom"
-                        class="text-[#8696a0] border-b-2 border-transparent py-1 font-medium text-sm transition-all">Classroom</button>
+                        class="text-medium-gray border-b-2 border-transparent py-1 font-bold text-sm transition-all uppercase tracking-widest">Classroom</button>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto bg-[#111b21] relative">
+            <div class="flex-1 overflow-y-auto bg-white relative">
                 <!-- Section: Info -->
-                <div id="roomSection-info" class="space-y-2">
+                <div id="roomSection-info">
                     <!-- Profile Pic Section -->
-                    <div class="flex flex-col items-center py-8 bg-[#111b21]">
+                    <div class="flex flex-col items-center py-12">
                         <div class="relative group">
                             <div id="roomInfoAvatar"
-                                class="w-40 h-40 rounded-full bg-[#202c33] flex items-center justify-center overflow-hidden">
-                                <i data-lucide="users" class="w-20 h-20 text-[#6a7175]"></i>
+                                class="w-48 h-48 rounded-full bg-medium-divider flex items-center justify-center overflow-hidden border-4 border-white shadow-xl">
+                                <i data-lucide="users" class="w-24 h-24 text-medium-gray"></i>
                             </div>
                             <label id="roomAvatarLabel" for="roomAvatarUpload"
-                                class="absolute bottom-2 right-2 w-10 h-10 bg-blue rounded-full flex items-center justify-center cursor-pointer shadow-lg hidden">
-                                <i data-lucide="camera" class="w-5 h-5 text-white"></i>
+                                class="absolute bottom-4 right-4 w-12 h-12 bg-brand rounded-full flex items-center justify-center cursor-pointer shadow-lg hidden hover:scale-110 transition-transform">
+                                <i data-lucide="camera" class="w-6 h-6 text-white"></i>
                                 <input type="file" id="roomAvatarUpload" accept="image/*" class="hidden">
                             </label>
                         </div>
-                        <h2 id="roomInfoName" class="text-2xl font-medium mt-4 text-white"></h2>
-                        <p id="roomInfoSubtitle" class="text-[#8696a0] mt-1"></p>
-                    </div>
-
-                    <!-- Description Section -->
-                    <div class="bg-[#111b21] p-4 border-t border-white/5">
-                        <p class="text-blue text-sm mb-2">Description</p>
-                        <p id="roomInfoDesc" class="text-white/80 whitespace-pre-wrap"></p>
-                    </div>
-
-                    <!-- Members Section -->
-                    <div class="bg-[#111b21] border-t border-white/5">
-                        <div class="p-4 flex items-center justify-between">
-                            <p id="roomMemberCount" class="text-[#8696a0] text-sm"></p>
-                            <i data-lucide="search" class="w-5 h-5 text-[#8696a0]"></i>
+                        <div class="flex items-center gap-3 mt-6">
+                            <h2 id="roomInfoName" class="text-3xl font-bold serif text-medium-black"></h2>
+                            <button id="editRoomBtn" onclick="toggleEditRoomInfo()"
+                                class="text-medium-gray hover:text-brand transition-colors hidden">
+                                <i data-lucide="edit-3" class="w-5 h-5"></i>
+                            </button>
                         </div>
-                        <div id="roomMemberList" class="divide-y divide-white/5">
-                            <!-- Members populated here -->
+                        <input id="roomNameInput"
+                            class="hidden text-3xl font-bold serif text-medium-black border-b-2 border-brand outline-none text-center bg-transparent mt-6 mb-2"
+                            placeholder="Group Name">
+                        <p id="roomInfoSubtitle" class="text-brand font-bold uppercase tracking-widest text-[10px]"></p>
+                    </div>
+
+                    <div class="px-8 space-y-8 pb-12">
+                        <!-- Description Section -->
+                        <div class="space-y-2">
+                            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-medium-gray">Description</p>
+                            <p id="roomInfoDesc" class="text-medium-black leading-relaxed whitespace-pre-wrap"></p>
+                            <textarea id="roomDescInput"
+                                class="hidden w-full text-medium-black leading-relaxed p-4 bg-medium-divider/50 rounded-2xl border-2 border-brand outline-none focus:bg-white transition-all serif"
+                                rows="3" placeholder="Tell students what this group is about..."></textarea>
+                        </div>
+
+                        <!-- Save/Cancel Buttons -->
+                        <div id="roomEditActions" class="hidden flex gap-3 pt-4">
+                            <button onclick="cancelEditRoomInfo()"
+                                class="flex-1 py-3 bg-medium-divider hover:bg-medium-divider/80 text-medium-black rounded-full text-sm font-bold transition-all">Cancel</button>
+                            <button onclick="saveRoomInfo()"
+                                class="flex-1 py-3 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/20">Save
+                                Changes</button>
+                        </div>
+
+                        <!-- Members Section -->
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <p id="roomMemberCount"
+                                    class="text-[10px] uppercase tracking-[0.2em] font-bold text-medium-gray"></p>
+                                <button class="text-medium-gray hover:text-medium-black">
+                                    <i data-lucide="search" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <div id="roomMemberList" class="space-y-1">
+                                <!-- Members populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Stats Section (Teaching Groups) -->
+                        <div id="teachingStatsSection" class="pt-8 border-t border-medium-divider hidden">
+                            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-brand mb-4">Student Activity
+                            </p>
+                            <div id="teachingStatsContent"
+                                class="text-sm text-medium-black leading-relaxed p-4 bg-medium-divider/30 rounded-2xl">
+                            </div>
+                        </div>
+
+                        <!-- Admin Actions -->
+                        <div id="roomAdminActions" class="pt-8 border-t border-medium-divider hidden space-y-6">
+                            <div class="flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <p class="text-sm font-bold text-medium-black">Lock Group</p>
+                                    <p class="text-xs text-medium-gray">Prevent students from sending messages</p>
+                                </div>
+                                <button id="lockToggleBtn" onclick="toggleGroupLock()"
+                                    class="relative w-12 h-6 rounded-full transition-colors focus:outline-none bg-medium-divider">
+                                    <span
+                                        class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+                                </button>
+                            </div>
+                            <button onclick="confirmDeleteGroup()"
+                                class="w-full py-4 text-red-600 border border-red-100 bg-red-50/50 hover:bg-red-50 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                Delete Group
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Section: Classroom -->
-                <div id="roomSection-classroom" class="hidden p-4 space-y-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <h4 class="text-lg font-medium text-white">Assignments</h4>
+                <div id="roomSection-classroom" class="hidden px-8 py-6 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-2xl font-bold serif text-medium-black">Assignments</h4>
                         <button id="createAssignmentBtn" onclick="showCreateAssignment()"
-                            class="hidden px-3 py-1.5 bg-blue hover:bg-blue-dark text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5">
+                            class="hidden px-4 py-2 bg-brand hover:bg-brand-dark text-white text-xs font-bold rounded-full transition-all flex items-center gap-2 shadow-lg shadow-brand/10">
                             <i data-lucide="plus" class="w-4 h-4"></i>
-                            New Assignment
+                            New
                         </button>
                     </div>
 
-                    <div id="assignmentList" class="space-y-3">
+                    <div id="assignmentList" class="space-y-4">
                         <!-- Assignments populated here -->
-                        <div class="p-6 text-center text-[#8696a0] text-sm italic">
-                            No assignments yet.
-                        </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Stats Section (Teaching Groups) -->
-            <div id="teachingStatsSection" class="mt-2 bg-[#111b21] p-4 border-t border-white/5 hidden">
-                <p class="text-blue text-sm mb-2">📊 Student Activity</p>
-                <div id="teachingStatsContent" class="text-sm text-[#8696a0]"></div>
-            </div>
-
-            <!-- Admin Actions -->
-            <div id="roomAdminActions" class="mt-2 bg-[#111b21] p-4 border-t border-white/5 hidden space-y-4">
-                <div class="flex items-center justify-between">
-                    <p class="text-white/60 text-sm">Lock Group</p>
-                    <button id="lockToggleBtn" onclick="toggleGroupLock()"
-                        class="relative w-11 h-6 rounded-full transition-colors focus:outline-none bg-white/20">
-                        <span
-                            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform translate-x-0"></span>
-                    </button>
-                </div>
-                <button onclick="confirmDeleteGroup()"
-                    class="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    Delete Group
-                </button>
             </div>
         </div>
     </div>
@@ -1215,21 +860,21 @@
         }
 
         function renderAvatar(name, picUrl, size, userId) {
-            size = size || 'w-8 h-8';
+            size = size || 'w-10 h-10';
             const isOnline = userId && onlineUsers.has(parseInt(userId));
-            const onlineStatusClass = isOnline ? '' : 'hidden'; // For dynamic toggling later if needed
-            const onlineDot = isOnline ? `<div class="presence-dot absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full z-10" data-user-id="${userId}"></div>` : '';
+            const onlineStatusClass = isOnline ? '' : 'hidden';
+            const onlineDot = isOnline ? `<div class="presence-dot absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-brand border-2 border-white rounded-full z-10" data-user-id="${userId}"></div>` : '';
 
             let avatarHtml = '';
             if (picUrl === '__bot__' || name === 'ClassPulse AI') {
-                avatarHtml = `<div class="${size} rounded-full bg-purple-600/30 border border-purple-500/30 flex items-center justify-center shrink-0">
-                    <i data-lucide="bot" class="w-4 h-4 text-purple-400"></i></div>`;
+                avatarHtml = `<div class="${size} rounded-full bg-medium-divider flex items-center justify-center shrink-0">
+                    <i data-lucide="bot" class="w-5 h-5 text-brand"></i></div>`;
             } else if (picUrl) {
-                avatarHtml = `<img src="/static/${picUrl}" alt="${escapeHtml(name)}" class="${size} rounded-full object-cover shrink-0">`;
+                avatarHtml = `<img src="/static/${picUrl}" alt="${escapeHtml(name)}" class="${size} rounded-full object-cover shrink-0 border border-medium-divider">`;
             } else {
                 const initial = name ? name.charAt(0).toUpperCase() : '?';
-                const color = getAvatarColor(name || '');
-                avatarHtml = `<div class="${size} rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0" style="background-color:${color}">${initial}</div>`;
+                const color = '#F2F2F2';
+                avatarHtml = `<div class="${size} rounded-full flex items-center justify-center text-medium-black text-sm font-bold shrink-0 bg-medium-divider border border-medium-divider">${initial}</div>`;
             }
 
             return `<div class="relative flex-shrink-0">${avatarHtml}${onlineDot}</div>`;
@@ -1905,15 +1550,15 @@
             const div = document.createElement('div');
 
             if (msg.message_type === 'system') {
-                div.className = 'text-center text-white/40 text-sm py-2';
+                div.className = 'text-center text-medium-gray text-xs py-4 uppercase tracking-widest font-bold';
                 div.textContent = msg.content;
             } else if (msg.message_type === 'deleted') {
                 const isOwn = msg.sender_id === currentUser.id;
                 div.className = `flex ${isOwn ? 'justify-end' : 'justify-start'}`;
                 div.setAttribute('data-message-id', msg.id);
                 div.innerHTML = `
-                    <div class="max-w-[70%] bg-white/5 rounded-2xl px-4 py-3">
-                        <p class="text-sm italic text-white/40">This message was deleted</p>
+                    <div class="max-w-[70%] bg-medium-divider/50 rounded-xl px-4 py-3 border border-medium-divider">
+                        <p class="text-sm italic text-medium-gray">This message was deleted</p>
                     </div>
                 `;
             } else {
@@ -1921,49 +1566,46 @@
                 const isAi = msg.message_type === 'ai_response';
                 const isBroadcast = msg.message_type === 'broadcast';
                 const canEdit = isOwn && !isAi;
-                const canDelete = isOwn || currentUser.role === 'admin';
 
                 // Reply preview HTML
                 let replyHtml = '';
                 if (msg.reply_to) {
                     replyHtml = `
-                        <div class="text-xs bg-white/5 rounded px-2 py-1 mb-2 border-l-2 border-blue">
-                            <span class="text-blue">${escapeHtml(msg.reply_to.sender_name)}</span>
-                            <p class="text-white/50 truncate">${escapeHtml(msg.reply_to.content)}</p>
+                        <div class="text-xs bg-medium-divider rounded-lg px-3 py-2 mb-3 border-l-4 border-brand">
+                            <span class="text-medium-black font-bold mb-1 block">${escapeHtml(msg.reply_to.sender_name)}</span>
+                            <p class="text-medium-gray truncate">${escapeHtml(msg.reply_to.content)}</p>
                         </div>
                     `;
                 }
 
                 // Edited indicator
-                const editedHtml = msg.edited_at ? '<span class="edited-indicator text-white/30 ml-2">(edited)</span>' : '';
+                const editedHtml = msg.edited_at ? '<span class="text-[10px] text-medium-gray/50 ml-2">(edited)</span>' : '';
 
                 div.className = `message-wrapper flex ${isOwn ? 'justify-end' : 'justify-start'} ${animate ? 'message-enter' : ''} group`;
                 div.setAttribute('data-message-id', msg.id);
                 div.setAttribute('data-sender-id', msg.sender_id);
                 div.setAttribute('data-content', msg.content);
                 div.setAttribute('data-sender-name', msg.sender_name || 'Unknown');
-                div.setAttribute('data-message-type', msg.message_type || 'text');
 
-                const bgClass = isOwn ? 'bg-blue' : isBroadcast ? 'bg-green-600/30 border border-green-500/30' : isAi ? 'bg-purple-600/30 border border-purple-500/30' : 'bg-white/10';
+                const bubbleClass = isOwn ? 'msg-self' : '';
 
                 div.innerHTML = `
-                    <span class="swipe-reply-hint"><i data-lucide="reply" class="w-4 h-4"></i></span>
-                    <div class="msg-bubble-wrap">
-                        <div class="flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : ''}">
-                            ${!isOwn ? renderAvatar(msg.sender_name || 'Unknown', msg.sender_pic, 'w-8 h-8', msg.sender_id) : ''}
-                            <div class="bubble-inner min-w-0 ${bgClass} rounded-2xl px-4 py-3">
-                                ${!isOwn ? `<p class="text-xs ${isAi ? 'text-purple-400' : isBroadcast ? 'text-green-400' : 'text-white/60'} mb-1">${escapeHtml(msg.sender_name || 'Unknown')}${isAi ? ' (AI)' : isBroadcast ? ' (Broadcast)' : ''}</p>` : ''}
-                                ${replyHtml}
-                                <p class="message-content text-sm whitespace-pre-wrap">${escapeHtml(msg.content)}</p>
-                                <div class="flex items-center justify-end gap-1 mt-1">
-                                    <p class="message-time text-[10px] text-white/40">${formatTime(msg.created_at)}${editedHtml}</p>
-                                    ${isOwn ? renderStatusTicks(msg.status) : ''}
+                    <div class="msg-bubble-wrap ${bubbleClass}">
+                        <div class="flex items-start gap-4 ${isOwn ? 'flex-row-reverse' : ''}">
+                            ${!isOwn ? renderAvatar(msg.sender_name || 'Unknown', msg.sender_pic, 'w-10 h-10', msg.sender_id) : ''}
+                            <div class="flex-1 min-w-0">
+                                ${!isOwn ? `<p class="text-xs font-bold text-medium-black mb-1 serif">${escapeHtml(msg.sender_name || 'Unknown')}${isAi ? ' <span class="text-brand ml-1">AI</span>' : isBroadcast ? ' <span class="text-brand ml-1">Broadcast</span>' : ''}</p>` : ''}
+                                <div class="msg-bubble">
+                                    ${replyHtml}
+                                    <p class="message-content text-sm whitespace-pre-wrap">${escapeHtml(msg.content)}</p>
                                 </div>
-                            </div>
-                            <div class="message-actions flex items-center gap-1 mb-2">
-                                <button onclick="showContextMenu(event, ${msg.id})" class="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white transition-colors">
-                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
-                                </button>
+                                <div class="flex items-center mt-2 ${isOwn ? 'justify-end' : 'justify-start'} gap-2">
+                                    <p class="message-time text-[10px] text-medium-gray font-medium">${formatTime(msg.created_at)}${editedHtml}</p>
+                                    ${isOwn ? renderStatusTicks(msg.status) : ''}
+                                    <button onclick="showContextMenu(event, ${msg.id})" class="opacity-0 group-hover:opacity-100 p-1 hover:bg-medium-divider rounded transition-all">
+                                        <i data-lucide="more-horizontal" class="w-4 h-4 text-medium-gray"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1984,27 +1626,27 @@
             if (status === 'sending') {
                 return `
                     <div class="ml-1" title="Sending...">
-                        <i data-lucide="clock" class="w-3 h-3 text-white/40 animate-pulse"></i>
+                        <i data-lucide="clock" class="w-3 h-3 text-medium-gray/50 animate-pulse"></i>
                     </div>
                 `;
             } else if (status === 'read') {
                 return `
-                    <div class="flex items-center -space-x-2 ml-1" title="Read">
-                        <i data-lucide="check" class="w-3 h-3 text-blue-400"></i>
-                        <i data-lucide="check" class="w-3 h-3 text-blue-400"></i>
+                    <div class="flex items-center -space-x-1.5 ml-1" title="Read">
+                        <i data-lucide="check" class="w-3 h-3 text-brand"></i>
+                        <i data-lucide="check" class="w-3 h-3 text-brand"></i>
                     </div>
                 `;
             } else if (status === 'delivered') {
                 return `
-                    <div class="flex items-center -space-x-2 ml-1" title="Delivered">
-                        <i data-lucide="check" class="w-3 h-3 text-white/40"></i>
-                        <i data-lucide="check" class="w-3 h-3 text-white/40"></i>
+                    <div class="flex items-center -space-x-1.5 ml-1" title="Delivered">
+                        <i data-lucide="check" class="w-3 h-3 text-medium-gray/50"></i>
+                        <i data-lucide="check" class="w-3 h-3 text-medium-gray/50"></i>
                     </div>
                 `;
             } else {
                 return `
                     <div class="ml-1" title="Sent">
-                        <i data-lucide="check" class="w-3 h-3 text-white/40"></i>
+                        <i data-lucide="check" class="w-3 h-3 text-medium-gray/50"></i>
                     </div>
                 `;
             }
@@ -2520,6 +2162,10 @@
             document.getElementById('roomInfoModal').classList.remove('hidden');
             lucide.createIcons();
 
+            // Admin: Show edit button
+            document.getElementById('editRoomBtn').classList.toggle('hidden', !isStaff || !isGroup);
+            cancelEditRoomInfo(); // Ensure we start in view mode
+
             // Avatar upload listener (once)
             const avatarInput = document.getElementById('roomAvatarUpload');
             if (!avatarInput.hasListener) {
@@ -2538,6 +2184,74 @@
                 });
                 avatarInput.hasListener = true;
             }
+        }
+
+        let isEditingRoom = false;
+        function toggleEditRoomInfo() {
+            isEditingRoom = true;
+            document.getElementById('roomInfoName').classList.add('hidden');
+            document.getElementById('editRoomBtn').classList.add('hidden');
+            document.getElementById('roomNameInput').classList.remove('hidden');
+            document.getElementById('roomNameInput').value = currentRoom.name;
+
+            document.getElementById('roomInfoDesc').classList.add('hidden');
+            document.getElementById('roomDescInput').classList.remove('hidden');
+            document.getElementById('roomDescInput').value = currentRoom.description || '';
+
+            document.getElementById('roomEditActions').classList.remove('hidden');
+            document.getElementById('roomAdminActions').classList.add('hidden');
+            document.getElementById('roomNameInput').focus();
+        }
+
+        function cancelEditRoomInfo() {
+            isEditingRoom = false;
+            document.getElementById('roomInfoName').classList.remove('hidden');
+            document.getElementById('editRoomBtn').classList.remove('hidden');
+            document.getElementById('roomNameInput').classList.add('hidden');
+
+            document.getElementById('roomInfoDesc').classList.remove('hidden');
+            document.getElementById('roomDescInput').classList.add('hidden');
+
+            document.getElementById('roomEditActions').classList.add('hidden');
+            const isStaff = currentUser.role === 'admin' || currentUser.role === 'lecturer';
+            const isGroup = currentRoom.room_type === 'group';
+            if (isStaff && isGroup) {
+                document.getElementById('roomAdminActions').classList.remove('hidden');
+            }
+        }
+
+        function saveRoomInfo() {
+            const newName = document.getElementById('roomNameInput').value.trim();
+            const newDesc = document.getElementById('roomDescInput').value.trim();
+
+            if (!newName) {
+                showToast('Name cannot be empty');
+                return;
+            }
+
+            socket.emit('update_room_info', {
+                user_id: currentUser.id,
+                room_id: currentRoom.id,
+                name: newName,
+                description: newDesc
+            });
+
+            // Optimistic update
+            currentRoom.name = newName;
+            currentRoom.description = newDesc;
+            document.getElementById('roomInfoName').textContent = newName;
+            document.getElementById('roomInfoDesc').textContent = newDesc || 'No description provided.';
+
+            // Update sidebar if visible
+            const roomBtn = document.querySelector(`[data-room-id="${currentRoom.id}"] p.font-medium`);
+            if (roomBtn) roomBtn.textContent = newName;
+
+            // Update header if active
+            const headerName = document.getElementById('chatHeaderName');
+            if (headerName) headerName.textContent = newName;
+
+            cancelEditRoomInfo();
+            showToast('Group info updated');
         }
 
         function switchRoomTab(tab) {

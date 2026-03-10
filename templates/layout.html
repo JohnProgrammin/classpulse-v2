@@ -6,24 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ClassPulse{% endblock %}</title>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- GSAP Animation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap"
+        rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        blue: {
-                            DEFAULT: '#0066FF',
-                            dark: '#0052CC',
-                        }
+                        brand: '#1A8917', // Medium Green
+                        'brand-dark': '#156d12',
+                        'medium-black': '#242424',
+                        'medium-gray': '#6B6B6B',
+                        'medium-divider': '#F2F2F2',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Source Serif Pro', 'serif'],
                     }
                 }
             }
@@ -31,20 +34,34 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-        * {
+        body {
+            background-color: #FFFFFF;
+            color: #242424;
             font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        body {
-            background: #000000;
-            color: #FFFFFF;
+        .serif {
+            font-family: 'Source Serif Pro', serif;
+        }
+
+        /* Medium style buttons */
+        .btn-primary {
+            @apply px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded-full transition-all text-sm font-medium;
+        }
+
+        .btn-secondary {
+            @apply px-4 py-2 text-medium-gray hover:text-medium-black transition-all text-sm font-medium;
+        }
+
+        /* Subtle dividers */
+        .divider {
+            border-bottom: 1px solid #F2F2F2;
         }
 
         /* Smooth animations */
         .fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
+            animation: fadeIn 0.4s ease-out forwards;
             opacity: 0;
         }
 
@@ -56,51 +73,51 @@
 
         /* Custom scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #000;
+            background: #FFFFFF;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 3px;
+            background: #E6E6E6;
+            border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: #CCCCCC;
         }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body class="selection:bg-brand/20">
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
-        <div class="max-w-6xl mx-auto px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <a href="/" class="flex items-center space-x-2 group">
-                    <span class="text-lg font-semibold">ClassPulse</span>
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-medium-divider">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12">
+            <div class="flex items-center justify-between h-20">
+                <a href="/" class="flex items-center space-x-1 group">
+                    <span class="text-2xl font-bold tracking-tighter serif">ClassPulse</span>
                 </a>
 
-                <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-8">
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('dashboard') }}"
-                        class="text-white/60 hover:text-white transition-colors text-sm">
+                        class="text-sm text-medium-gray hover:text-medium-black transition-colors">
                         Dashboard
                     </a>
                     <div class="flex items-center space-x-3">
-                        <span class="text-sm text-white/60">{{ current_user.name }}</span>
+                        <span class="text-sm font-medium text-medium-black">{{ current_user.name }}</span>
                     </div>
-                    <a href="{{ url_for('logout') }}" class="text-white/40 hover:text-white transition-colors">
+                    <a href="{{ url_for('logout') }}"
+                        class="text-medium-gray hover:text-medium-black transition-colors">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                     </a>
                     {% else %}
-                    <a href="{{ url_for('login') }}"
-                        class="px-4 py-2 bg-blue hover:bg-blue-dark rounded-lg transition-colors text-sm font-medium">
-                        Login
+                    <a href="{{ url_for('login') }}" class="btn-primary">
+                        Sign In
                     </a>
                     {% endif %}
                 </div>
@@ -111,16 +128,16 @@
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="fixed top-20 right-6 z-50 space-y-2 fade-in">
+    <div class="fixed top-24 right-6 z-50 space-y-3 fade-in">
         {% for category, message in messages %}
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-xl max-w-md">
+        <div class="bg-white border border-medium-divider px-6 py-4 rounded-lg shadow-sm max-w-md">
             <div class="flex items-center space-x-3">
                 {% if category == 'success' %}
-                <i data-lucide="check-circle" class="w-5 h-5 text-blue"></i>
+                <i data-lucide="check-circle" class="w-5 h-5 text-brand"></i>
                 {% else %}
                 <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
                 {% endif %}
-                <p class="text-sm">{{ message }}</p>
+                <p class="text-sm font-medium text-medium-black">{{ message }}</p>
             </div>
         </div>
         {% endfor %}
@@ -129,18 +146,24 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main class="pt-16">
+    <main class="pt-20">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-white/10 mt-20">
-        <div class="max-w-6xl mx-auto px-6 lg:px-8 py-12">
-            <div class="flex items-center justify-between text-sm text-white/40">
-                <div class="flex items-center space-x-2">
-                    <span>© 2025 ClassPulse</span>
+    <footer class="border-t border-medium-divider mt-32">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 py-16">
+            <div
+                class="flex flex-col md:flex-row items-center justify-between text-sm text-medium-gray space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-6">
+                    <span class="font-bold text-medium-black serif">ClassPulse</span>
+                    <span>© 2025</span>
                 </div>
-                <span>Built for educators who care</span>
+                <div class="flex items-center space-x-8">
+                    <a href="#" class="hover:text-medium-black">About</a>
+                    <a href="#" class="hover:text-medium-black">Terms</a>
+                    <a href="#" class="hover:text-medium-black">Privacy</a>
+                </div>
             </div>
         </div>
     </footer>
@@ -149,14 +172,15 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Auto-hide flash messages after 3 seconds
+        // Auto-hide flash messages after 3 seconds with graceful fade
         document.addEventListener('DOMContentLoaded', () => {
-            const flashContainer = document.querySelector('.fixed.top-20.right-6');
+            const flashContainer = document.querySelector('.fixed.top-24.right-6');
             if (flashContainer) {
                 setTimeout(() => {
-                    flashContainer.style.transition = 'opacity 0.5s ease-out';
+                    flashContainer.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
                     flashContainer.style.opacity = '0';
-                    setTimeout(() => flashContainer.remove(), 500);
+                    flashContainer.style.transform = 'translateX(20px)';
+                    setTimeout(() => flashContainer.remove(), 600);
                 }, 3000);
             }
         });

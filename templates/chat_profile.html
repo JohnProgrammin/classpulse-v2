@@ -13,7 +13,15 @@
             theme: {
                 extend: {
                     colors: {
-                        blue: { DEFAULT: '#0066FF', dark: '#0052CC' }
+                        brand: '#1A8917',
+                        'brand-dark': '#156d12',
+                        'medium-black': '#242424',
+                        'medium-gray': '#6B6B6B',
+                        'medium-divider': '#F2F2F2',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Source Serif Pro', 'serif'],
                     }
                 }
             }
@@ -21,110 +29,107 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-        * {
-            font-family: 'Inter', sans-serif;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap');
 
         body {
-            background: #111111;
-            color: #FFFFFF;
-            min-height: 100vh;
-            overflow-x: hidden;
-            width: 100%;
+            background-color: #FFFFFF;
+            color: #242424;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* ---- avatar circle ---- */
+        .serif {
+            font-family: 'Source Serif Pro', serif;
+        }
+
+        /* Avatar styling */
         .avatar-wrap {
             position: relative;
-            width: 120px;
-            height: 120px;
+            width: 160px;
+            height: 160px;
             margin: 0 auto;
         }
 
         .avatar-wrap img,
         .avatar-wrap .avatar-initials {
-            width: 120px;
-            height: 120px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
             object-fit: cover;
             display: block;
+            border: 1px solid #F2F2F2;
         }
 
         .avatar-wrap .avatar-initials {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
+            font-size: 4rem;
             font-weight: 700;
-            color: #fff;
-            background: linear-gradient(135deg, #0066FF, #7c3aed);
+            color: #242424;
+            background-color: #F2F2F2;
+            font-family: 'Source Serif Pro', serif;
         }
 
-        /* camera badge */
         .camera-badge {
             position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 36px;
-            height: 36px;
-            background: #0066FF;
+            bottom: 8px;
+            right: 8px;
+            width: 44px;
+            height: 44px;
+            background: #1A8917;
             border-radius: 50%;
-            border: 3px solid #111;
+            border: 4px solid #FFFFFF;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .camera-badge:hover {
-            background: #0052CC;
+            background: #156d12;
+            transform: scale(1.05);
         }
 
-        /* sticky header blur */
-        .header-blur {
-            background: rgba(17, 17, 17, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+        /* Sticky header */
+        .header-sticky {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
         }
 
-        /* iOS zoom prevention */
-        @media (max-width: 1023px) {
-
-            input,
-            textarea,
-            select {
-                font-size: 16px !important;
-            }
-        }
-
-        /* ---- Crop / adjust modal ---- */
+        /* Modal styling */
         #cropModal {
             display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(36, 36, 36, 0.98);
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
         }
 
         #cropModal.active {
             display: flex;
         }
 
-        #cropModal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.92);
-            z-index: 100;
+        .crop-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            padding: 48px 24px 56px;
+            gap: 32px;
         }
 
         .crop-clip {
-            width: 240px;
-            height: 240px;
+            width: 280px;
+            height: 280px;
             border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
             position: relative;
             touch-action: none;
@@ -141,188 +146,211 @@
             cursor: grab;
         }
 
-        #cropImg.dragging {
+        #cropImg:active {
             cursor: grabbing;
         }
 
-        .zoom-row {
+        .zoom-slider-container {
             width: 100%;
-            max-width: 280px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 0 10px;
-        }
-
-        .zoom-row span {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 1.25rem;
-            user-select: none;
-        }
-
-        .crop-btns {
-            width: 100%;
-            max-width: 320px;
-            display: flex;
-            gap: 12px;
-            padding: 0 10px;
-        }
-
-        .crop-btns button {
-            flex: 1;
-            padding: 12px 0;
-            border-radius: 8px;
-            border: none;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            color: #fff;
-        }
-
-        .crop-btns .btn-cancel {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .crop-btns .btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .crop-btns .btn-save {
-            background: #0066FF;
-        }
-
-        .crop-btns .btn-save:hover {
-            background: #0052CC;
+            gap: 16px;
+            color: white;
         }
 
         #zoomSlider {
             flex: 1;
-            accent-color: #0066FF;
-            cursor: pointer;
+            accent-color: #1A8917;
+        }
+
+        /* Inputs */
+        .input-elegant {
+            width: 100%;
+            padding: 12px 0;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #F2F2F2;
+            font-size: 1.125rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-elegant:focus {
+            border-bottom-color: #242424;
+        }
+
+        .label-elegant {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            tracking: 0.05em;
+            color: #6B6B6B;
+            margin-bottom: 4px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            background-color: #1A8917;
+            color: white;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(26, 137, 23, 0.1);
+        }
+
+        .btn-primary:hover {
+            background-color: #156d12;
+        }
+
+        .danger-card {
+            margin-top: 4rem;
+            padding: 2rem;
+            border: 1px solid #fee2e2;
+            background-color: rgba(254, 242, 242, 0.3);
+            border-radius: 1.5rem;
         }
     </style>
 </head>
 
-<body>
-    <!-- Sticky back-nav header -->
-    <header class="sticky top-0 z-10 border-b border-white/10 header-blur">
-        <div class="max-w-md mx-auto px-4 py-3 flex items-center gap-3">
-            <a href="{{ url_for('chat_app') }}"
-                class="text-white/60 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors">
-                <i data-lucide="arrow-left" class="w-5 h-5"></i>
-            </a>
-            <h1 class="text-base font-semibold">Profile</h1>
+<body class="selection:bg-brand/20">
+    <header class="header-sticky sticky top-0 z-10 border-b border-medium-divider">
+        <div class="max-w-2xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="{{ url_for('chat_app') }}" class="text-medium-gray hover:text-medium-black transition-colors">
+                    <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                </a>
+                <h1 class="text-xl font-bold serif tracking-tight">Your Profile</h1>
+            </div>
+            <div class="text-xs font-bold uppercase tracking-widest text-medium-gray">ClassPulse</div>
         </div>
     </header>
 
-    <main class="max-w-md mx-auto px-4 py-6">
+    <main class="max-w-xl mx-auto px-6 py-12">
         <!-- Flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        {% for category, message in messages %}
-        <div class="mb-4 px-4 py-3 rounded-lg text-sm
-                        {% if category == 'success' %}bg-green-500/20 text-green-400
-                        {% else %}bg-red-500/20 text-red-400{% endif %}">
-            {{ message }}
+        <div class="mb-12 space-y-3">
+            {% for category, message in messages %}
+            <div
+                class="px-6 py-4 rounded-2xl flex items-center gap-3 {% if category == 'success' %}bg-brand/5 text-brand border border-brand/10{% else %}bg-red-50 text-red-600 border border-red-100{% endif %}">
+                <i data-lucide="{% if category == 'success' %}check-circle{% else %}alert-circle{% endif %}"
+                    class="w-5 h-5"></i>
+                <p class="text-sm font-bold">{{ message }}</p>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
         {% endif %}
         {% endwith %}
 
-        <!-- Avatar display -->
-        <div class="avatar-wrap">
-            {% if user.profile_pic %}
-            <img id="avatarPreview" src="/static/{{ user.profile_pic }}" alt="{{ user.display_name or user.username }}">
-            {% else %}
-            <div class="avatar-initials" id="avatarPreview">{{ (user.display_name or user.username)[0].upper() }}</div>
-            {% endif %}
+        <div class="text-center mb-16">
+            <div class="avatar-wrap group">
+                {% if user.profile_pic %}
+                <img id="avatarPreview" src="/static/{{ user.profile_pic }}"
+                    alt="{{ user.display_name or user.username }}">
+                {% else %}
+                <div class="avatar-initials" id="avatarPreview">{{ (user.display_name or user.username)[0].upper() }}
+                </div>
+                {% endif %}
 
-            <!-- Camera overlay – triggers hidden file input -->
-            <label class="camera-badge" for="avatarUpload">
-                <i data-lucide="camera" class="w-4 h-4 text-white"></i>
-            </label>
-        </div>
-
-        {% if user.profile_pic %}
-        <!-- Remove-photo is its own mini form so it doesn't fight with the file upload -->
-        <form method="POST" class="text-center mt-3 mb-2">
-            <input type="hidden" name="remove_avatar" value="true">
-            <button type="submit" class="text-red-400 hover:text-red-300 text-xs underline transition-colors">
-                Remove photo
-            </button>
-        </form>
-        {% endif %}
-
-        <!-- Main profile form -->
-        <form method="POST" enctype="multipart/form-data" class="mt-6 space-y-5">
-            <!-- file input (visually hidden, triggered by camera badge label) -->
-            <input type="file" id="avatarUpload" name="avatar" accept="image/*" class="hidden">
-
-            <!-- Display Name -->
-            <div>
-                <label class="block text-white/60 text-sm mb-2">Display Name</label>
-                <input type="text" name="display_name" value="{{ user.display_name or user.username }}"
-                    class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue transition-colors">
+                <label class="camera-badge" for="avatarUpload">
+                    <i data-lucide="camera" class="w-5 h-5 text-white"></i>
+                </label>
             </div>
 
-            <!-- Username (read-only) -->
-            <div>
-                <label class="block text-white/60 text-sm mb-2">Username</label>
-                <div class="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white/40 break-all">{{
-                    user.username }}
+            {% if user.profile_pic %}
+            <form method="POST" class="mt-6">
+                <input type="hidden" name="remove_avatar" value="true">
+                <button type="submit"
+                    class="text-xs font-bold text-red-500 hover:text-red-600 uppercase tracking-widest transition-colors text-center w-full">
+                    Remove Photo
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-12">
+            <input type="file" id="avatarUpload" name="avatar" accept="image/*" class="hidden">
+
+            <div class="space-y-8">
+                <!-- Display Name -->
+                <div>
+                    <label class="label-elegant">Display Name</label>
+                    <input type="text" name="display_name" value="{{ user.display_name or user.username }}"
+                        class="input-elegant serif" placeholder="Your name">
+                </div>
+
+                <!-- Username -->
+                <div>
+                    <label class="label-elegant">Username</label>
+                    <div class="py-3 text-lg font-medium text-medium-gray border-b border-medium-divider border-dashed">
+                        @{{ user.username }}</div>
+                    <p class="mt-2 text-[10px] text-medium-gray/60 uppercase tracking-wider">Username cannot be changed
+                    </p>
+                </div>
+
+                <!-- Bio -->
+                <div>
+                    <label class="label-elegant">Short Bio</label>
+                    <textarea name="bio" rows="1" placeholder="Writing is my passion..." class="input-elegant"
+                        oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">{{ user.bio or '' }}</textarea>
                 </div>
             </div>
 
-            <!-- Bio -->
-            <div>
-                <label class="block text-white/60 text-sm mb-2">About me</label>
-                <textarea name="bio" rows="3" placeholder="Write something about yourself..."
-                    class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue transition-colors resize-none placeholder-white/30">{{ user.bio or '' }}</textarea>
+            <div class="pt-8">
+                <button type="submit" class="btn-primary">
+                    Update Profile
+                </button>
             </div>
 
-            <!-- Save -->
-            <button type="submit"
-                class="w-full py-3 bg-blue hover:bg-blue-dark rounded-lg text-sm font-semibold transition-colors">
-                Save Changes
-            </button>
-
-
             <!-- Danger Zone -->
-            <div class="mt-12 pt-8 border-t border-white/10">
-                <h3 class="text-red-500 text-sm font-semibold mb-3 uppercase tracking-wider">Danger Zone</h3>
+            <div class="danger-card">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-[0.2em] mb-4">Danger Zone</h3>
                 {% if user.role == 'admin' %}
-                <p class="text-white/40 text-xs mb-4 italic">Staff accounts cannot be deleted for system safety.</p>
-                <button type="button" disabled
-                    class="w-full py-3 bg-white/5 border border-white/10 text-white/20 rounded-lg text-sm font-semibold cursor-not-allowed">
-                    Delete My Account (Disabled)
-                </button>
+                <div class="flex items-start gap-3 p-4 bg-white border border-red-100 rounded-2xl">
+                    <i data-lucide="shield" class="w-5 h-5 text-medium-gray shrink-0"></i>
+                    <p class="text-xs leading-relaxed text-medium-gray">As an <strong>Administrator</strong>, your
+                        account cannot be deleted to ensure system stability and audit logs.</p>
+                </div>
                 {% else %}
-                <p class="text-white/40 text-xs mb-4">Once you delete your account, there is no going back. Please be
-                    certain.</p>
+                <p class="text-sm text-medium-gray mb-6 leading-relaxed">Deactivating your account will permanently
+                    remove all your messages, course enrollments, and personal data. This action is irreversible.</p>
                 <button type="button" onclick="confirmDeleteAccount()"
-                    class="w-full py-3 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-lg text-sm font-semibold transition-colors">
-                    Delete My Account
+                    class="w-full py-4 border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white rounded-full text-sm font-bold transition-all">
+                    Deactivate Account
                 </button>
                 {% endif %}
             </div>
         </form>
     </main>
 
-    <!-- Crop / Adjust Photo modal -->
+    <!-- Crop Modal -->
     <div id="cropModal">
-        <h3 style="color:#fff;font-size:1rem;font-weight:600;">Adjust Photo</h3>
-        <div class="crop-clip">
-            <img id="cropImg" alt="">
-        </div>
-        <div class="zoom-row">
-            <span>−</span>
-            <input type="range" id="zoomSlider" min="100" max="300" value="100">
-            <span>+</span>
-        </div>
-        <div class="crop-btns">
-            <button class="btn-cancel" onclick="cancelCrop()">Cancel</button>
-            <button class="btn-save" onclick="applyCrop()">Save</button>
+        <div class="crop-container">
+            <div class="text-center">
+                <h3 class="text-white text-2xl font-bold serif mb-2">Adjust your photo</h3>
+                <p class="text-white/40 text-sm">Drag to reposition, use slider to zoom</p>
+            </div>
+
+            <div class="crop-clip">
+                <img id="cropImg" alt="">
+            </div>
+
+            <div class="zoom-slider-container">
+                <i data-lucide="minus" class="w-4 h-4"></i>
+                <input type="range" id="zoomSlider" min="100" max="300" value="100">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+            </div>
+
+            <div class="w-full flex gap-4 pt-4">
+                <button
+                    class="flex-1 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold transition-all"
+                    onclick="cancelCrop()">Cancel</button>
+                <button
+                    class="flex-1 py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20"
+                    onclick="applyCrop()">Apply</button>
+            </div>
         </div>
     </div>
 
@@ -334,7 +362,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
 
-            // File picked → open crop modal instead of direct preview
             document.getElementById('avatarUpload').addEventListener('change', function () {
                 const file = this.files && this.files[0];
                 if (!file) return;
@@ -348,32 +375,27 @@
                 reader.readAsDataURL(file);
             });
 
-            // Zoom slider
             document.getElementById('zoomSlider').addEventListener('input', function () {
                 cropState.zoom = parseInt(this.value);
                 positionCropImg();
             });
 
-            // Drag – mouse
             const clip = document.querySelector('.crop-clip');
             clip.addEventListener('mousedown', startDrag);
             window.addEventListener('mousemove', moveDrag);
             window.addEventListener('mouseup', endDrag);
-            // Drag – touch
             clip.addEventListener('touchstart', startDrag, { passive: false });
             window.addEventListener('touchmove', moveDrag, { passive: false });
             window.addEventListener('touchend', endDrag);
 
-            // Form submit: if we have a cropped image, send it via fetch
             const mainForm = document.querySelector('form[enctype="multipart/form-data"]');
             if (mainForm) {
                 mainForm.addEventListener('submit', function (e) {
-                    if (!croppedDataUrl) return; // no crop – normal submit
+                    if (!croppedDataUrl) return;
                     e.preventDefault();
                     const fd = new FormData();
                     fd.append('display_name', document.querySelector('[name="display_name"]').value);
                     fd.append('bio', document.querySelector('[name="bio"]').value);
-                    // dataURL → Blob
                     const b64 = croppedDataUrl.split(',')[1];
                     const raw = atob(b64);
                     const bytes = new Uint8Array(raw.length);
@@ -387,13 +409,11 @@
             }
         });
 
-        // ————— Crop modal logic —————
         function openCrop(dataUrl) {
             const img = document.getElementById('cropImg');
             img.src = dataUrl;
             img.onload = () => {
-                const CLIP = 240;
-                // scale so the image fills the circle on its shorter side
+                const CLIP = 280;
                 cropState.baseScale = Math.max(CLIP / img.naturalWidth, CLIP / img.naturalHeight);
                 cropState.zoom = 100;
                 cropState.offsetX = 0;
@@ -420,7 +440,7 @@
         }
 
         function applyCrop() {
-            const CLIP = 240;
+            const CLIP = 280;
             const img = document.getElementById('cropImg');
             const scale = cropState.baseScale * (cropState.zoom / 100);
             const w = img.naturalWidth * scale;
@@ -431,12 +451,10 @@
             canvas.height = CLIP;
             const ctx = canvas.getContext('2d');
 
-            // circular clip
             ctx.beginPath();
             ctx.arc(CLIP / 2, CLIP / 2, CLIP / 2, 0, Math.PI * 2);
             ctx.clip();
 
-            // draw image at current pan / zoom
             ctx.drawImage(img,
                 CLIP / 2 + cropState.offsetX - w / 2,
                 CLIP / 2 + cropState.offsetY - h / 2,
@@ -444,8 +462,6 @@
             );
 
             croppedDataUrl = canvas.toDataURL('image/png');
-
-            // live-update the avatar circle
             const preview = document.getElementById('avatarPreview');
             if (preview.tagName === 'IMG') {
                 preview.src = croppedDataUrl;
@@ -456,11 +472,9 @@
                 newImg.alt = 'Preview';
                 preview.replaceWith(newImg);
             }
-
             document.getElementById('cropModal').classList.remove('active');
         }
 
-        // ————— Drag / pan handlers —————
         function getPoint(e) {
             const src = e.touches ? e.touches[0] : e;
             return { x: src.clientX, y: src.clientY };
@@ -469,7 +483,6 @@
             e.preventDefault();
             const pt = getPoint(e);
             dragStart = { x: pt.x, y: pt.y, ox: cropState.offsetX, oy: cropState.offsetY };
-            document.getElementById('cropImg').classList.add('dragging');
         }
         function moveDrag(e) {
             if (!dragStart) return;
@@ -481,32 +494,20 @@
         }
         function endDrag() {
             dragStart = null;
-            const img = document.getElementById('cropImg');
-            if (img) img.classList.remove('dragging');
         }
 
-
-        // ————— Account Deletion —————
         function confirmDeleteAccount() {
-            if (confirm("Are you absolutely sure you want to delete your account? This action cannot be undone and you will lose all your data.")) {
+            if (confirm("Are you absolutely sure you want to delete your account? This action cannot be undone.")) {
                 fetch('/api/chat/delete-account', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                    headers: { 'Content-Type': 'application/json' }
                 })
                     .then(response => response.json())
                     .then(data => {
-                        if (data.success) {
-                            window.location.href = '/chat/login';
-                        } else {
-                            alert("Error deleting account: " + (data.error || "Unknown error"));
-                        }
+                        if (data.success) window.location.href = '/chat/login';
+                        else alert("Error deleting account: " + (data.error || "Unknown error"));
                     })
-                    .catch(err => {
-                        console.error("Deletion error:", err);
-                        alert("A network error occurred. Please try again.");
-                    });
+                    .catch(err => alert("A network error occurred."));
             }
         }
     </script>

@@ -434,10 +434,10 @@ class ChatUser(UserMixin, db.Model):
         return self.role == 'admin'
 
     def is_lecturer(self):
-        return self.role in ['lecturer', 'admin']
+        return self.role in ['lecturer', 'admin', 'system']
 
     def is_staff(self):
-        return self.role in ['lecturer', 'admin']
+        return self.role in ['lecturer', 'admin', 'system']
 
     def is_student(self):
         return self.role == 'student'

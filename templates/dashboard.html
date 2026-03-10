@@ -3,180 +3,154 @@
 {% block title %}Dashboard - ClassPulse{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-6 lg:px-8 py-12">
-    <div class="mb-12 fade-in">
-        <h1 class="text-4xl font-bold mb-2">Dashboard</h1>
-        <p class="text-white/60">Hey {{ current_user.name }}, here's what's happening</p>
-    </div>
+<div class="max-w-4xl mx-auto px-6 py-12">
+    <!-- Header -->
+    <header class="mb-16 fade-in">
+        <h1 class="text-4xl font-bold serif text-medium-black mb-4">Your Dashboard</h1>
+        <p class="text-medium-gray italic">"In the classroom of life, information is the only currency that matters."
+        </p>
+    </header>
 
-    <!-- Stats -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 fade-in">
-            <div class="text-2xl sm:text-3xl font-bold mb-1">{{ courses|length }}</div>
-            <div class="text-xs sm:text-sm text-white/60">Active courses</div>
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20 fade-in" style="animation-delay: 0.1s;">
+        <div class="space-y-1">
+            <span class="text-xs font-bold uppercase tracking-widest text-medium-gray">Active Courses</span>
+            <p class="text-3xl font-bold serif text-medium-black">{{ stats.active_courses }}</p>
         </div>
-
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 fade-in"
-            style="animation-delay: 0.1s;">
-            <div class="text-2xl sm:text-3xl font-bold mb-1">{{ total_messages }}</div>
-            <div class="text-xs sm:text-sm text-white/60">Messages sent</div>
+        <div class="space-y-1">
+            <span class="text-xs font-bold uppercase tracking-widest text-medium-gray">Messages</span>
+            <p class="text-3xl font-bold serif text-medium-black">{{ stats.total_messages }}</p>
         </div>
-
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 fade-in"
-            style="animation-delay: 0.2s;">
-            <div class="text-2xl sm:text-3xl font-bold mb-1">{{ pending_questions }}</div>
-            <div class="text-xs sm:text-sm text-white/60">Questions waiting</div>
+        <div class="space-y-1">
+            <span class="text-xs font-bold uppercase tracking-widest text-medium-gray">Questions</span>
+            <p class="text-3xl font-bold serif text-medium-black">{{ stats.pending_questions }}</p>
         </div>
-
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 fade-in"
-            style="animation-delay: 0.3s;">
-            <div class="text-2xl sm:text-3xl font-bold mb-1">{{ total_faqs }}</div>
-            <div class="text-xs sm:text-sm text-white/60">FAQs saved</div>
+        <div class="space-y-1">
+            <span class="text-xs font-bold uppercase tracking-widest text-medium-gray">Efficiency</span>
+            <p class="text-3xl font-bold serif text-brand">94%</p>
         </div>
     </div>
 
-    <!-- Courses -->
-    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 fade-in">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-            <h2 class="text-xl sm:text-2xl font-bold">Your courses</h2>
-            <button onclick="showAddCourse()"
-                class="px-4 py-2 bg-blue/20 hover:bg-blue/30 border border-blue/30 rounded-lg transition-colors text-sm font-medium w-full sm:w-auto">
-                Add course
+    <!-- Courses Section -->
+    <section class="fade-in" style="animation-delay: 0.2s;">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold serif text-medium-black">My Courses</h2>
+            {% if current_user.is_lecturer() %}
+            <button onclick="showAddCourseModal()"
+                class="text-sm font-medium text-brand hover:text-brand-dark transition-colors">
+                + Add Course
             </button>
+            {% endif %}
         </div>
 
-        {% if courses %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div class="space-y-8">
             {% for course in courses %}
-            <div class="bg-black/40 border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors cursor-pointer"
-                onclick="location.href='{{ url_for('course_detail', course_id=course.id) }}'">
-                <div class="flex items-start justify-between mb-4">
-                    <div>
-                        <h3 class="text-lg font-semibold mb-1">{{ course.code }}</h3>
-                        <p class="text-sm text-white/60">{{ course.name }}</p>
+            <div class="group py-8 border-b border-medium-divider flex items-center justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <span class="text-xs font-medium px-2 py-0.5 bg-medium-divider rounded-full text-medium-gray">{{
+                            course.code }}</span>
+                        <span class="text-xs text-medium-gray tracking-tight uppercase font-semibold">{{ course.semester
+                            }}</span>
                     </div>
-                    {% if course.group_id %}
-                    <span class="px-3 py-1 bg-blue/20 text-blue rounded-full text-xs font-medium">
-                        Active
-                    </span>
-                    {% else %}
-                    <span class="px-3 py-1 bg-white/10 text-white/60 rounded-full text-xs font-medium">
-                        Setup needed
-                    </span>
-                    {% endif %}
+                    <h3
+                        class="text-2xl font-bold text-medium-black serif group-hover:text-brand transition-colors mb-3">
+                        <a href="{{ url_for('chat_room', room_id=course.room_id) }}">{{ course.name }}</a>
+                    </h3>
+                    <div class="flex items-center space-x-6 text-sm text-medium-gray">
+                        <span class="flex items-center space-x-2">
+                            <i data-lucide="users" class="w-4 h-4 opacity-50"></i>
+                            <span>{{ course.student_count }} students</span>
+                        </span>
+                        <span class="flex items-center space-x-2">
+                            <i data-lucide="message-square" class="w-4 h-4 opacity-50"></i>
+                            <span>{{ course.unread_count }} new messages</span>
+                        </span>
+                    </div>
                 </div>
-
-                <div class="text-xs text-white/40">
-                    Created {{ course.created_at.strftime('%b %d, %Y') }}
+                <div class="hidden md:block">
+                    <a href="{{ url_for('chat_room', room_id=course.room_id) }}"
+                        class="px-6 py-2 border border-medium-black text-medium-black rounded-full text-sm font-medium hover:bg-medium-black hover:text-white transition-all">
+                        Open Class
+                    </a>
                 </div>
+            </div>
+            {% else %}
+            <div class="py-24 text-center border border-dashed border-medium-divider rounded-2xl">
+                <div class="w-16 h-16 bg-medium-divider rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i data-lucide="book" class="w-8 h-8 text-medium-gray"></i>
+                </div>
+                <h3 class="text-xl font-bold text-medium-black serif mb-2">No courses found</h3>
+                <p class="text-medium-gray mb-8">Get started by creating your first course room.</p>
+                {% if current_user.is_lecturer() %}
+                <button onclick="showAddCourseModal()" class="btn-primary px-8 py-3">
+                    Start your first course
+                </button>
+                {% else %}
+                <p class="text-sm italic">Please contact your lecturer to be added to a course.</p>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
-        {% else %}
-        <div class="text-center py-16">
-            <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="inbox" class="w-8 h-8 text-white/40"></i>
-            </div>
-            <h3 class="text-lg font-semibold mb-2">No courses yet</h3>
-            <p class="text-white/60 text-sm mb-6">Register your first course to get started</p>
-            <button onclick="showAddCourse()"
-                class="px-6 py-3 bg-blue hover:bg-blue-dark rounded-lg font-medium transition-colors">
-                Add course
-            </button>
-        </div>
-        {% endif %}
-    </div>
-
-    {% if scheduled_count > 0 %}
-    <div
-        class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mt-6 border-l-4 border-l-blue fade-in">
-        <div class="flex items-center space-x-3">
-            <i data-lucide="clock" class="w-5 h-5 text-blue"></i>
-            <div>
-                <div class="font-semibold">{{ scheduled_count }} scheduled message{{ 's' if scheduled_count != 1 else ''
-                    }}</div>
-                <p class="text-sm text-white/60">Check individual courses to manage them</p>
-            </div>
-        </div>
-    </div>
-    {% endif %}
+    </section>
 </div>
 
 <!-- Add Course Modal -->
-<div id="addCourseModal" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 hidden items-center justify-center p-6">
-    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl max-w-2xl w-full p-8">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-2xl font-bold">Add a course</h3>
-            <button onclick="closeAddCourse()"
-                class="w-10 h-10 hover:bg-white/10 rounded-lg flex items-center justify-center transition-colors">
-                <i data-lucide="x" class="w-6 h-6"></i>
+<div id="addCourseModal" class="fixed inset-0 bg-white/98 z-[100] hidden items-center justify-center p-6 fade-in"
+    style="animation-duration: 0.2s;">
+    <div class="w-full max-w-lg">
+        <div class="flex items-center justify-between mb-12">
+            <h3 class="text-3xl font-bold serif text-medium-black">Add New Course</h3>
+            <button onclick="closeAddCourseModal()"
+                class="text-medium-gray hover:text-medium-black p-2 transition-colors">
+                <i data-lucide="x" class="w-8 h-8"></i>
             </button>
         </div>
 
-        <div class="space-y-6">
-            <div class="bg-black/40 border border-white/10 rounded-xl p-6">
-                <div class="flex items-start space-x-4">
-                    <div class="w-10 h-10 bg-blue rounded-xl flex items-center justify-center flex-shrink-0 font-bold">1
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-semibold mb-2">Register via WhatsApp</h4>
-                        <p class="text-sm text-white/60 mb-3">Send this message to ClassPulse</p>
-                        <div class="bg-black/60 border border-white/10 rounded-lg p-4">
-                            <code class="text-sm">Register: CS101, Introduction to Programming</code>
-                        </div>
-                    </div>
-                </div>
+        <form action="{{ url_for('add_course') }}" method="POST" class="space-y-10">
+            <div class="space-y-4">
+                <label class="text-xs font-bold uppercase tracking-widest text-medium-gray">Course Name</label>
+                <input type="text" name="name"
+                    class="w-full px-0 py-4 bg-transparent border-b border-medium-divider focus:border-medium-black outline-none text-2xl serif"
+                    placeholder="What's the subject?" required>
             </div>
-
-            <div class="bg-black/40 border border-white/10 rounded-xl p-6">
-                <div class="flex items-start space-x-4">
-                    <div class="w-10 h-10 bg-blue rounded-xl flex items-center justify-center flex-shrink-0 font-bold">2
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-semibold mb-2">Add to your group</h4>
-                        <p class="text-sm text-white/60">Add ClassPulse to your course WhatsApp group</p>
-                    </div>
-                </div>
+            <div class="space-y-4">
+                <label class="text-xs font-bold uppercase tracking-widest text-medium-gray">Course Code</label>
+                <input type="text" name="code"
+                    class="w-full px-0 py-4 bg-transparent border-b border-medium-divider focus:border-medium-black outline-none text-2xl serif"
+                    placeholder="e.g. CS101" required>
             </div>
-
-            <div class="bg-black/40 border border-white/10 rounded-xl p-6">
-                <div class="flex items-start space-x-4">
-                    <div class="w-10 h-10 bg-blue rounded-xl flex items-center justify-center flex-shrink-0 font-bold">3
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-semibold mb-2">Link the group</h4>
-                        <p class="text-sm text-white/60 mb-3">Send this via DM to ClassPulse</p>
-                        <div class="bg-black/60 border border-white/10 rounded-lg p-4">
-                            <code class="text-sm">/link +234XXXXXXXXXX</code>
-                        </div>
-                        <p class="text-xs text-white/40 mt-2">Use any student's number from the group</p>
-                    </div>
-                </div>
+            <div class="space-y-4">
+                <label class="text-xs font-bold uppercase tracking-widest text-medium-gray">Semester</label>
+                <input type="text" name="semester"
+                    class="w-full px-0 py-4 bg-transparent border-b border-medium-divider focus:border-medium-black outline-none text-2xl serif"
+                    placeholder="e.g. Fall 2024" required>
             </div>
-        </div>
-
-        <div class="mt-6 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="text-sm text-white/40">
-                WhatsApp: <span class="text-blue">+1 415 523 8886</span>
+            <div class="pt-8">
+                <button type="submit"
+                    class="w-full py-4 bg-medium-black text-white rounded-full text-lg font-medium hover:bg-black transition-all shadow-lg hover:shadow-black/10">
+                    Create Course Room
+                </button>
             </div>
-            <button onclick="closeAddCourse()"
-                class="w-full sm:w-auto px-6 py-3 bg-blue hover:bg-blue-dark rounded-lg font-medium transition-colors">
-                Got it
-            </button>
-        </div>
+        </form>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-    function showAddCourse() {
-        document.getElementById('addCourseModal').classList.remove('hidden');
-        document.getElementById('addCourseModal').classList.add('flex');
-        lucide.createIcons();
+    function showAddCourseModal() {
+        const modal = document.getElementById('addCourseModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
     }
 
-    function closeAddCourse() {
-        document.getElementById('addCourseModal').classList.add('hidden');
-        document.getElementById('addCourseModal').classList.remove('flex');
+    function closeAddCourseModal() {
+        const modal = document.getElementById('addCourseModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
     }
 </script>
 {% endblock %}

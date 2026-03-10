@@ -113,9 +113,11 @@ Write a practical, engaging lesson for Day {day_num}. Make it relatable with rea
                 message_type='system'
             )
             db.session.add(close_msg)
-            room.is_active = False
+            # Permanently delete the room (per user request)
+            # We delete the room object, which cascades to memberships and messages.
+            db.session.delete(room)
             db.session.commit()
-            print(f"[TEACH] Closed teaching group '{session.topic}' (room {room.id})")
+            print(f"[TEACH] Permanently deleted teaching group '{session.topic}' (room {room.id})")
 
 
 def register_socket_events(socketio):
@@ -1135,6 +1137,33 @@ def register_socket_events(socketio):
         emit('room_avatar_updated', {
             'room_id': room_id,
             'profile_pic': room.profile_pic
+        }, broadcast=True)
+
+    @socketio.on('update_room_info')
+    def handle_update_room_info(data):
+        """Update room name and description (Admin only)"""
+        room_id = data.get('room_id')
+        user_id = data.get('user_id')
+        name = data.get('name')
+        description = data.get('description')
+        
+        user = ChatUser.query.get(user_id)
+        room = ChatRoom.query.get(room_id)
+        
+        if not user or not room or not user.is_staff():
+            return
+            
+        if name:
+            room.name = name
+        if description is not None:
+            room.description = description
+            
+        db.session.commit()
+        
+        emit('room_info_updated', {
+            'room_id': room_id,
+            'name': room.name,
+            'description': room.description
         }, broadcast=True)
 
     @socketio.on('delete_room')
