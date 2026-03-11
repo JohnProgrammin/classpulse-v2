@@ -15,11 +15,6 @@
             <div class="space-y-2">
                 <div class="flex items-center gap-3">
                     <h1 class="text-5xl font-bold serif tracking-tight text-medium-black">{{ course.code }}</h1>
-                    {% if course.group_id %}
-                    <span
-                        class="px-3 py-1 bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-widest rounded-full">Active
-                        Sync</span>
-                    {% endif %}
                 </div>
                 <p class="text-2xl text-medium-gray serif italic">{{ course.name }}</p>
             </div>
@@ -125,7 +120,7 @@
                             </div>
                             <div class="p-4 bg-medium-divider/50 rounded-xl border border-medium-divider border-dashed">
                                 <p class="text-[10px] uppercase font-bold text-medium-gray mb-2 tracking-widest">
-                                    WhatsApp Reply Template</p>
+                                    Reply Preview</p>
                                 <code class="text-sm text-brand font-bold">Answer: Your response here</code>
                             </div>
                         </div>
@@ -170,10 +165,7 @@
             {% else %}
             <div class="text-center py-24 bg-medium-divider/10 rounded-3xl">
                 <h3 class="text-lg font-bold serif text-medium-black mb-2">No Scheduled Broadcasts</h3>
-                <p class="text-sm text-medium-gray mb-6">Schedule announcements using the 'Schedule' command on
-                    WhatsApp.</p>
-                <code
-                    class="text-xs bg-white px-4 py-2 rounded-lg border border-medium-divider text-brand">Schedule 14:30: Important Notice</code>
+                <p class="text-sm text-medium-gray mb-6">Schedule announcements to keep your students informed about upcoming events.</p>
             </div>
             {% endif %}
         </div>

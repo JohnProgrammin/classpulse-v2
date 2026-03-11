@@ -8,16 +8,12 @@
         background-color: #FFFFFF !important;
     }
 
-    main {
-        padding-top: 0 !important;
-    }
 
     .auth-wrapper {
         display: flex;
         align-items: center;
         justify-content: center;
         min-height: calc(100vh - 80px);
-        /* Adjust for nav height */
         background-color: #FFFFFF;
     }
 
@@ -126,24 +122,29 @@
 <div class="auth-wrapper">
     <div class="auth-container fade-in">
         <div class="auth-header">
-            <h1 class="serif">Join ClassPulse.</h1>
+            <h1 class="serif">Create your account.</h1>
         </div>
 
-        <form method="POST" action="{{ url_for('register') }}">
+        <form method="POST" action="{{ url_for('chat_register') }}">
             <div class="input-group">
                 <label for="username">Username</label>
-                <input type="text" name="username" id="username" class="auth-input" required autofocus>
+                <input type="text" name="username" id="username" class="auth-input" placeholder="e.g. john_doe" required autofocus>
             </div>
 
             <div class="input-group">
-                <label for="name">Full Name</label>
-                <input type="text" name="name" id="name" class="auth-input" required>
+                <label for="display_name">Display Name</label>
+                <input type="text" name="display_name" id="display_name" class="auth-input" placeholder="John Doe" required>
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email Address</label>
+                <input type="email" name="email" id="email" class="auth-input" placeholder="john@example.com" required>
             </div>
 
             <div class="input-group">
                 <label for="password">Password</label>
                 <div class="relative">
-                    <input type="password" name="password" id="password" class="auth-input pr-10" required>
+                    <input type="password" name="password" id="password" class="auth-input pr-10" placeholder="••••••••" required>
                     <button type="button" onclick="togglePassword()" class="password-toggle">
                         <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
                     </button>
@@ -156,7 +157,7 @@
         </form>
 
         <div class="auth-footer">
-            Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+            Already have an account? <a href="{{ url_for('chat_login') }}">Sign in</a>
         </div>
     </div>
 </div>

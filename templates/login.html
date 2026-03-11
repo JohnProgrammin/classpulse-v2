@@ -1,65 +1,186 @@
 {% extends "layout.html" %}
 
-{% block title %}Login - ClassPulse{% endblock %}
+{% block title %}Sign In - ClassPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #FFFFFF !important;
+    }
+
+
+    .auth-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 80px);
+        background-color: #FFFFFF;
+    }
+
+    .auth-container {
+        width: 100%;
+        max-width: 400px;
+        padding: 40px 24px;
+        text-align: center;
+    }
+
+    .auth-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        margin-bottom: 40px;
+        color: #242424;
+    }
+
+    .input-group {
+        margin-bottom: 24px;
+        text-align: left;
+    }
+
+    .input-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #6B6B6B;
+        margin-bottom: 8px;
+    }
+
+    .auth-input {
+        width: 100%;
+        padding: 12px 0;
+        background-color: transparent;
+        border: none;
+        border-bottom: 1px solid #F2F2F2;
+        border-radius: 0;
+        font-size: 16px;
+        color: #242424;
+        transition: border-color 0.2s;
+    }
+
+    .auth-input:focus {
+        outline: none;
+        border-bottom-color: #242424;
+    }
+
+    .auth-submit {
+        width: 100%;
+        padding: 12px;
+        background-color: #242424;
+        color: #FFFFFF;
+        border-radius: 24px;
+        font-size: 15px;
+        font-weight: 500;
+        margin-top: 16px;
+        transition: background-color 0.2s;
+        cursor: pointer;
+    }
+
+    .auth-submit:hover {
+        background-color: #000000;
+    }
+
+    .auth-info {
+        margin-top: 40px;
+        padding: 24px;
+        background-color: #F9F9F9;
+        border-radius: 12px;
+        text-align: left;
+    }
+
+    .auth-info h3 {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #242424;
+    }
+
+    .auth-info p {
+        font-size: 13px;
+        color: #6B6B6B;
+        margin-bottom: 16px;
+    }
+
+    .command-box {
+        background-color: #FFFFFF;
+        border: 1px solid #F2F2F2;
+        padding: 12px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 12px;
+        color: #1A8917;
+    }
+
+    .relative {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6B6B6B;
+        background: none;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-6 py-20">
-    <div class="w-full max-w-md">
-        <div class="text-center mb-8 fade-in">
-            
-            <h1 class="text-3xl font-bold mb-2">Welcome back</h1>
-            <p class="text-white/60">Log in to manage your courses</p>
+<div class="auth-wrapper">
+    <div class="auth-container fade-in">
+        <div class="auth-header">
+            <h1 class="serif">Lecturer Sign In.</h1>
         </div>
-        
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 fade-in" style="animation-delay: 0.2s;">
-            <form method="POST" class="space-y-6">
-                <div>
-                    <label for="phone" class="block text-sm font-medium mb-2">
-                        Your WhatsApp number
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i data-lucide="phone" class="w-5 h-5 text-white/40"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            id="phone" 
-                            name="phone" 
-                            placeholder="+2348155985292"
-                            required
-                            class="w-full pl-12 pr-4 py-3 bg-black/40 border border-white/10 rounded-xl focus:border-blue outline-none transition-colors text-white placeholder-white/40"
-                        >
-                    </div>
-                    <p class="mt-2 text-xs text-white/40">Use the number you registered with</p>
-                </div>
-                
-                <button 
-                    type="submit" 
-                    class="w-full py-3 bg-blue hover:bg-blue-dark rounded-xl font-medium transition-colors"
-                >
-                    Log in
-                </button>
-            </form>
-        </div>
-        
-        <div class="mt-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 fade-in" style="animation-delay: 0.4s;">
-            <div class="flex items-start space-x-3">
-                <div class="w-8 h-8 bg-blue/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="info" class="w-4 h-4 text-blue"></i>
-                </div>
-                <div>
-                    <h3 class="font-medium mb-1">First time here?</h3>
-                    <p class="text-sm text-white/60 mb-3">Send this to ClassPulse on WhatsApp:</p>
-                    <div class="bg-black/40 border border-white/10 rounded-lg p-3">
-                        <code class="text-sm">Register: Your Name, CS101, Course Name</code>
-                    </div>
-                    <div class="flex items-center space-x-2 mt-3 text-sm text-white/40">
-                        <i data-lucide="phone" class="w-4 h-4"></i>
-                        <span>+1 415 523 8886</span>
-                    </div>
+
+        <form method="POST">
+            <div class="input-group">
+                <label for="phone">Phone Number or Email</label>
+                <input type="text" name="phone" id="phone" class="auth-input" placeholder="e.g. +234... or email@..." required autofocus>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <div class="relative">
+                    <input type="password" name="password" id="password" class="auth-input pr-10" required>
+                    <button type="button" onclick="togglePassword()" class="password-toggle">
+                        <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
+                    </button>
                 </div>
             </div>
+
+            <button type="submit" class="auth-submit">
+                Continue
+            </button>
+        </form>
+
+        <div class="auth-info">
+            <h3>New Educator?</h3>
+            <p>Join over 500+ educators using ClassPulse to streamline their course communication.</p>
+            <a href="{{ url_for('chat_register') }}" class="block text-sm font-bold text-brand hover:text-brand-dark transition-colors">
+                Create an educator account →
+            </a>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+</script>
 {% endblock %}

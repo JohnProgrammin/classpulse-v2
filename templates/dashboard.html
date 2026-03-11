@@ -55,7 +55,7 @@
                     </div>
                     <h3
                         class="text-2xl font-bold text-medium-black serif group-hover:text-brand transition-colors mb-3">
-                        <a href="{{ url_for('chat_room', room_id=course.room_id) }}">{{ course.name }}</a>
+                        <a href="{{ url_for('course_detail', course_id=course.id) }}">{{ course.name }}</a>
                     </h3>
                     <div class="flex items-center space-x-6 text-sm text-medium-gray">
                         <span class="flex items-center space-x-2">
@@ -69,9 +69,9 @@
                     </div>
                 </div>
                 <div class="hidden md:block">
-                    <a href="{{ url_for('chat_room', room_id=course.room_id) }}"
+                    <a href="{{ url_for('course_detail', course_id=course.id) }}"
                         class="px-6 py-2 border border-medium-black text-medium-black rounded-full text-sm font-medium hover:bg-medium-black hover:text-white transition-all">
-                        Open Class
+                        Management
                     </a>
                 </div>
             </div>

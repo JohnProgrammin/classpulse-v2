@@ -13,6 +13,12 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap"
         rel="stylesheet">
 
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -33,12 +39,11 @@
         }
     </script>
 
-    <style>
-        body {
-            background-color: #FFFFFF;
-            color: #242424;
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-white text-medium-black font-sans antialiased;
+            }
         }
 
         .serif {
@@ -56,7 +61,7 @@
 
         /* Subtle dividers */
         .divider {
-            border-bottom: 1px solid #F2F2F2;
+            @apply border-b border-medium-divider;
         }
 
         /* Smooth animations */
@@ -69,24 +74,6 @@
             to {
                 opacity: 1;
             }
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #FFFFFF;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #E6E6E6;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #CCCCCC;
         }
     </style>
 
@@ -102,23 +89,38 @@
                     <span class="text-2xl font-bold tracking-tighter serif">ClassPulse</span>
                 </a>
 
-                <div class="flex items-center space-x-8">
+                <div class="flex items-center space-x-6 md:space-x-8">
                     {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('dashboard') }}"
-                        class="text-sm text-medium-gray hover:text-medium-black transition-colors">
-                        Dashboard
-                    </a>
-                    <div class="flex items-center space-x-3">
-                        <span class="text-sm font-medium text-medium-black">{{ current_user.name }}</span>
-                    </div>
-                    <a href="{{ url_for('logout') }}"
-                        class="text-medium-gray hover:text-medium-black transition-colors">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                    </a>
+                        <!-- Lecturer specific links -->
+                        <a href="{{ url_for('dashboard') }}"
+                            class="text-sm font-bold uppercase tracking-widest text-medium-gray hover:text-medium-black transition-colors">
+                            Courses
+                        </a>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs font-bold uppercase tracking-widest text-medium-black">{{ current_user.phone }}</span>
+                        </div>
+                        <a href="{{ url_for('logout') }}"
+                            class="text-medium-gray hover:text-medium-black transition-colors">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                        </a>
+                    {% elif session.get('chat_user_id') %}
+                        <!-- Student specific links -->
+                        <a href="{{ url_for('chat_app') }}"
+                            class="text-sm font-bold uppercase tracking-widest text-medium-gray hover:text-medium-black transition-colors">
+                            Knowledge Base
+                        </a>
+                        <a href="{{ url_for('chat_logout') }}"
+                            class="text-medium-gray hover:text-medium-black transition-colors">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                        </a>
                     {% else %}
-                    <a href="{{ url_for('login') }}" class="btn-primary">
-                        Sign In
-                    </a>
+                        <!-- Not logged in -->
+                        <a href="{{ url_for('chat_index') }}" class="text-xs font-bold uppercase tracking-widest text-medium-gray hover:text-medium-black transition-colors">
+                            For Students
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn-primary">
+                            Lecturer Sign In
+                        </a>
                     {% endif %}
                 </div>
             </div>
@@ -128,7 +130,7 @@
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="fixed top-24 right-6 z-50 space-y-3 fade-in">
+    <div class="fixed top-24 right-6 z-[100] space-y-3 fade-in">
         {% for category, message in messages %}
         <div class="bg-white border border-medium-divider px-6 py-4 rounded-lg shadow-sm max-w-md">
             <div class="flex items-center space-x-3">

@@ -1,5 +1,4 @@
-import eventlet
-eventlet.monkey_patch()
+
 
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, session, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -28,8 +27,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'chat_login'
 
-# Initialize Socket.IO for real-time chat
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Initialize Socket.IO for real-time chat with explicit threading mode for Python 3.13 compatibility
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Create database tables
 if not os.environ.get('TESTING'):
@@ -73,10 +72,149 @@ def load_user(user_id):
 # ==========================================
 @app.route('/')
 def index():
-    """Landing page - redirect to chat"""
-    if 'chat_user_id' in session:
-        return redirect(url_for('chat_app'))
-    return redirect(url_for('chat_login'))
+    """Landing page - Medium style"""
+    return render_template('index.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Lecturer login page"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        phone = request.form.get('phone', '').strip()
+        password = request.form.get('password', '')
+        # In this version, we match Lecturer by phone number
+        lecturer = Lecturer.query.filter_by(phone_number=phone).first()
+
+        if lecturer and (not lecturer.password_hash or lecturer.check_password(password)):
+            login_user(lecturer)
+            lecturer.last_login = datetime.utcnow()
+            db.session.commit()
+            flash('Welcome back, Professor!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid phone number or password.', 'error')
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Logout current lecturer"""
+    logout_user()
+    flash('Logged out successfully', 'success')
+    return redirect(url_for('index'))
+
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Lecturer dashboard overview"""
+    courses = Course.query.filter_by(lecturer_id=current_user.id, is_active=True).all()
+    
+    # Calculate some stats for the dashboard
+    stats = {
+        'active_courses': len(courses),
+        'total_messages': Message.query.filter(Message.course_id.in_([c.id for c in courses])).count() if courses else 0,
+        'pending_questions': PendingQuestion.query.filter(
+            PendingQuestion.course_id.in_([c.id for c in courses]),
+            PendingQuestion.status == 'pending'
+        ).count() if courses else 0
+    }
+
+    return render_template('dashboard.html', 
+        user=current_user, 
+        courses=courses,
+        stats=stats
+    )
+
+
+@app.route('/add-course', methods=['POST'])
+@login_required
+def add_course():
+    """Create a new course and associated chat room"""
+    name = request.form.get('name')
+    code = request.form.get('code', '').upper()
+    semester = request.form.get('semester')
+
+    if not name or not code:
+        flash('Course name and code are required', 'error')
+        return redirect(url_for('dashboard'))
+
+    # Check if code already exists
+    if Course.query.filter_by(code=code, is_active=True).first():
+        flash(f'Course {code} already exists', 'error')
+        return redirect(url_for('dashboard'))
+
+    # Create random group ID
+    group_id = f"c_{secrets.token_hex(4)}"
+    
+    # Create the Course
+    new_course = Course(
+        name=name,
+        code=code,
+        semester=semester,
+        lecturer_id=current_user.id,
+        group_id=group_id
+    )
+    db.session.add(new_course)
+    db.session.flush()
+
+    # Create associated ChatRoom for the web chat system
+    from chat_handler import generate_invite_code
+    new_room = ChatRoom(
+        name=f"{code} - {name}",
+        description=f"Official group for {name}",
+        room_type='group',
+        invite_code=generate_invite_code(),
+        created_by=None, # System created
+        course_id=new_course.id
+    )
+    db.session.add(new_room)
+    db.session.commit()
+
+    flash(f'Course {code} successfully created!', 'success')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/chat/room/<int:room_id>')
+@login_required
+def chat_room(room_id):
+    """Redirect to the main chat app with a specific room focus"""
+    return redirect(url_for('chat_app', room_focus=room_id))
+
+
+@app.route('/course/<int:course_id>')
+@login_required
+def course_detail(course_id):
+    """Detailed view for a specific course"""
+    course = Course.query.get_or_404(course_id)
+    
+    # Check ownership
+    if course.lecturer_id != current_user.id:
+        flash('Access denied.', 'error')
+        return redirect(url_for('dashboard'))
+
+    faqs = FAQ.query.filter_by(course_id=course_id).order_by(FAQ.created_at.desc()).all()
+    pending = PendingQuestion.query.filter_by(course_id=course_id, status='pending').order_by(PendingQuestion.asked_at.desc()).all()
+    scheduled = ScheduledMessage.query.filter_by(course_id=course_id, status='pending').order_by(ScheduledMessage.scheduled_time.asc()).all()
+    
+    # Get recent messages from the associated room
+    recent_messages = []
+    if course.room:
+        recent_messages = ChatMessage.query.filter_by(room_id=course.room.id)\
+            .order_by(ChatMessage.created_at.desc()).limit(20).all()
+
+    return render_template('course_detail.html',
+        course=course,
+        faqs=faqs,
+        pending=pending,
+        scheduled=scheduled,
+        recent_messages=recent_messages
+    )
 
 
 # ==========================================
@@ -404,6 +542,78 @@ def export_chat(room_id):
     return response
 
 
+# --- RESTORED API ENDPOINTS ---
+
+@app.route('/api/faq/add', methods=['POST'])
+@login_required
+def api_add_faq():
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'No data provided'}), 400
+    
+    course_id = data.get('course_id')
+    question = data.get('question')
+    answer = data.get('answer')
+    
+    if not course_id or not question or not answer:
+        return jsonify({'success': False, 'error': 'Missing fields'}), 400
+        
+    course = Course.query.get(course_id)
+    if not course or course.lecturer_id != current_user.id:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        
+    new_faq = FAQ(course_id=course_id, question=question, answer=answer)
+    db.session.add(new_faq)
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+
+@app.route('/api/faq/delete/<int:faq_id>', methods=['DELETE'])
+@login_required
+def api_delete_faq(faq_id):
+    faq = FAQ.query.get_or_404(faq_id)
+    course = Course.query.get(faq.course_id)
+    
+    if not course or course.lecturer_id != current_user.id:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        
+    db.session.delete(faq)
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+
+@app.route('/api/question/dismiss/<int:question_id>', methods=['POST'])
+@login_required
+def api_dismiss_question(question_id):
+    question = PendingQuestion.query.get_or_404(question_id)
+    course = Course.query.get(question.course_id)
+    
+    if not course or course.lecturer_id != current_user.id:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        
+    question.status = 'dismissed'
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+
+@app.route('/api/scheduled/cancel/<int:message_id>', methods=['POST'])
+@login_required
+def api_cancel_scheduled(message_id):
+    msg = ScheduledMessage.query.get_or_404(message_id)
+    course = Course.query.get(msg.course_id)
+    
+    if not course or course.lecturer_id != current_user.id:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        
+    msg.status = 'cancelled'
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+
 # ==========================================
 # 6. ERROR HANDLERS
 # ==========================================
@@ -416,14 +626,14 @@ def not_found(error):
     return render_template('404.html'), 404
 
 
-@app.errorhandler(500)
-def internal_error(error):
-    db.session.rollback()
-    return render_template('500.html'), 500
+# @app.errorhandler(500)
+# def internal_error(error):
+#     db.session.rollback()
+#     return render_template('500.html'), 500
 
 
 # ==========================================
 # 7. RUN APPLICATION
 # ==========================================
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=Config.DEBUG)
+    socketio.run(app, host='0.0.0.0', port=5001, debug=Config.DEBUG)

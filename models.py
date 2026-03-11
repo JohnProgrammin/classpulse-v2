@@ -35,8 +35,8 @@ class Lecturer(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     
-    # Relationships handled by ChatUser now
-    pass
+    # Relationships
+    courses = db.relationship('Course', backref='lecturer', lazy=True)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -67,12 +67,27 @@ class Course(db.Model):
     name = db.Column(db.String(200))
     description = db.Column(db.Text)
     group_id = db.Column(db.String(100), unique=True, index=True)
-    lecturer_id = db.Column(db.Integer, db.ForeignKey('chat_users.id'), nullable=False)
+    lecturer_id = db.Column(db.Integer, db.ForeignKey('lecturers.id'), nullable=False)
 
     # New fields
     semester = db.Column(db.String(50))
     year = db.Column(db.Integer)
     student_count = db.Column(db.Integer, default=0)
+
+    # Relationships
+    room = db.relationship('ChatRoom', backref='course_rel', lazy=True, uselist=False)
+
+    @property
+    def room_id(self):
+        return self.room.id if self.room else None
+
+    @property
+    def unread_count(self):
+        # Placeholder: could be based on messages since lecturer last login
+        # For now, just count total messages in the room
+        if not self.room:
+            return 0
+        return ChatMessage.query.filter_by(room_id=self.room.id, status='sent').count()
 
     # Conversational AI fields
     conversation_summary = db.Column(db.Text)  # AI-generated course summary
@@ -422,7 +437,6 @@ class ChatUser(UserMixin, db.Model):
     # Relationships
     memberships = db.relationship('ChatMember', backref='user', lazy=True, cascade='all, delete-orphan')
     messages = db.relationship('ChatMessage', backref='sender', lazy=True, cascade='all, delete-orphan')
-    courses = db.relationship('Course', backref='creator', lazy=True)  # Link to courses created/managed by this user
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

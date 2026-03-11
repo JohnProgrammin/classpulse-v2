@@ -8,9 +8,6 @@
         background-color: #FFFFFF !important;
     }
 
-    main {
-        padding-top: 0 !important;
-    }
 
     .auth-wrapper {
         display: flex;
@@ -128,7 +125,7 @@
             <h1 class="serif">Welcome back.</h1>
         </div>
 
-        <form method="POST" action="{{ url_for('login') }}">
+        <form method="POST" action="{{ url_for('chat_login') }}">
             <div class="input-group">
                 <label for="username">Username</label>
                 <input type="text" name="username" id="username" class="auth-input" required autofocus>
@@ -150,7 +147,7 @@
         </form>
 
         <div class="auth-footer">
-            No account? <a href="{{ url_for('register') }}">Create one</a>
+            No account? <a href="{{ url_for('chat_register') }}">Create one</a>
         </div>
     </div>
 </div>
