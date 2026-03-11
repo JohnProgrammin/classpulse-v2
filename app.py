@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, session, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_socketio import SocketIO
