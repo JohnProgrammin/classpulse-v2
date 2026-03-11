@@ -11,6 +11,6 @@ COPY . .
 
 EXPOSE 5000
 
-# Use gthread since eventlet was removed
-CMD ["gunicorn", "--worker-class", "gthread", "--threads", "20", "-w", "1", "--bind", "0.0.0.0:5000", "app:app"]
+# Use eventlet to support Flask-SocketIO properly
+CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5000", "app:app"]
 
