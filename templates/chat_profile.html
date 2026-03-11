@@ -326,29 +326,29 @@
     </main>
 
     <!-- Crop Modal -->
-    <div id="cropModal">
-        <div class="crop-container">
+    <div id="cropModal" class="p-4 md:p-6">
+        <div class="crop-container max-w-sm md:max-w-md w-full mx-auto relative top-1/2 -translate-y-1/2 max-h-[90vh] overflow-y-auto custom-scrollbar bg-medium-black/50 p-6 rounded-3xl backdrop-blur-md border border-white/10">
             <div class="text-center">
-                <h3 class="text-white text-2xl font-bold serif mb-2">Adjust your photo</h3>
-                <p class="text-white/40 text-sm">Drag to reposition, use slider to zoom</p>
+                <h3 class="text-white text-xl md:text-2xl font-bold serif mb-2">Adjust your photo</h3>
+                <p class="text-white/60 text-xs md:text-sm">Drag to reposition, use slider to zoom</p>
             </div>
 
-            <div class="crop-clip">
+            <div class="crop-clip mx-auto w-64 h-64 md:w-72 md:h-72">
                 <img id="cropImg" alt="">
             </div>
 
-            <div class="zoom-slider-container">
-                <i data-lucide="minus" class="w-4 h-4"></i>
+            <div class="zoom-slider-container w-full max-w-xs mx-auto">
+                <i data-lucide="minus" class="w-4 h-4 text-white/70"></i>
                 <input type="range" id="zoomSlider" min="100" max="300" value="100">
-                <i data-lucide="plus" class="w-4 h-4"></i>
+                <i data-lucide="plus" class="w-4 h-4 text-white/70"></i>
             </div>
 
-            <div class="w-full flex gap-4 pt-4">
+            <div class="w-full flex flex-col-reverse sm:flex-row gap-3 md:gap-4 pt-2">
                 <button
-                    class="flex-1 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold transition-all"
+                    class="w-full sm:flex-1 py-3 md:py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold transition-all text-sm md:text-base"
                     onclick="cancelCrop()">Cancel</button>
                 <button
-                    class="flex-1 py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20"
+                    class="w-full sm:flex-1 py-3 md:py-4 bg-brand hover:bg-brand-dark text-white rounded-full font-bold transition-all shadow-lg shadow-brand/20 text-sm md:text-base"
                     onclick="applyCrop()">Apply</button>
             </div>
         </div>

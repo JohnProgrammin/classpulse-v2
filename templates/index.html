@@ -5,19 +5,19 @@
 {% block content %}
 <!-- Hero Section -->
 <section class="border-b border-medium-divider overflow-hidden pt-20 lg:pt-0">
-    <div class="max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-2 gap-0 items-stretch min-h-[85vh]">
-        <div class="py-24 lg:py-32 flex flex-col justify-center fade-in">
-            <h1 class="text-6xl sm:text-7xl md:text-8xl font-bold mb-8 leading-[0.95] serif tracking-tighter text-medium-black">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 grid lg:grid-cols-2 gap-0 items-stretch min-h-[85vh]">
+        <div class="py-16 sm:py-24 lg:py-32 flex flex-col justify-center fade-in">
+            <h1 class="text-5xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 leading-[0.95] serif tracking-tighter text-medium-black">
                 Communication,<br /><span class="text-brand">simplified.</span>
             </h1>
-            <p class="text-xl sm:text-2xl text-medium-secondary font-medium max-w-lg mb-12 leading-tight">
+            <p class="text-lg sm:text-xl md:text-2xl text-medium-secondary font-medium max-w-lg mb-8 md:mb-12 leading-tight">
                 Empowering modern educators with automated routine communication and distraction-free student engagement.
             </p>
-            <div class="flex flex-col sm:flex-row items-center gap-6">
-                <a href="{{ url_for('auth_choice') }}" class="btn-primary px-12 py-5 text-xl">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                <a href="{{ url_for('auth_choice') }}" class="btn-primary w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 text-center text-lg sm:text-xl">
                     Get started
                 </a>
-                <a href="#how-it-works" class="text-medium-black font-bold border-b-2 border-brand/20 hover:border-brand transition-all pb-1">
+                <a href="#how-it-works" class="text-medium-black font-bold border-b-2 border-brand/20 hover:border-brand transition-all pb-1 self-center sm:self-auto">
                     See how it works →
                 </a>
             </div>
@@ -33,8 +33,8 @@
 
 <!-- Trusted By Section -->
 <section class="border-b border-medium-divider bg-theme-surface overflow-hidden">
-    <div class="max-w-7xl mx-auto px-6 lg:px-12 py-12 flex flex-col md:flex-row items-center gap-8 opacity-50 grayscale">
-        <span class="text-sm font-bold uppercase tracking-widest text-medium-black whitespace-nowrap shrink-0">Trusted by Modern Educators</span>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-8 md:py-12 flex flex-col md:flex-row items-center gap-6 md:gap-8 opacity-50 grayscale">
+        <span class="text-xs sm:text-sm font-bold uppercase tracking-widest text-medium-black whitespace-nowrap shrink-0">Trusted by Modern Educators</span>
         <div class="relative flex overflow-hidden mask-fade w-full">
             <div class="flex items-center space-x-12 animate-marquee whitespace-nowrap min-w-full pl-12">
                 <span class="text-xl font-bold serif">AcademicPulse</span>
@@ -55,41 +55,41 @@
 </section>
 
 <!-- Features Section -->
-<section class="max-w-7xl mx-auto px-6 lg:px-12 py-24">
-    <div class="flex items-center space-x-3 mb-16">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 md:py-24">
+    <div class="flex items-center space-x-3 mb-12 md:mb-16">
         <div class="w-2 h-2 bg-brand rounded-full"></div>
         <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-medium-black">Core Capabilities</h2>
     </div>
 
-    <div class="grid md:grid-cols-3 gap-16 lg:gap-24">
+    <div class="grid md:grid-cols-3 gap-12 md:gap-16 lg:gap-24">
         <!-- Feature 1 -->
-        <div class="space-y-6">
-            <span class="text-4xl font-bold text-medium-divider serif">01</span>
+        <div class="space-y-4 md:space-y-6">
+            <span class="text-3xl md:text-4xl font-bold text-medium-divider serif">01</span>
             <div>
-                <h3 class="text-xl font-bold text-medium-black mb-4 serif">Unified Dashboard</h3>
-                <p class="text-medium-gray leading-relaxed">
+                <h3 class="text-lg md:text-xl font-bold text-medium-black mb-3 md:mb-4 serif">Unified Dashboard</h3>
+                <p class="text-base md:text-lg text-medium-gray leading-relaxed">
                     A single source of truth for your academic messages. Monitor engagement and course health at a glance.
                 </p>
             </div>
         </div>
 
         <!-- Feature 2 -->
-        <div class="space-y-6">
-            <span class="text-4xl font-bold text-medium-divider serif">02</span>
+        <div class="space-y-4 md:space-y-6">
+            <span class="text-3xl md:text-4xl font-bold text-medium-divider serif">02</span>
             <div>
-                <h3 class="text-xl font-bold text-medium-black mb-4 serif">Automated Intelligence</h3>
-                <p class="text-medium-gray leading-relaxed">
+                <h3 class="text-lg md:text-xl font-bold text-medium-black mb-3 md:mb-4 serif">Automated Intelligence</h3>
+                <p class="text-base md:text-lg text-medium-gray leading-relaxed">
                     Our AI learns from your previous answers to resolve routine student inquiries instantly, 24/7.
                 </p>
             </div>
         </div>
 
         <!-- Feature 3 -->
-        <div class="space-y-6">
-            <span class="text-4xl font-bold text-medium-divider serif">03</span>
+        <div class="space-y-4 md:space-y-6">
+            <span class="text-3xl md:text-4xl font-bold text-medium-divider serif">03</span>
             <div>
-                <h3 class="text-xl font-bold text-medium-black mb-4 serif">Time-Shifted Broadcasts</h3>
-                <p class="text-medium-gray leading-relaxed">
+                <h3 class="text-lg md:text-xl font-bold text-medium-black mb-3 md:mb-4 serif">Time-Shifted Broadcasts</h3>
+                <p class="text-base md:text-lg text-medium-gray leading-relaxed">
                     Write once, deliver exactly when it matters. Schedule announcements for optimal student visibility.
                 </p>
             </div>
@@ -97,40 +97,40 @@
     </div>
 </section>
 
-<div class="divider max-w-7xl mx-auto px-6 lg:px-12"></div>
+<div class="divider max-w-7xl mx-auto px-4 sm:px-6 lg:px-12"></div>
 
 <!-- How it works -->
-<section id="how-it-works" class="max-w-7xl mx-auto px-6 lg:px-12 py-32 grid lg:grid-cols-3 gap-24">
-    <div class="lg:col-span-2 space-y-24">
+<section id="how-it-works" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 md:py-32 grid lg:grid-cols-3 gap-12 lg:gap-24">
+    <div class="lg:col-span-2 space-y-16 lg:space-y-24">
         <div class="group">
-            <div class="flex items-center space-x-4 mb-6">
+            <div class="flex items-center space-x-4 mb-4 md:mb-6">
                 <span class="text-xs font-bold uppercase tracking-[0.2em] text-medium-gray">Step 01</span>
                 <div class="flex-1 h-px bg-medium-divider"></div>
             </div>
-            <h2 class="text-4xl font-bold text-medium-black mb-6 serif group-hover:text-brand transition-colors">Onboard in seconds.</h2>
-            <p class="text-xl text-medium-gray leading-relaxed">
+            <h2 class="text-3xl md:text-4xl font-bold text-medium-black mb-4 md:mb-6 serif group-hover:text-brand transition-colors">Onboard in seconds.</h2>
+            <p class="text-lg md:text-xl text-medium-gray leading-relaxed">
                 Create your educator profile with just a phone number. No complex configuration or lengthy setup required.
             </p>
         </div>
 
         <div class="group">
-            <div class="flex items-center space-x-4 mb-6">
+            <div class="flex items-center space-x-4 mb-4 md:mb-6">
                 <span class="text-xs font-bold uppercase tracking-[0.2em] text-medium-gray">Step 02</span>
                 <div class="flex-1 h-px bg-medium-divider"></div>
             </div>
-            <h2 class="text-4xl font-bold text-medium-black mb-6 serif group-hover:text-brand transition-colors">Structure your courses.</h2>
-            <p class="text-xl text-medium-gray leading-relaxed">
+            <h2 class="text-3xl md:text-4xl font-bold text-medium-black mb-4 md:mb-6 serif group-hover:text-brand transition-colors">Structure your courses.</h2>
+            <p class="text-lg md:text-xl text-medium-gray leading-relaxed">
                 Define your knowledge base and schedule announcements. Our interface stays out of your way so you can focus on content.
             </p>
         </div>
 
         <div class="group">
-            <div class="flex items-center space-x-4 mb-6">
+            <div class="flex items-center space-x-4 mb-4 md:mb-6">
                 <span class="text-xs font-bold uppercase tracking-[0.2em] text-medium-gray">Step 03</span>
                 <div class="flex-1 h-px bg-medium-divider"></div>
             </div>
-            <h2 class="text-4xl font-bold text-medium-black mb-6 serif group-hover:text-brand transition-colors">Automate engagement.</h2>
-            <p class="text-xl text-medium-gray leading-relaxed">
+            <h2 class="text-3xl md:text-4xl font-bold text-medium-black mb-4 md:mb-6 serif group-hover:text-brand transition-colors">Automate engagement.</h2>
+            <p class="text-lg md:text-xl text-medium-gray leading-relaxed">
                 Invite students and let ClassPulse handle the routine. Focus your energy on high-value interactions while the system manages the rest.
             </p>
         </div>
@@ -156,39 +156,39 @@
 </section>
 
 <!-- Testimonials -->
-<section class="max-w-7xl mx-auto px-6 lg:px-12 py-32 border-t border-medium-divider">
-    <div class="grid lg:grid-cols-2 gap-24 items-center">
-        <div class="space-y-8">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 md:py-32 border-t border-medium-divider">
+    <div class="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+        <div class="space-y-6 md:space-y-8">
             <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-brand">Voices of Impact</h2>
-            <blockquote class="text-4xl md:text-5xl font-bold serif text-medium-black leading-[1.1] tracking-tight">
+            <blockquote class="text-3xl sm:text-4xl md:text-5xl font-bold serif text-medium-black leading-[1.1] tracking-tight">
                 "ClassPulse has completely transformed how I manage my courses. The AI responses alone save me hours every week."
             </blockquote>
             <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center font-bold text-brand">JD</div>
+                <div class="w-10 md:w-12 h-10 md:h-12 bg-brand/10 rounded-full flex items-center justify-center font-bold text-brand">JD</div>
                 <div>
                     <p class="font-bold text-medium-black">Dr. Julia Donovan</p>
                     <p class="text-sm text-medium-gray">Professor of Cognitive Science</p>
                 </div>
             </div>
         </div>
-        <div class="grid sm:grid-cols-2 gap-8">
-            <div class="p-8 bg-theme-surface rounded-2xl space-y-4">
-                <p class="text-medium-black italic">"The minimalist interface is exactly what academia needed. No more cluttered forums."</p>
-                <p class="text-xs font-bold uppercase tracking-widest text-medium-gray">— Mark R., Lecturer</p>
+        <div class="grid sm:grid-cols-2 gap-6 md:gap-8">
+            <div class="p-6 md:p-8 bg-theme-surface rounded-2xl space-y-3 md:space-y-4">
+                <p class="text-sm md:text-base text-medium-black italic">"The minimalist interface is exactly what academia needed. No more cluttered forums."</p>
+                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-medium-gray">— Mark R., Lecturer</p>
             </div>
-            <div class="p-8 bg-theme-surface rounded-2xl space-y-4">
-                <p class="text-medium-black italic">"Students love the instant feedback. I love that I only see the critical questions."</p>
-                <p class="text-xs font-bold uppercase tracking-widest text-medium-gray">— Sarah L., TA</p>
+            <div class="p-6 md:p-8 bg-theme-surface rounded-2xl space-y-3 md:space-y-4">
+                <p class="text-sm md:text-base text-medium-black italic">"Students love the instant feedback. I love that I only see the critical questions."</p>
+                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-medium-gray">— Sarah L., TA</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- FAQ Section -->
-<section class="max-w-7xl mx-auto px-6 lg:px-12 py-32 border-t border-medium-divider">
-    <div class="max-w-3xl mx-auto text-center mb-24">
-        <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-brand mb-6">Common Inquiries</h2>
-        <h3 class="text-4xl md:text-5xl font-bold serif text-medium-black tracking-tight">Everything you need to know.</h3>
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 md:py-32 border-t border-medium-divider">
+    <div class="max-w-3xl mx-auto text-center mb-12 md:mb-24">
+        <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-brand mb-4 md:mb-6">Common Inquiries</h2>
+        <h3 class="text-3xl sm:text-4xl md:text-5xl font-bold serif text-medium-black tracking-tight">Everything you need to know.</h3>
     </div>
 
     <div class="max-w-3xl mx-auto space-y-6">
@@ -223,13 +223,13 @@
 </section>
 
 <!-- Final CTA -->
-<section class="max-w-7xl mx-auto px-6 lg:px-12 py-32 border-t border-medium-divider bg-brand text-white rounded-t-[4rem] text-center">
-    <h2 class="text-5xl md:text-7xl font-bold mb-12 serif tracking-tighter">Ready to reclaim your time?</h2>
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-        <a href="{{ url_for('auth_choice') }}" class="px-12 py-5 bg-white text-brand rounded-full text-xl font-bold hover:bg-theme-bg transition-all">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 md:py-32 border-t border-medium-divider bg-brand text-white rounded-t-3xl md:rounded-t-[4rem] text-center">
+    <h2 class="text-4xl sm:text-5xl md:text-7xl font-bold mb-8 md:mb-12 serif tracking-tighter">Ready to reclaim your time?</h2>
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 sm:gap-6">
+        <a href="{{ url_for('auth_choice') }}" class="px-8 sm:px-12 py-4 sm:py-5 bg-white text-brand rounded-full text-lg sm:text-xl font-bold hover:bg-theme-surface transition-all">
             Get started for free
         </a>
-        <a href="{{ url_for('chat_index') }}" class="px-12 py-5 border-2 border-white/20 hover:border-white rounded-full text-xl font-bold transition-all">
+        <a href="{{ url_for('chat_index') }}" class="px-8 sm:px-12 py-4 sm:py-5 border-2 border-white/20 hover:border-white rounded-full text-lg sm:text-xl font-bold transition-all">
             Student Access
         </a>
     </div>

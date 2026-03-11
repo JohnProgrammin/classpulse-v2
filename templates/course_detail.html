@@ -3,21 +3,21 @@
 {% block title %}{{ course.code }} - ClassPulse{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-6 py-16">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-16">
     <!-- Header Section -->
-    <div class="mb-16 fade-in">
+    <div class="mb-8 md:mb-16 fade-in">
         <a href="{{ url_for('dashboard') }}"
-            class="inline-flex items-center gap-2 text-medium-gray hover:text-medium-black transition-colors mb-8 text-xs font-bold uppercase tracking-[0.2em]">
+            class="inline-flex items-center gap-2 text-medium-gray hover:text-medium-black transition-colors mb-6 md:mb-8 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>
             <span>Back to Dashboard</span>
         </a>
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div class="space-y-4">
-                <h1 class="text-5xl md:text-6xl font-bold serif tracking-tight text-medium-black leading-none">{{ course.code }}</h1>
-                <p class="text-2xl text-medium-gray serif italic">{{ course.name }}</p>
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8">
+            <div class="space-y-2 md:space-y-4">
+                <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold serif tracking-tight text-medium-black leading-none break-words">{{ course.code }}</h1>
+                <p class="text-xl md:text-2xl text-medium-gray serif italic break-words">{{ course.name }}</p>
             </div>
             <button onclick="showAddFAQ()"
-                class="px-8 py-3 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/10 flex items-center justify-center gap-2 w-full md:w-auto">
+                class="px-6 md:px-8 py-3 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/10 flex items-center justify-center gap-2 w-full md:w-auto shrink-0">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 Expand Knowledge
             </button>
@@ -25,26 +25,26 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="border-b border-medium-divider mb-12 fade-in overflow-hidden">
-        <div class="flex gap-8 md:gap-12 overflow-x-auto no-scrollbar pb-1">
+    <div class="border-b border-medium-divider mb-8 md:mb-12 fade-in overflow-hidden">
+        <div class="flex gap-6 md:gap-12 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
             <button onclick="switchTab('knowledge')" id="tab-knowledge"
-                class="tab-button border-b-2 py-4 font-bold text-xs transition-all uppercase tracking-widest active">
+                class="tab-button border-b-2 py-4 font-bold text-[10px] md:text-xs transition-all uppercase tracking-widest whitespace-nowrap active border-brand text-medium-black">
                 Archive ({{ faqs|length }})
             </button>
             <button onclick="switchTab('pending')" id="tab-pending"
-                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-xs transition-all uppercase tracking-widest whitespace-nowrap">
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-[10px] md:text-xs transition-all uppercase tracking-widest whitespace-nowrap">
                 Review ({{ pending|length }})
             </button>
             <button onclick="switchTab('scheduled')" id="tab-scheduled"
-                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-xs transition-all uppercase tracking-widest">
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-[10px] md:text-xs transition-all uppercase tracking-widest whitespace-nowrap">
                 Plans ({{ scheduled|length }})
             </button>
             <button onclick="switchTab('history')" id="tab-history"
-                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-xs transition-all uppercase tracking-widest">
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-[10px] md:text-xs transition-all uppercase tracking-widest whitespace-nowrap">
                 Log
             </button>
             <button onclick="switchTab('command')" id="tab-command"
-                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-xs transition-all uppercase tracking-widest flex items-center gap-2">
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-[10px] md:text-xs transition-all uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
                 <i data-lucide="sparkles" class="w-3 h-3 text-brand"></i>
                 Command Center
             </button>
@@ -56,14 +56,14 @@
         <!-- Knowledge Base -->
         <div id="content-knowledge" class="tab-content transition-all duration-300">
             {% if faqs %}
-            <div class="grid gap-6">
+            <div class="grid gap-4 md:gap-6">
                 {% for faq in faqs %}
                 <div
-                    class="bg-theme-surface border border-theme-divider rounded-2xl p-8 transition-all group">
-                    <div class="flex items-start justify-between gap-6">
-                        <div class="flex-1 space-y-4">
-                            <h3 class="text-2xl font-bold serif text-medium-black leading-tight">{{ faq.question }}</h3>
-                            <p class="text-theme-secondary leading-relaxed text-lg">{{ faq.answer }}</p>
+                    class="bg-theme-surface border border-theme-divider rounded-2xl p-6 md:p-8 transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+                        <div class="flex-1 space-y-3 md:space-y-4">
+                            <h3 class="text-xl md:text-2xl font-bold serif text-medium-black leading-tight break-words">{{ faq.question }}</h3>
+                            <p class="text-theme-secondary leading-relaxed text-base md:text-lg break-words">{{ faq.answer }}</p>
                             <div class="flex items-center gap-4 pt-2">
                                 <div
                                     class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand">
@@ -73,7 +73,7 @@
                             </div>
                         </div>
                         <button onclick="deleteFAQ('{{ faq.id }}')"
-                            class="w-10 h-10 text-theme-secondary hover:text-red-500 hover:bg-red-50/10 rounded-full flex items-center justify-center transition-all">
+                            class="w-10 h-10 text-theme-secondary hover:text-red-500 hover:bg-red-50/10 rounded-full flex items-center justify-center transition-all shrink-0 self-end sm:self-auto">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -100,33 +100,33 @@
         <!-- Pending Questions -->
         <div id="content-pending" class="tab-content hidden transition-all duration-300">
             {% if pending %}
-            <div class="grid gap-6">
+            <div class="grid gap-4 md:gap-6">
                 {% for question in pending %}
                 <div
-                    class="bg-theme-surface border-l-4 border-brand rounded-r-2xl p-8 border-y border-r border-theme-divider">
-                    <div class="flex items-start justify-between gap-6">
-                        <div class="flex-1">
-                            <h3 class="text-2xl font-bold serif mb-4 text-medium-black leading-tight">"{{
+                    class="bg-theme-surface border-l-4 border-brand rounded-r-2xl p-6 md:p-8 border-y border-r border-theme-divider">
+                    <div class="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
+                        <div class="flex-1 w-full">
+                            <h3 class="text-xl md:text-2xl font-bold serif mb-4 text-medium-black leading-tight break-words">"{{
                                 question.question }}"</h3>
-                            <div class="flex items-center gap-3 mb-6">
+                            <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-6">
                                 <div
-                                    class="w-6 h-6 rounded-full bg-medium-divider flex items-center justify-center text-[10px] font-bold">
+                                    class="w-5 h-5 md:w-6 md:h-6 rounded-full bg-medium-divider flex items-center justify-center text-[10px] font-bold shrink-0">
                                     {{ question.student_name[0].upper() }}
                                 </div>
-                                <span class="text-xs font-bold text-medium-gray uppercase tracking-widest">{{
+                                <span class="text-[10px] md:text-xs font-bold text-medium-gray uppercase tracking-widest break-all">{{
                                     question.student_name }}</span>
-                                <span class="text-medium-divider">•</span>
-                                <span class="text-xs text-medium-gray">{{ question.asked_at.strftime('%b %d, %I:%M %p')
+                                <span class="text-medium-divider hidden sm:inline">•</span>
+                                <span class="text-[10px] md:text-xs text-medium-gray w-full sm:w-auto mt-1 sm:mt-0">{{ question.asked_at.strftime('%b %d, %I:%M %p')
                                     }}</span>
                             </div>
-                            <div class="p-4 bg-medium-divider/50 rounded-xl border border-medium-divider border-dashed">
-                                <p class="text-[10px] uppercase font-bold text-medium-gray mb-2 tracking-widest">
+                            <div class="p-3 md:p-4 bg-medium-divider/50 rounded-xl border border-medium-divider border-dashed w-full overflow-x-auto">
+                                <p class="text-[10px] uppercase font-bold text-medium-gray mb-2 tracking-widest whitespace-nowrap">
                                     Reply Preview</p>
-                                <code class="text-sm text-brand font-bold">Answer: Your response here</code>
+                                <code class="text-xs md:text-sm text-brand font-bold whitespace-nowrap">Answer: Your response here</code>
                             </div>
                         </div>
                         <button onclick="dismissQuestion('{{ question.id }}')"
-                            class="text-theme-secondary hover:text-medium-black transition-colors">
+                            class="text-theme-secondary hover:text-medium-black transition-colors shrink-0 self-end sm:self-start">
                             <i data-lucide="x-circle" class="w-6 h-6"></i>
                         </button>
                     </div>
@@ -148,16 +148,16 @@
             <div class="space-y-4">
                 {% for msg in scheduled %}
                 <div
-                    class="bg-theme-surface border border-theme-divider rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div class="space-y-1">
+                    class="bg-theme-surface border border-theme-divider rounded-2xl p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+                    <div class="space-y-1 md:space-y-2">
                         <div class="flex items-center gap-2 text-brand font-bold text-[10px] uppercase tracking-widest">
                             <i data-lucide="clock" class="w-3 h-3"></i>
                             <span>{{ msg.scheduled_time.strftime('%b %d, %Y at %I:%M %p') }}</span>
                         </div>
-                        <p class="text-medium-black font-medium leading-relaxed">{{ msg.message }}</p>
+                        <p class="text-medium-black text-sm md:text-base font-medium leading-relaxed break-words">{{ msg.message }}</p>
                     </div>
                     <button onclick="cancelScheduled('{{ msg.id }}')"
-                        class="px-6 py-2 border border-red-500/20 text-red-500 hover:bg-red-50/10 rounded-full text-xs font-bold transition-all uppercase tracking-widest">
+                        class="px-6 py-2 border border-red-500/20 text-red-500 hover:bg-red-50/10 rounded-full text-xs font-bold transition-all uppercase tracking-widest shrink-0 self-start md:self-auto">
                         Cancel
                     </button>
                 </div>

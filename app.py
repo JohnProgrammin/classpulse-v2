@@ -100,8 +100,9 @@ def login():
     if request.method == 'POST':
         phone = request.form.get('phone', '').strip()
         password = request.form.get('password', '')
-        # In this version, we match Lecturer by phone number
-        lecturer = Lecturer.query.filter_by(phone_number=phone).first()
+        
+        # Match Lecturer by phone number OR email
+        lecturer = Lecturer.query.filter((Lecturer.phone_number == phone) | (Lecturer.email == phone)).first()
 
         if lecturer and (not lecturer.password_hash or lecturer.check_password(password)):
             login_user(lecturer)
@@ -110,7 +111,7 @@ def login():
             flash('Welcome back, Professor!', 'success')
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid phone number or password.', 'error')
+            flash('Invalid phone number/email or password.', 'error')
 
     return render_template('login.html')
 
