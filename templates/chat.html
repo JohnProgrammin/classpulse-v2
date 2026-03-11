@@ -242,11 +242,11 @@
 
 <body class="flex overflow-hidden transition-colors duration-300" style="width: 100vw; height: 100dvh;">
     <!-- Mobile backdrop -->
-    <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden">
+    <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden lg:hidden">
     </div>
 
     <!-- Sidebar -->
-    <div id="sidebar" class="w-80 bg-theme-bg border-r border-medium-divider flex flex-col z-50">
+    <div id="sidebar" class="absolute lg:relative w-[85%] sm:w-80 h-full transform -translate-x-full lg:translate-x-0 transition-transform duration-300 bg-theme-bg border-r border-medium-divider flex flex-col z-50 shrink-0">
         <!-- Header -->
         <div class="p-6 border-b border-medium-divider">
             <div class="flex items-center justify-between mb-6">
@@ -2641,20 +2641,22 @@ ${escapeHtml(s.content)}
         // ————— Sidebar (mobile) —————
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebarBackdrop');
-            const isOpen = sidebar.classList.contains('open');
-            sidebar.classList.toggle('open', !isOpen);
-            backdrop.classList.toggle('visible', !isOpen);
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+            if (isHidden) {
+                openSidebar();
+            } else {
+                closeSidebar();
+            }
         }
 
         function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('sidebarBackdrop').classList.remove('visible');
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebarBackdrop').classList.add('hidden');
         }
 
         function openSidebar() {
-            document.getElementById('sidebar').classList.add('open');
-            document.getElementById('sidebarBackdrop').classList.add('visible');
+            document.getElementById('sidebar').classList.remove('-translate-x-full');
+            document.getElementById('sidebarBackdrop').classList.remove('hidden');
         }
 
         // ————— Typing Indicators —————
