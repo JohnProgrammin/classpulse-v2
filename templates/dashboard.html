@@ -3,11 +3,11 @@
 {% block title %}Dashboard - ClassPulse{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-6 py-12">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12">
     <!-- Header -->
-    <header class="mb-16 fade-in">
-        <h1 class="text-4xl font-bold serif text-medium-black mb-4">Your Dashboard</h1>
-        <p class="text-medium-gray italic">"In the classroom of life, information is the only currency that matters."
+    <header class="mb-10 md:mb-16 fade-in">
+        <h1 class="text-3xl md:text-4xl font-bold serif text-medium-black mb-4">Your Dashboard</h1>
+        <p class="text-sm md:text-base text-medium-gray italic">"In the classroom of life, information is the only currency that matters."
         </p>
     </header>
 
@@ -53,7 +53,7 @@
                         class="text-2xl font-bold text-medium-black serif group-hover:text-brand transition-colors mb-3">
                         <a href="{{ url_for('course_detail', course_id=course.id) }}">{{ course.name }}</a>
                     </h3>
-                    <div class="flex items-center space-x-6 text-sm text-medium-gray">
+                    <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-medium-gray mt-2 sm:mt-0">
                         <span class="flex items-center space-x-2">
                             <i data-lucide="users" class="w-4 h-4 opacity-50"></i>
                             <span>{{ course.student_count }} students</span>
@@ -92,14 +92,14 @@
 </div>
 
 <!-- Add Course Modal -->
-<div id="addCourseModal" class="fixed inset-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl z-[100] hidden items-center justify-center p-6 fade-in"
+<div id="addCourseModal" class="fixed inset-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl z-[100] hidden items-center justify-center p-4 sm:p-6 fade-in"
     style="animation-duration: 0.3s;">
-    <div class="w-full max-w-lg bg-white dark:bg-theme-surface p-12 rounded-[2.5rem] border border-medium-divider shadow-2xl transition-all">
-        <div class="flex items-center justify-between mb-16">
-            <h3 class="text-4xl font-bold serif text-medium-black">New Course</h3>
+    <div class="w-full max-w-lg bg-white dark:bg-theme-surface p-8 sm:p-12 rounded-3xl sm:rounded-[2.5rem] border border-medium-divider shadow-2xl transition-all max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-8 sm:mb-16">
+            <h3 class="text-2xl sm:text-4xl font-bold serif text-medium-black">New Course</h3>
             <button onclick="closeAddCourseModal()"
                 class="text-medium-gray hover:text-medium-black p-2 transition-colors">
-                <i data-lucide="x" class="w-8 h-8"></i>
+                <i data-lucide="x" class="w-6 h-6 sm:w-8 sm:h-8"></i>
             </button>
         </div>
 
