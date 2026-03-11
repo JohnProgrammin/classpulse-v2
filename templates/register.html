@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Sign In - ClassPulse{% endblock %}
+{% block title %}Educator Registration - ClassPulse{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -38,7 +38,6 @@
         letter-spacing: 0.1em;
         border-radius: 4px;
         margin-bottom: 32px;
-        opacity: 0.8;
     }
 
     .input-group {
@@ -126,14 +125,24 @@
 <div class="auth-wrapper">
     <div class="auth-container fade-in">
         <div class="auth-header">
-            <span class="role-badge">Student Portal</span>
-            <h1 class="serif">Welcome back.</h1>
+            <span class="role-badge">Educator Portal</span>
+            <h1 class="serif">Join ClassPulse.</h1>
         </div>
 
-        <form method="POST" action="{{ url_for('chat_login') }}">
+        <form method="POST">
             <div class="input-group">
-                <label for="username">Username</label>
-                <input type="text" name="username" id="username" class="auth-input" required autofocus>
+                <label for="name">Full Name</label>
+                <input type="text" name="name" id="name" class="auth-input" placeholder="e.g. Profiler Smith" required autofocus>
+            </div>
+
+            <div class="input-group">
+                <label for="phone">Phone Number</label>
+                <input type="text" name="phone" id="phone" class="auth-input" placeholder="e.g. +234..." required>
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email Address (Optional)</label>
+                <input type="email" name="email" id="email" class="auth-input" placeholder="email@university.edu">
             </div>
 
             <div class="input-group">
@@ -147,20 +156,12 @@
             </div>
 
             <button type="submit" class="auth-submit">
-                Continue
+                Create account
             </button>
         </form>
 
-        <div class="auth-info">
-            <h3>Join your course group?</h3>
-            <p>Access your course materials and AI assistants instantly.</p>
-            <a href="{{ url_for('chat_register') }}" class="block text-sm font-bold text-brand hover:text-brand-dark transition-colors">
-                Create a student account →
-            </a>
-        </div>
-
         <div class="auth-footer">
-            No account? <a href="{{ url_for('chat_register') }}">Create one</a>
+            Already have an educator account? <a href="{{ url_for('login') }}">Sign in</a>
         </div>
     </div>
 </div>

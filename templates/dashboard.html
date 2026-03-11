@@ -92,39 +92,41 @@
 </div>
 
 <!-- Add Course Modal -->
-<div id="addCourseModal" class="fixed inset-0 bg-white/98 z-[100] hidden items-center justify-center p-6 fade-in"
-    style="animation-duration: 0.2s;">
-    <div class="w-full max-w-lg">
-        <div class="flex items-center justify-between mb-12">
-            <h3 class="text-3xl font-bold serif text-medium-black">Add New Course</h3>
+<div id="addCourseModal" class="fixed inset-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl z-[100] hidden items-center justify-center p-6 fade-in"
+    style="animation-duration: 0.3s;">
+    <div class="w-full max-w-lg bg-white dark:bg-theme-surface p-12 rounded-[2.5rem] border border-medium-divider shadow-2xl transition-all">
+        <div class="flex items-center justify-between mb-16">
+            <h3 class="text-4xl font-bold serif text-medium-black">New Course</h3>
             <button onclick="closeAddCourseModal()"
                 class="text-medium-gray hover:text-medium-black p-2 transition-colors">
                 <i data-lucide="x" class="w-8 h-8"></i>
             </button>
         </div>
 
-        <form action="{{ url_for('add_course') }}" method="POST" class="space-y-10">
-            <div class="space-y-4">
-                <label class="text-xs font-bold uppercase tracking-widest text-medium-gray">Course Name</label>
+        <form action="{{ url_for('add_course') }}" method="POST" class="space-y-12">
+            <div class="space-y-3 group">
+                <label class="text-[10px] font-bold uppercase tracking-[0.2em] text-medium-gray group-focus-within:text-brand transition-colors">Course Name</label>
                 <input type="text" name="name"
-                    class="w-full px-0 py-4 bg-transparent border-b border-medium-divider focus:border-medium-black outline-none text-2xl serif"
-                    placeholder="What's the subject?" required>
+                    class="w-full px-0 py-3 bg-transparent border-b-2 border-medium-divider focus:border-brand outline-none text-2xl serif text-medium-black transition-all"
+                    placeholder="e.g. Introduction to Physics" required>
             </div>
-            <div class="space-y-4">
-                <label class="text-xs font-bold uppercase tracking-widest text-medium-gray">Course Code</label>
-                <input type="text" name="code"
-                    class="w-full px-0 py-4 bg-transparent border-b border-medium-divider focus:border-medium-black outline-none text-2xl serif"
-                    placeholder="e.g. CS101" required>
-            </div>
-            <div class="space-y-4">
-                <label class="text-xs font-bold uppercase tracking-widest text-medium-gray">Semester</label>
-                <input type="text" name="semester"
-                    class="w-full px-0 py-4 bg-transparent border-b border-medium-divider focus:border-medium-black outline-none text-2xl serif"
-                    placeholder="e.g. Fall 2024" required>
+            <div class="grid grid-cols-2 gap-12">
+                <div class="space-y-3 group">
+                    <label class="text-[10px] font-bold uppercase tracking-[0.2em] text-medium-gray group-focus-within:text-brand transition-colors">Code</label>
+                    <input type="text" name="code"
+                        class="w-full px-0 py-3 bg-transparent border-b-2 border-medium-divider focus:border-brand outline-none text-xl serif text-medium-black transition-all"
+                        placeholder="CS101" required>
+                </div>
+                <div class="space-y-3 group">
+                    <label class="text-[10px] font-bold uppercase tracking-[0.2em] text-medium-gray group-focus-within:text-brand transition-colors">Semester</label>
+                    <input type="text" name="semester"
+                        class="w-full px-0 py-3 bg-transparent border-b-2 border-medium-divider focus:border-brand outline-none text-xl serif text-medium-black transition-all"
+                        placeholder="Fall 2024" required>
+                </div>
             </div>
             <div class="pt-8">
                 <button type="submit"
-                    class="w-full py-4 bg-medium-black text-white rounded-full text-lg font-medium hover:bg-black transition-all shadow-lg hover:shadow-black/10">
+                    class="w-full py-5 bg-medium-black text-white rounded-full text-lg font-bold hover:bg-brand transition-all shadow-xl shadow-black/5 hover:shadow-brand/20">
                     Create Course Room
                 </button>
             </div>

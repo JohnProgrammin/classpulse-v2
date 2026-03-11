@@ -43,6 +43,11 @@
                 class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-xs transition-all uppercase tracking-widest">
                 Log
             </button>
+            <button onclick="switchTab('command')" id="tab-command"
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-xs transition-all uppercase tracking-widest flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-3 h-3 text-brand"></i>
+                Command Center
+            </button>
         </div>
     </div>
 
@@ -54,11 +59,11 @@
             <div class="grid gap-6">
                 {% for faq in faqs %}
                 <div
-                    class="bg-white border border-medium-divider rounded-2xl p-8 hover:shadow-xl hover:shadow-medium-divider/50 transition-all group">
+                    class="bg-theme-surface border border-theme-divider rounded-2xl p-8 transition-all group">
                     <div class="flex items-start justify-between gap-6">
                         <div class="flex-1 space-y-4">
                             <h3 class="text-2xl font-bold serif text-medium-black leading-tight">{{ faq.question }}</h3>
-                            <p class="text-medium-gray leading-relaxed text-lg">{{ faq.answer }}</p>
+                            <p class="text-theme-secondary leading-relaxed text-lg">{{ faq.answer }}</p>
                             <div class="flex items-center gap-4 pt-2">
                                 <div
                                     class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand">
@@ -67,8 +72,8 @@
                                 </div>
                             </div>
                         </div>
-                        <button onclick="deleteFAQ({{ faq.id }})"
-                            class="w-10 h-10 text-medium-gray hover:text-red-500 hover:bg-red-50 rounded-full flex items-center justify-center transition-all">
+                        <button onclick="deleteFAQ('{{ faq.id }}')"
+                            class="w-10 h-10 text-theme-secondary hover:text-red-500 hover:bg-red-50/10 rounded-full flex items-center justify-center transition-all">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -98,7 +103,7 @@
             <div class="grid gap-6">
                 {% for question in pending %}
                 <div
-                    class="bg-white border-l-4 border-brand shadow-sm rounded-r-2xl p-8 border-y border-r border-medium-divider">
+                    class="bg-theme-surface border-l-4 border-brand rounded-r-2xl p-8 border-y border-r border-theme-divider">
                     <div class="flex items-start justify-between gap-6">
                         <div class="flex-1">
                             <h3 class="text-2xl font-bold serif mb-4 text-medium-black leading-tight">"{{
@@ -120,8 +125,8 @@
                                 <code class="text-sm text-brand font-bold">Answer: Your response here</code>
                             </div>
                         </div>
-                        <button onclick="dismissQuestion({{ question.id }})"
-                            class="text-medium-gray hover:text-medium-black transition-colors">
+                        <button onclick="dismissQuestion('{{ question.id }}')"
+                            class="text-theme-secondary hover:text-medium-black transition-colors">
                             <i data-lucide="x-circle" class="w-6 h-6"></i>
                         </button>
                     </div>
@@ -143,7 +148,7 @@
             <div class="space-y-4">
                 {% for msg in scheduled %}
                 <div
-                    class="bg-white border border-medium-divider rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    class="bg-theme-surface border border-theme-divider rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div class="space-y-1">
                         <div class="flex items-center gap-2 text-brand font-bold text-[10px] uppercase tracking-widest">
                             <i data-lucide="clock" class="w-3 h-3"></i>
@@ -151,8 +156,8 @@
                         </div>
                         <p class="text-medium-black font-medium leading-relaxed">{{ msg.message }}</p>
                     </div>
-                    <button onclick="cancelScheduled({{ msg.id }})"
-                        class="px-6 py-2 border border-red-100 text-red-600 hover:bg-red-50 rounded-full text-xs font-bold transition-all uppercase tracking-widest">
+                    <button onclick="cancelScheduled('{{ msg.id }}')"
+                        class="px-6 py-2 border border-red-500/20 text-red-500 hover:bg-red-50/10 rounded-full text-xs font-bold transition-all uppercase tracking-widest">
                         Cancel
                     </button>
                 </div>
@@ -172,11 +177,11 @@
             <div class="space-y-3">
                 {% for msg in recent_messages %}
                 <div
-                    class="bg-white border border-medium-divider rounded-xl p-6 hover:bg-medium-divider/20 transition-colors">
+                    class="bg-theme-surface border border-theme-divider rounded-xl p-6 hover:bg-brand/5 transition-colors">
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-2">
                             <span
-                                class="px-2 py-0.5 bg-medium-divider text-medium-gray rounded text-[9px] font-bold uppercase tracking-widest">{{
+                                class="px-2 py-0.5 bg-theme-divider text-theme-secondary rounded text-[9px] font-bold uppercase tracking-widest">{{
                                 msg.message_type }}</span>
                             <p class="text-medium-black text-sm leading-relaxed">{{ msg.content }}</p>
                         </div>
@@ -193,13 +198,64 @@
             </div>
             {% endif %}
         </div>
+
+        <!-- AI Command Center -->
+        <div id="content-command" class="tab-content hidden transition-all duration-300">
+            <div class="bg-medium-black rounded-3xl overflow-hidden flex flex-col h-[600px] shadow-2xl">
+                <!-- Chat Header -->
+                <div class="p-6 border-b border-white/10 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-brand rounded-full flex items-center justify-center">
+                            <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <p class="text-white font-bold serif">System Oracle</p>
+                            <p class="text-white/40 text-[10px] uppercase font-bold tracking-widest">Command Center Active</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Feed -->
+                <div id="command-feed" class="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar">
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 bg-brand/20 rounded-lg flex items-center justify-center shrink-0">
+                            <i data-lucide="bot" class="w-4 h-4 text-brand"></i>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl rounded-tl-none p-5 text-white/80 max-w-[80%]">
+                            <p class="text-sm leading-relaxed">Good morning, {{ current_user.name }}. I'm ready to assist with {{ course.code }}. Ask me to summarize student needs, draft a broadcast, or analyze your Knowledge Base.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="p-6 bg-white/5 border-t border-white/10">
+                    <div class="flex items-center gap-4">
+                        <div class="relative flex-1">
+                            <input type="text" id="command-input" 
+                                placeholder="Type a command (e.g. 'Summarize recent questions')..."
+                                class="w-full bg-white/10 border-0 rounded-full py-4 pl-6 pr-16 text-white placeholder:text-white/20 outline-none focus:ring-2 focus:ring-brand transition-all">
+                            <button onclick="sendCommand()" 
+                                class="absolute right-2 top-2 w-12 h-12 bg-brand hover:bg-brand-dark text-white rounded-full flex items-center justify-center transition-all">
+                                <i data-lucide="send" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <button id="record-btn" onmousedown="startRecording()" onmouseup="stopRecording()" 
+                            class="w-14 h-14 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all group relative">
+                            <i data-lucide="mic" class="w-6 h-6 group-active:text-red-500"></i>
+                            <div id="record-ripple" class="absolute inset-0 bg-red-500 rounded-full scale-0 opacity-0 transition-all duration-300"></div>
+                        </button>
+                    </div>
+                    <p id="record-status" class="text-[9px] text-white/20 uppercase font-bold tracking-[0.2em] mt-2 text-center opacity-0 transition-opacity">Recording Voice Command...</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Add FAQ Modal -->
 <div id="addFAQModal"
-    class="fixed inset-0 bg-medium-black/40 backdrop-blur-sm z-50 hidden items-center justify-center p-6">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-10 shadow-2xl transform transition-all duration-300">
+    class="fixed inset-0 bg-theme-bg/95 backdrop-blur-md z-50 hidden items-center justify-center p-6">
+    <div class="bg-theme-bg border border-theme-divider rounded-3xl max-w-lg w-full p-10 transform transition-all duration-300">
         <div class="flex items-center justify-between mb-8">
             <h3 class="text-3xl font-bold serif text-medium-black">Add FAQ</h3>
             <button onclick="closeAddFAQ()" class="text-medium-gray hover:text-medium-black transition-colors">
@@ -238,7 +294,7 @@
 </div>
 
 <script>
-    const courseId = {{ course.id }};
+    const courseId = Number("{{ course.id }}");
 
     function switchTab(tab) {
         document.querySelectorAll('.tab-content').forEach(el => {
@@ -330,6 +386,160 @@
                     if (data.success) location.reload();
                 });
         }
+    }
+
+    function sendCommand() {
+        const input = document.getElementById('command-input');
+        const message = input.value.trim();
+        if (!message) return;
+
+        const feed = document.getElementById('command-feed');
+        
+        // Add User Message
+        const userMsg = document.createElement('div');
+        userMsg.className = 'flex items-start justify-end gap-4';
+        userMsg.innerHTML = `
+            <div class="bg-brand rounded-2xl rounded-tr-none p-5 text-white max-w-[80%]">
+                <p class="text-sm leading-relaxed">${message}</p>
+            </div>
+        `;
+        feed.appendChild(userMsg);
+        input.value = '';
+        feed.scrollTop = feed.scrollHeight;
+
+        // Add Loading Indicator
+        const loadingMsg = document.createElement('div');
+        loadingMsg.id = 'ai-loading';
+        loadingMsg.className = 'flex items-start gap-4 fade-in';
+        loadingMsg.innerHTML = `
+            <div class="w-8 h-8 bg-brand/20 rounded-lg flex items-center justify-center shrink-0">
+                <i data-lucide="bot" class="w-4 h-4 text-brand"></i>
+            </div>
+            <div class="bg-white/5 rounded-2xl rounded-tl-none p-5 text-white/40 italic text-sm">
+                Analyzing course data...
+            </div>
+        `;
+        feed.appendChild(loadingMsg);
+        feed.scrollTop = feed.scrollHeight;
+        lucide.createIcons();
+
+        fetch('/api/command_center', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ course_id: courseId, message: message })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('ai-loading').remove();
+            
+            if (data.success) {
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'flex items-start gap-4 fade-in';
+                aiMsg.innerHTML = `
+                    <div class="w-8 h-8 bg-brand/20 rounded-lg flex items-center justify-center shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4 text-brand"></i>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl rounded-tl-none p-5 text-white/80 max-w-[80%]">
+                        <p class="text-sm leading-relaxed">${data.response}</p>
+                    </div>
+                `;
+                feed.appendChild(aiMsg);
+            } else {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'text-center text-xs text-red-500/50 py-2';
+                errorMsg.innerText = data.error || 'System failed to respond';
+                feed.appendChild(errorMsg);
+            }
+            feed.scrollTop = feed.scrollHeight;
+            lucide.createIcons();
+        });
+    }
+
+    // Allow Enter key to send
+    document.getElementById('command-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendCommand();
+    });
+
+    let mediaRecorder;
+    let audioChunks = [];
+
+    async function startRecording() {
+        if (!navigator.mediaDevices) return;
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            sendVoiceCommand(audioBlob);
+        };
+
+        mediaRecorder.start();
+        document.getElementById('record-status').classList.remove('opacity-0');
+        document.getElementById('record-ripple').classList.add('scale-150', 'opacity-20');
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            document.getElementById('record-status').classList.add('opacity-0');
+            document.getElementById('record-ripple').classList.remove('scale-150', 'opacity-20');
+        }
+    }
+
+    function sendVoiceCommand(blob) {
+        const formData = new FormData();
+        formData.append('audio', blob);
+        formData.append('course_id', courseId);
+
+        // Show transcribing loading in input
+        const input = document.getElementById('command-input');
+        input.placeholder = "Transcribing voice...";
+        input.disabled = true;
+
+        fetch('/api/voice_command', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            input.disabled = false;
+            input.placeholder = "Type a command...";
+            if (data.success) {
+                input.value = data.transcription;
+                sendCommand(); // Auto-send the transcribed command
+            }
+        });
+    }
+
+    function showAITyping() {
+        const feed = document.getElementById('command-feed');
+        const typing = document.createElement('div');
+        typing.id = 'ai-typing-indicator';
+        typing.className = 'flex items-start gap-4 fade-in';
+        typing.innerHTML = `
+            <div class="w-8 h-8 bg-brand/20 rounded-lg flex items-center justify-center shrink-0">
+                <i data-lucide="bot" class="w-4 h-4 text-brand"></i>
+            </div>
+            <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        `;
+        feed.appendChild(typing);
+        feed.scrollTop = feed.scrollHeight;
+        lucide.createIcons();
+    }
+
+    function removeAITyping() {
+        const typing = document.getElementById('ai-typing-indicator');
+        if (typing) typing.remove();
     }
 
     lucide.createIcons();

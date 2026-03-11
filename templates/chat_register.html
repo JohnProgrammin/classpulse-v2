@@ -4,17 +4,12 @@
 
 {% block extra_css %}
 <style>
-    body {
-        background-color: #FFFFFF !important;
-    }
-
-
     .auth-wrapper {
         display: flex;
         align-items: center;
         justify-content: center;
         min-height: calc(100vh - 80px);
-        background-color: #FFFFFF;
+        background-color: var(--theme-bg);
     }
 
     .auth-container {
@@ -28,8 +23,22 @@
         font-size: 32px;
         font-weight: 700;
         letter-spacing: -0.5px;
-        margin-bottom: 40px;
-        color: #242424;
+        margin-bottom: 8px;
+        color: var(--theme-text);
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background-color: var(--brand-green);
+        color: white;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border-radius: 4px;
+        margin-bottom: 32px;
+        opacity: 0.8;
     }
 
     .input-group {
@@ -41,7 +50,7 @@
         display: block;
         font-size: 13px;
         font-weight: 500;
-        color: #6B6B6B;
+        color: var(--theme-secondary);
         margin-bottom: 8px;
     }
 
@@ -50,44 +59,43 @@
         padding: 12px 0;
         background-color: transparent;
         border: none;
-        border-bottom: 1px solid #F2F2F2;
+        border-bottom: 1px solid var(--theme-divider);
         border-radius: 0;
         font-size: 16px;
-        color: #242424;
+        color: var(--theme-text);
         transition: border-color 0.2s;
     }
 
     .auth-input:focus {
         outline: none;
-        border-bottom-color: #242424;
+        border-bottom-color: var(--theme-text);
     }
 
     .auth-submit {
         width: 100%;
-        padding: 12px;
-        background-color: #1A8917;
-        color: #FFFFFF;
-        border: none;
+        padding: 14px;
+        background-color: var(--theme-text);
+        color: var(--theme-bg);
         border-radius: 24px;
         font-size: 15px;
-        font-weight: 500;
+        font-weight: 700;
         margin-top: 16px;
-        transition: background-color 0.2s;
+        transition: opacity 0.2s;
         cursor: pointer;
     }
 
     .auth-submit:hover {
-        background-color: #156f13;
+        opacity: 0.9;
     }
 
     .auth-footer {
         margin-top: 32px;
         font-size: 14px;
-        color: #6B6B6B;
+        color: var(--theme-secondary);
     }
 
     .auth-footer a {
-        color: #1A8917;
+        color: var(--brand-green);
         font-weight: 600;
         text-decoration: none;
     }
@@ -105,15 +113,11 @@
         right: 0;
         top: 50%;
         transform: translateY(-50%);
-        color: #6B6B6B;
+        color: var(--theme-secondary);
         background: none;
         border: none;
         padding: 8px;
         cursor: pointer;
-    }
-
-    .password-toggle:hover {
-        color: #242424;
     }
 </style>
 {% endblock %}
@@ -122,6 +126,7 @@
 <div class="auth-wrapper">
     <div class="auth-container fade-in">
         <div class="auth-header">
+            <span class="role-badge">Student Portal</span>
             <h1 class="serif">Create your account.</h1>
         </div>
 

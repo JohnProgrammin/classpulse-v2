@@ -23,9 +23,19 @@ app.config.from_object(Config)
 
 # Initialize extensions
 db.init_app(app)
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user, AnonymousUserMixin
+
+# ... inside app initialization ...
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'chat_login'
+
+class AnonymousUser(AnonymousUserMixin):
+    def is_lecturer(self): return False
+    def is_student(self): return False
+    def is_admin(self): return False
+
+login_manager.anonymous_user = AnonymousUser
 
 # Initialize Socket.IO for real-time chat with explicit threading mode for Python 3.13 compatibility
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
@@ -75,6 +85,11 @@ def index():
     """Landing page - Medium style"""
     return render_template('index.html')
 
+@app.route('/get-started')
+def auth_choice():
+    """Choice page for Lecturers vs Students"""
+    return render_template('auth_choice.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -107,6 +122,45 @@ def logout():
     logout_user()
     flash('Logged out successfully', 'success')
     return redirect(url_for('index'))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """Educator registration page"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        phone = request.form.get('phone', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+
+        if not name or not phone or not password:
+            flash('Name, phone, and password are required', 'error')
+            return render_template('register.html')
+
+        if Lecturer.query.filter_by(phone_number=phone).first():
+            flash('Phone number already registered', 'error')
+            return render_template('register.html')
+
+        if email and Lecturer.query.filter_by(email=email).first():
+            flash('Email already registered', 'error')
+            return render_template('register.html')
+
+        new_lecturer = Lecturer(
+            name=name,
+            phone_number=phone,
+            email=email if email else None
+        )
+        new_lecturer.set_password(password)
+        db.session.add(new_lecturer)
+        db.session.commit()
+
+        flash('Educator account created! Please sign in.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
 
 
 @app.route('/dashboard')
@@ -617,6 +671,227 @@ def api_cancel_scheduled(message_id):
 # ==========================================
 # 6. ERROR HANDLERS
 # ==========================================
+@app.route('/api/command_center', methods=['POST'])
+@login_required
+def api_command_center():
+    """Lecturer-AI direct chat interaction"""
+    if not current_user.is_lecturer():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+    data = request.get_json() or {}
+    message = data.get('message', '').strip()
+    course_id = data.get('course_id')
+
+    if not message or not course_id:
+        return jsonify({'success': False, 'error': 'Missing data'}), 400
+
+    course = Course.query.get(course_id)
+    if not course or course.lecturer_id != current_user.id:
+        return jsonify({'success': False, 'error': 'Course not found or unauthorized'}), 404
+
+    try:
+        from ai_engine import ask_groq_ai_direct
+        from action_engine import ActionEngine
+        import json
+
+        # Build a specialized prompt for the lecturer command center
+        prompt = f"""You are the ClassPulse Control AI for {course.code}. 
+You are speaking directly to LECTURER {current_user.name}.
+Your job is to assist them with:
+1. Summarizing student needs
+2. Analyzing course data
+3. Drafting academic content
+4. Answering technical system questions
+5. Executing system actions (Create group, lock chat, teaching sessions, etc.)
+
+Be professional, concise, and proactive.
+
+LECTURER COMMAND: {message}"""
+
+        response = ask_groq_ai_direct(prompt, tools_enabled=True)
+        
+        if response:
+            # Check for JSON action block
+            action_result = None
+            if "{" in response and "}" in response:
+                try:
+                    # Crude extraction of JSON from response
+                    json_str = response[response.find("{"):response.rfind("}")+1]
+                    action_data = json.loads(json_str)
+                    action = action_data.get('action')
+                    params = action_data.get('params', {})
+                    
+                    if action == 'create_group':
+                        success, res = ActionEngine.create_group(current_user.id, params.get('name'), params.get('description'), course.id)
+                        action_result = res
+                    elif action == 'lock_group':
+                        success, res = ActionEngine.lock_group(current_user.id, params.get('room_id'), params.get('lock'))
+                        action_result = res
+                    elif action == 'create_teaching_session':
+                        success, res = ActionEngine.create_teaching_session(current_user.id, params.get('room_id'), params.get('topic'), params.get('days'))
+                        action_result = res
+                    elif action == 'send_broadcast':
+                        success, res = ActionEngine.send_broadcast(current_user.id, params.get('room_id'), params.get('message'))
+                        action_result = res
+                    elif action == 'delete_group':
+                        success, res = ActionEngine.delete_group(current_user.id, params.get('room_id'))
+                        action_result = res
+                except Exception as e:
+                    print(f"[WARN] Failed to parse AI action: {e}")
+
+            return jsonify({
+                'success': True, 
+                'response': response,
+                'action_result': action_result,
+                'timestamp': datetime.utcnow().isoformat()
+            })
+        else:
+            return jsonify({'success': False, 'error': 'AI failed to respond'}), 500
+
+    except Exception as e:
+        print(f"[ERROR] Command Center Error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/voice_command', methods=['POST'])
+@login_required
+def api_voice_command():
+    """Handle voice commands from lecturer to AI"""
+    if not current_user.is_lecturer():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+    if 'audio' not in request.files:
+        return jsonify({'success': False, 'error': 'No audio file provided'}), 400
+
+    course_id = request.form.get('course_id')
+    audio_file = request.files['audio']
+
+    try:
+        from voice_handler import transcribe_voice_note
+        import tempfile
+        import os
+
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as tmp:
+            audio_file.save(tmp.name)
+            tmp_path = tmp.name
+
+        try:
+            # Transcribe locally or via API
+            # Note: transcribe_voice_note expects a URL normally, but let's assume we can pass a path or update it
+            # For simplicity, let's mock the transcription if we can't easily use the existing handler
+            from groq import Groq
+            client = Groq(api_key=Config.GROQ_API_KEY)
+            
+            with open(tmp_path, 'rb') as f:
+                transcription = client.audio.transcriptions.create(
+                    file=(os.path.basename(tmp_path), f.read()),
+                    model="whisper-large-v3",
+                    language="en",
+                    response_format="json"
+                )
+            
+            text = transcription.text.strip()
+            
+            # Now treat the text as a command
+            # Reuse logic or call the endpoint internally? Let's assume we return the text for the frontend to then 'send'
+            return jsonify({
+                'success': True,
+                'transcription': text,
+                'message': 'Voice processed successfully'
+            })
+
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    except Exception as e:
+        print(f"[ERROR] Voice Command Error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/chat/voice', methods=['POST'])
+@login_required
+def api_chat_voice():
+    """Handle voice notes sent by lecturer to group chats"""
+    if not current_user.is_lecturer():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+    if 'audio' not in request.files:
+        return jsonify({'success': False, 'error': 'No audio file provided'}), 400
+
+    room_id = request.form.get('room_id')
+    audio_file = request.files['audio']
+
+    try:
+        from groq import Groq
+        import tempfile
+        import os
+        from models import ChatRoom, ChatMessage, VoiceTranscription
+
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as tmp:
+            audio_file.save(tmp.name)
+            tmp_path = tmp.name
+
+        try:
+            client = Groq(api_key=Config.GROQ_API_KEY)
+            with open(tmp_path, 'rb') as f:
+                transcription_res = client.audio.transcriptions.create(
+                    file=(os.path.basename(tmp_path), f.read()),
+                    model="whisper-large-v3",
+                    language="en",
+                    response_format="json"
+                )
+            
+            text = transcription_res.text.strip()
+            
+            # Save the voice note to the database as a message
+            # In a real app, you'd save the audio file to S3/Cloudinary.
+            # Here we'll simulate it by tagging the message as 'voice_note'
+            msg = ChatMessage(
+                room_id=room_id,
+                sender_id=current_user.id,
+                content=f"[Voice Note: {text}]",
+                message_type='voice_note'
+            )
+            db.session.add(msg)
+            db.session.commit()
+
+            # Record the transcription metadata using the existing VoiceTranscription model
+            vt = VoiceTranscription(
+                phone_number=current_user.username,  # use username as identifier
+                transcribed_text=text,
+                status='completed',
+                duration_seconds=0
+            )
+            db.session.add(vt)
+            db.session.commit()
+
+            # Emit via socket
+            socketio.emit('new_message', {
+                'id': msg.id,
+                'room_id': room_id,
+                'content': msg.content,
+                'sender_id': current_user.id,
+                'sender_name': current_user.display_name or current_user.username,
+                'sender_pic': current_user.profile_pic,
+                'message_type': 'voice_note',
+                'created_at': msg.created_at.isoformat(),
+                'transcription': text
+            }, room=f'room_{room_id}')
+
+            return jsonify({'success': True, 'message_id': msg.id})
+
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    except Exception as e:
+        print(f"[ERROR] Chat Voice Error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/favicon.ico')
 def favicon():
     return '', 204

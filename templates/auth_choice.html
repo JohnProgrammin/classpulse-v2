@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}Get Started - ClassPulse{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-80px)] flex items-center justify-center py-12 px-6">
+    <div class="max-w-4xl w-full grid md:grid-cols-2 gap-8 items-stretch fade-in">
+        <!-- Lecturer Portal Card -->
+        <a href="{{ url_for('login') }}" class="group relative flex flex-col p-10 bg-theme-surface rounded-[2.5rem] border border-theme-divider hover:border-brand/30 transition-all hover:scale-[1.02]">
+            <div class="mb-8 w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center group-hover:bg-brand/20 transition-colors">
+                <i data-lucide="graduation-cap" class="w-8 h-8 text-brand"></i>
+            </div>
+            <h2 class="text-3xl font-bold mb-4 serif text-medium-black">Educator Portal</h2>
+            <p class="text-medium-secondary mb-12 flex-grow leading-relaxed">
+                Manage your courses, automate student inquiries with AI, and schedule semester-wide broadcasts from a minimalist dashboard.
+            </p>
+            <div class="flex items-center text-brand font-bold">
+                Sign in as Lecturer <i data-lucide="arrow-right" class="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-theme-divider">
+                <p class="text-xs font-bold uppercase tracking-widest text-medium-secondary">New here?</p>
+                <a href="{{ url_for('register') }}" class="text-sm font-medium text-medium-black hover:underline">Apply for an educator account →</a>
+            </div>
+        </a>
+
+        <!-- Student Portal Card -->
+        <a href="{{ url_for('chat_index') }}" class="group relative flex flex-col p-10 bg-theme-bg rounded-[2.5rem] border-2 border-brand/20 hover:border-brand/40 transition-all hover:scale-[1.02]">
+            <div class="mb-8 w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center group-hover:bg-brand/20 transition-colors">
+                <i data-lucide="users" class="w-8 h-8 text-brand"></i>
+            </div>
+            <h2 class="text-3xl font-bold mb-4 serif text-medium-black">Student Portal</h2>
+            <p class="text-medium-secondary mb-12 flex-grow leading-relaxed">
+                Access your course knowledge base, get instant answers from AI assistants, and stay updated with lecturer announcements.
+            </p>
+            <div class="flex items-center text-brand font-bold">
+                Enter Student Space <i data-lucide="arrow-right" class="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-theme-divider">
+                <p class="text-xs font-bold uppercase tracking-widest text-medium-secondary">Access Code?</p>
+                <span class="text-sm font-medium text-medium-black hover:underline">Join specific course group →</span>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

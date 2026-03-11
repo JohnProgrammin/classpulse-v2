@@ -4,26 +4,42 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="border-b border-medium-divider bg-[#FFC017]">
-    <div class="max-w-7xl mx-auto px-6 lg:px-12 py-24 lg:py-32 grid lg:grid-cols-2 gap-12 items-center">
-        <div class="fade-in">
-            <h1
-                class="text-6xl sm:text-7xl md:text-8xl font-bold mb-8 leading-[0.9] serif tracking-tighter text-medium-black">
-                Communication,<br />simplified.
+<section class="border-b border-medium-divider overflow-hidden pt-20 lg:pt-0">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-2 gap-0 items-stretch min-h-[85vh]">
+        <div class="py-24 lg:py-32 flex flex-col justify-center fade-in">
+            <h1 class="text-6xl sm:text-7xl md:text-8xl font-bold mb-8 leading-[0.95] serif tracking-tighter text-medium-black">
+                Communication,<br /><span class="text-brand">simplified.</span>
             </h1>
-            <p class="text-xl sm:text-2xl text-medium-black font-medium max-w-lg mb-12 leading-tight">
-                ClassPulse empowers educators to automate routine communication, manage course knowledge, and engage students through a distraction-free interface.
+            <p class="text-xl sm:text-2xl text-medium-secondary font-medium max-w-lg mb-12 leading-tight">
+                Empowering modern educators with automated routine communication and distraction-free student engagement.
             </p>
-            <a href="{{ url_for('login') }}"
-                class="inline-block px-10 py-4 bg-medium-black text-white rounded-full text-xl font-medium hover:bg-black transition-all shadow-xl hover:shadow-black/10">
-                Get started
-            </a>
-        </div>
-        <div class="hidden lg:flex justify-end fade-in" style="animation-delay: 0.2s;">
-            <div
-                class="w-full max-w-md aspect-square bg-black/5 rounded-3xl flex items-center justify-center border border-black/10 transition-transform hover:scale-[1.02]">
-                <i data-lucide="sparkles" class="w-32 h-32 text-medium-black opacity-10"></i>
+            <div class="flex flex-col sm:flex-row items-center gap-6">
+                <a href="{{ url_for('auth_choice') }}" class="btn-primary px-12 py-5 text-xl">
+                    Get started
+                </a>
+                <a href="#how-it-works" class="text-medium-black font-bold border-b-2 border-brand/20 hover:border-brand transition-all pb-1">
+                    See how it works →
+                </a>
             </div>
+        </div>
+        <div class="relative hidden lg:block fade-in" style="animation-delay: 0.2s;">
+            <div class="absolute inset-0 bg-brand/5"></div>
+            <img src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=2070" 
+                 alt="Modern Workspace" 
+                 class="w-full h-full object-cover grayscale-[20%] dark:opacity-80">
+        </div>
+    </div>
+</section>
+
+<!-- Trusted By Section -->
+<section class="border-b border-medium-divider bg-theme-surface">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 py-12 flex flex-wrap items-center justify-between gap-8 opacity-50 grayscale">
+        <span class="text-sm font-bold uppercase tracking-widest text-medium-black">Trusted by Modern Educators</span>
+        <div class="flex items-center space-x-12">
+            <span class="text-xl font-bold serif">AcademicPulse</span>
+            <span class="text-xl font-bold serif">EduFlow</span>
+            <span class="text-xl font-bold serif">Lumina University</span>
+            <span class="text-xl font-bold serif">Zenith Academy</span>
         </div>
     </div>
 </section>
@@ -74,7 +90,7 @@
 <div class="divider max-w-7xl mx-auto px-6 lg:px-12"></div>
 
 <!-- How it works -->
-<section class="max-w-7xl mx-auto px-6 lg:px-12 py-32 grid lg:grid-cols-3 gap-24">
+<section id="how-it-works" class="max-w-7xl mx-auto px-6 lg:px-12 py-32 grid lg:grid-cols-3 gap-24">
     <div class="lg:col-span-2 space-y-24">
         <div class="group">
             <div class="flex items-center space-x-4 mb-6">
@@ -129,4 +145,83 @@
     </div>
 </section>
 
+<!-- Testimonials -->
+<section class="max-w-7xl mx-auto px-6 lg:px-12 py-32 border-t border-medium-divider">
+    <div class="grid lg:grid-cols-2 gap-24 items-center">
+        <div class="space-y-8">
+            <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-brand">Voices of Impact</h2>
+            <blockquote class="text-4xl md:text-5xl font-bold serif text-medium-black leading-[1.1] tracking-tight">
+                "ClassPulse has completely transformed how I manage my courses. The AI responses alone save me hours every week."
+            </blockquote>
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center font-bold text-brand">JD</div>
+                <div>
+                    <p class="font-bold text-medium-black">Dr. Julia Donovan</p>
+                    <p class="text-sm text-medium-gray">Professor of Cognitive Science</p>
+                </div>
+            </div>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-8">
+            <div class="p-8 bg-theme-surface rounded-2xl space-y-4">
+                <p class="text-medium-black italic">"The minimalist interface is exactly what academia needed. No more cluttered forums."</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-medium-gray">— Mark R., Lecturer</p>
+            </div>
+            <div class="p-8 bg-theme-surface rounded-2xl space-y-4">
+                <p class="text-medium-black italic">"Students love the instant feedback. I love that I only see the critical questions."</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-medium-gray">— Sarah L., TA</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="max-w-7xl mx-auto px-6 lg:px-12 py-32 border-t border-medium-divider">
+    <div class="max-w-3xl mx-auto text-center mb-24">
+        <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-brand mb-6">Common Inquiries</h2>
+        <h3 class="text-4xl md:text-5xl font-bold serif text-medium-black tracking-tight">Everything you need to know.</h3>
+    </div>
+
+    <div class="max-w-3xl mx-auto space-y-6">
+        <div class="p-6 bg-theme-surface rounded-2xl group cursor-pointer border border-transparent hover:border-brand/10 transition-all">
+            <h4 class="text-lg font-bold text-medium-black mb-2 flex items-center justify-between">
+                Is ClassPulse difficult to set up?
+                <i data-lucide="chevron-down" class="w-5 h-5 opacity-50 group-hover:text-brand transition-colors"></i>
+            </h4>
+            <p class="text-medium-gray leading-relaxed hidden group-hover:block fade-in">
+                Not at all. You can be up and running in under 2 minutes. Simply create your account, register your course code, and share the invite with your students.
+            </p>
+        </div>
+        <div class="p-6 bg-theme-surface rounded-2xl group cursor-pointer border border-transparent hover:border-brand/10 transition-all">
+            <h4 class="text-lg font-bold text-medium-black mb-2 flex items-center justify-between">
+                How does the AI work?
+                <i data-lucide="chevron-down" class="w-5 h-5 opacity-50 group-hover:text-brand transition-colors"></i>
+            </h4>
+            <p class="text-medium-gray leading-relaxed hidden group-hover:block fade-in">
+                Our AI analyzes your course materials and previous student interactions to provide accurate, real-time answers. If it's unsure, it flags the question for your review.
+            </p>
+        </div>
+        <div class="p-6 bg-theme-surface rounded-2xl group cursor-pointer border border-transparent hover:border-brand/10 transition-all">
+            <h4 class="text-lg font-bold text-medium-black mb-2 flex items-center justify-between">
+                Can I schedule messages in advance?
+                <i data-lucide="chevron-down" class="w-5 h-5 opacity-50 group-hover:text-brand transition-colors"></i>
+            </h4>
+            <p class="text-medium-gray leading-relaxed hidden group-hover:block fade-in">
+                Yes! You can plan your entire semester's broadcasts in one sitting. ClassPulse will handle the delivery automatically at your specified times.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Final CTA -->
+<section class="max-w-7xl mx-auto px-6 lg:px-12 py-32 border-t border-medium-divider bg-brand text-white rounded-t-[4rem] text-center">
+    <h2 class="text-5xl md:text-7xl font-bold mb-12 serif tracking-tighter">Ready to reclaim your time?</h2>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+        <a href="{{ url_for('auth_choice') }}" class="px-12 py-5 bg-white text-brand rounded-full text-xl font-bold hover:bg-theme-bg transition-all">
+            Get started for free
+        </a>
+        <a href="{{ url_for('chat_index') }}" class="px-12 py-5 border-2 border-white/20 hover:border-white rounded-full text-xl font-bold transition-all">
+            Student Access
+        </a>
+    </div>
+</section>
 {% endblock %}

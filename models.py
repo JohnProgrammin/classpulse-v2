@@ -54,6 +54,15 @@ class Lecturer(UserMixin, db.Model):
         self.reset_token = secrets.token_urlsafe(32)
         self.reset_token_expires = datetime.utcnow() + timedelta(hours=24)
         return self.reset_token
+
+    def is_lecturer(self):
+        return True
+
+    def is_student(self):
+        return False
+
+    def is_admin(self):
+        return False
     
     def __repr__(self):
         return f'<Lecturer {self.name}>'

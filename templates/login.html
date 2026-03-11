@@ -4,17 +4,12 @@
 
 {% block extra_css %}
 <style>
-    body {
-        background-color: #FFFFFF !important;
-    }
-
-
     .auth-wrapper {
         display: flex;
         align-items: center;
         justify-content: center;
         min-height: calc(100vh - 80px);
-        background-color: #FFFFFF;
+        background-color: var(--theme-bg);
     }
 
     .auth-container {
@@ -28,8 +23,21 @@
         font-size: 32px;
         font-weight: 700;
         letter-spacing: -0.5px;
-        margin-bottom: 40px;
-        color: #242424;
+        margin-bottom: 8px;
+        color: var(--theme-text);
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background-color: var(--brand-green);
+        color: white;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border-radius: 4px;
+        margin-bottom: 32px;
     }
 
     .input-group {
@@ -41,8 +49,8 @@
         display: block;
         font-size: 13px;
         font-weight: 500;
-        color: #6B6B6B;
-        margin-bottom: 8px;
+        color: var(--theme-secondary);
+        margin-bottom: 32px;
     }
 
     .auth-input {
@@ -50,39 +58,39 @@
         padding: 12px 0;
         background-color: transparent;
         border: none;
-        border-bottom: 1px solid #F2F2F2;
+        border-bottom: 1px solid var(--theme-divider);
         border-radius: 0;
         font-size: 16px;
-        color: #242424;
+        color: var(--theme-text);
         transition: border-color 0.2s;
     }
 
     .auth-input:focus {
         outline: none;
-        border-bottom-color: #242424;
+        border-bottom-color: var(--theme-text);
     }
 
     .auth-submit {
         width: 100%;
-        padding: 12px;
-        background-color: #242424;
-        color: #FFFFFF;
+        padding: 14px;
+        background-color: var(--theme-text);
+        color: var(--theme-bg);
         border-radius: 24px;
         font-size: 15px;
-        font-weight: 500;
+        font-weight: 700;
         margin-top: 16px;
-        transition: background-color 0.2s;
+        transition: opacity 0.2s;
         cursor: pointer;
     }
 
     .auth-submit:hover {
-        background-color: #000000;
+        opacity: 0.9;
     }
 
     .auth-info {
         margin-top: 40px;
         padding: 24px;
-        background-color: #F9F9F9;
+        background-color: var(--theme-surface);
         border-radius: 12px;
         text-align: left;
     }
@@ -91,23 +99,13 @@
         font-size: 14px;
         font-weight: 700;
         margin-bottom: 8px;
-        color: #242424;
+        color: var(--theme-text);
     }
 
     .auth-info p {
         font-size: 13px;
-        color: #6B6B6B;
+        color: var(--theme-secondary);
         margin-bottom: 16px;
-    }
-
-    .command-box {
-        background-color: #FFFFFF;
-        border: 1px solid #F2F2F2;
-        padding: 12px;
-        border-radius: 8px;
-        font-family: monospace;
-        font-size: 12px;
-        color: #1A8917;
     }
 
     .relative {
@@ -119,7 +117,7 @@
         right: 0;
         top: 50%;
         transform: translateY(-50%);
-        color: #6B6B6B;
+        color: var(--theme-secondary);
         background: none;
         border: none;
         padding: 8px;
@@ -132,7 +130,8 @@
 <div class="auth-wrapper">
     <div class="auth-container fade-in">
         <div class="auth-header">
-            <h1 class="serif">Lecturer Sign In.</h1>
+            <span class="role-badge">Educator Portal</span>
+            <h1 class="serif">Welcome back.</h1>
         </div>
 
         <form method="POST">
@@ -159,7 +158,7 @@
         <div class="auth-info">
             <h3>New Educator?</h3>
             <p>Join over 500+ educators using ClassPulse to streamline their course communication.</p>
-            <a href="{{ url_for('chat_register') }}" class="block text-sm font-bold text-brand hover:text-brand-dark transition-colors">
+            <a href="{{ url_for('register') }}" class="block text-sm font-bold text-brand hover:text-brand-dark transition-colors">
                 Create an educator account →
             </a>
         </div>

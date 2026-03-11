@@ -120,6 +120,32 @@ Write a practical, engaging lesson for Day {day_num}. Make it relatable with rea
             print(f"[TEACH] Permanently deleted teaching group '{session.topic}' (room {room.id})")
 
 
+def handle_proactive_monitoring(room, content, socketio):
+    """Scan student messages for important questions and notify lecturer"""
+    try:
+        from ai_engine import scan_for_important_questions
+        from models import ChatMessage
+        
+        # Get recent messages for context
+        recent = ChatMessage.query.filter_by(room_id=room.id).order_by(ChatMessage.created_at.desc()).limit(1).all()
+        
+        important_qs = scan_for_important_questions(recent)
+        
+        if important_qs:
+            # Notify the lecturer room/channel
+            # Find the lecturer of the course
+            course = Course.query.filter_by(id=room.course_id).first()
+            if course:
+                emit('priority_question', {
+                    'room_id': room.id,
+                    'course_code': course.code,
+                    'question': important_qs[0]
+                }, room=f'lecturer_{course.lecturer_id}')
+                print(f"[MONITOR] Flagged important question in room {room.id}")
+
+    except Exception as e:
+        print(f"[ERROR] Proactive monitoring failed: {e}")
+
 def register_socket_events(socketio):
     """Register all Socket.IO event handlers"""
     # Map of sids to user_ids for presence tracking
@@ -321,6 +347,11 @@ def register_socket_events(socketio):
 
         emit('new_message', broadcast_data, room=f"room_{room_id}")
         print(f"[CHAT] Message sent by {user.username} in room {room_id}")
+
+        # Proactive scanning for important questions (if it's a student)
+        if room.room_type == 'group' and user.role == 'student':
+            handle_proactive_monitoring(room, content, socketio)
+
         if room.room_type == 'ai_dm':
             handle_ai_response(user, room, content, socketio)
 
@@ -2204,6 +2235,9 @@ Format: [CREATE_PERM_GROUP:GroupName]
 
         # Final AI reply to the room
         try:
+             # Stop typing before sending message
+            socketio.emit('stop_typing', {'room_id': room.id, 'user_id': ai_user.id}, room=f'room_{room.id}')
+
             ai_msg = ChatMessage(
                 room_id=room.id,
                 sender_id=ai_user.id,

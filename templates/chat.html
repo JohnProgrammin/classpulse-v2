@@ -34,6 +34,17 @@
             --medium-divider: #F2F2F2;
             --brand-green: #1A8917;
             --sidebar-bg: #FFFFFF;
+            --theme-bg: #FFFFFF;
+            --theme-surface: #F9F9F9;
+        }
+
+        .dark {
+            --medium-black: #E5E5E5;
+            --medium-gray: #A0A0A0;
+            --medium-divider: #1F1F1F;
+            --sidebar-bg: #0A0A0A;
+            --theme-bg: #0A0A0A;
+            --theme-surface: #151515;
         }
 
         * {
@@ -46,8 +57,9 @@
         }
 
         body {
-            background: #FFFFFF;
+            background: var(--theme-bg);
             color: var(--medium-black);
+            transition: background-color 0.3s, color 0.3s;
         }
 
         ::-webkit-scrollbar {
@@ -98,13 +110,13 @@
         /* Context menu */
         .context-menu {
             position: fixed;
-            background: #FFFFFF;
+            background: var(--theme-bg);
             border: 1px solid var(--medium-divider);
             border-radius: 8px;
             padding: 4px;
             z-index: 100;
             min-width: 180px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .context-menu button {
@@ -150,7 +162,7 @@
 
         /* Message Bubbles */
         .msg-bubble {
-            background: #FFFFFF;
+            background: var(--theme-surface);
             border: 1px solid var(--medium-divider);
             padding: 12px 16px;
             border-radius: 8px;
@@ -160,8 +172,9 @@
         }
 
         .msg-self .msg-bubble {
-            background: #F8F9FA;
-            border-color: #E9ECEF;
+            background: var(--brand-green);
+            border-color: var(--brand-green);
+            color: white;
         }
 
         /* Typing Indicator */
@@ -227,13 +240,13 @@
     </style>
 </head>
 
-<body class="flex overflow-hidden bg-white" style="width: 100vw; height: 100dvh;">
+<body class="flex overflow-hidden transition-colors duration-300" style="width: 100vw; height: 100dvh;">
     <!-- Mobile backdrop -->
     <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden">
     </div>
 
     <!-- Sidebar -->
-    <div id="sidebar" class="w-80 bg-white border-r border-medium-divider flex flex-col z-50">
+    <div id="sidebar" class="w-80 bg-theme-bg border-r border-medium-divider flex flex-col z-50">
         <!-- Header -->
         <div class="p-6 border-b border-medium-divider">
             <div class="flex items-center justify-between mb-6">
@@ -313,7 +326,7 @@
     </div>
 
     <!-- Main Chat Area -->
-    <div class="flex-1 flex flex-col min-h-0 min-w-0 relative bg-white">
+    <div class="flex-1 flex flex-col min-h-0 min-w-0 relative bg-theme-bg">
         <!-- No Room Selected View -->
         <div id="noRoomView" class="flex-1 flex flex-col">
             <div class="p-4 flex lg:hidden border-b border-medium-divider">
@@ -356,7 +369,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleTheme()" class="p-2 text-medium-gray hover:text-medium-black transition-colors" id="theme-toggle">
+                        <i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i>
+                    </button>
                     <button onclick="showRoomInfo()"
                         class="text-medium-gray hover:text-medium-black p-2 transition-colors">
                         <i data-lucide="info" class="w-5 h-5"></i>
@@ -370,7 +386,7 @@
             </div>
 
             <!-- Input Area -->
-            <div class="shrink-0 p-6 bg-white border-t border-medium-divider">
+            <div class="shrink-0 p-6 bg-theme-bg border-t border-medium-divider">
                 <div id="typingIndicators" class="mb-4 h-6"></div>
 
                 <!-- Feedback Banners -->
@@ -405,7 +421,7 @@
                             class="w-full px-0 py-3 bg-transparent border-none outline-none text-lg resize-none placeholder:text-medium-divider"></textarea>
                     </div>
                     <div class="flex items-center gap-2 pb-1 shrink-0">
-                        <button type="button" id="micBtn" onclick="startRecording()"
+                        <button type="button" id="micBtn" onclick="toggleRecording()"
                             class="p-3 hover:bg-medium-divider rounded-full transition-colors hidden text-medium-gray">
                             <i data-lucide="mic" class="w-5 h-5"></i>
                         </button>
@@ -806,6 +822,31 @@
     </div>
 
     <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Theme Toggle Logic
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+            }
+        }
+
+        // Initialize Theme
+        if (localStorage.getItem('theme') === 'dark' || 
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            updateThemeIcon(true);
+        }
+
         // User data
         const currentUser = {
             id: Number("{{ user.id }}"),
@@ -825,7 +866,7 @@
         let editingMessage = null;
         let contextMenuTarget = null;
         let unreadCounts = {}; // room_id -> count
-        let typingUsers = []; // List of {user_id, display_name}
+        let typingUsers = new Map(); // Map of user_id -> display_name
         let typingTimeout = null;
         let isTyping = false;
         let onlineUsers = new Set();
@@ -1413,8 +1454,45 @@
             // Optional: alert or show toast
         });
 
+        // Typing indicator management
+        function addTypingUser(data) {
+            typingUsers.set(data.user_id, data.display_name || data.username);
+            updateTypingDisplay();
+        }
+
+        function removeTypingUser(userId) {
+            typingUsers.delete(userId);
+            updateTypingDisplay();
+        }
+
+        function updateTypingDisplay() {
+            const container = document.getElementById('typingIndicators');
+            if (!container) return;
+
+            if (typingUsers.size === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const names = Array.from(typingUsers.values());
+            let text = '';
+            if (names.length === 1) text = `${names[0]} is typing...`;
+            else if (names.length === 2) text = `${names[0]} and ${names[1]} are typing...`;
+            else text = 'Several people are typing...';
+
+            container.innerHTML = `
+                <div class="typing-pill animate-pulse">
+                    <div class="flex gap-1 mr-2">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span class="font-medium">${text}</span>
+                </div>
+            `;
+        }
+
         function selectRoom(roomId) {
-            closeSidebar();  // auto-close sidebar on mobile after picking a room
 
             // Update UI
             document.querySelectorAll('.room-item').forEach(el => {

@@ -41,8 +41,27 @@
 
     <style type="text/tailwindcss">
         @layer base {
+            :root {
+                --theme-bg: #FFFFFF;
+                --theme-text: #242424;
+                --theme-secondary: #6B6B6B;
+                --theme-divider: #F2F2F2;
+                --theme-surface: #F9F9F9;
+                --brand-green: #1A8917;
+            }
+
+            .dark {
+                --theme-bg: #0A0A0A;
+                --theme-text: #E5E5E5;
+                --theme-secondary: #A0A0A0;
+                --theme-divider: #1F1F1F;
+                --theme-surface: #151515;
+            }
+
             body {
-                @apply bg-white text-medium-black font-sans antialiased;
+                @apply font-sans antialiased transition-colors duration-300;
+                background-color: var(--theme-bg);
+                color: var(--theme-text);
             }
         }
 
@@ -50,21 +69,42 @@
             font-family: 'Source Serif Pro', serif;
         }
 
-        /* Medium style buttons */
+        /* Premium Minimalist Buttons */
         .btn-primary {
-            @apply px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded-full transition-all text-sm font-medium;
+            @apply px-4 py-2 bg-brand text-white rounded-full transition-all text-sm font-bold;
+        }
+
+        .btn-primary:hover {
+            @apply opacity-90;
         }
 
         .btn-secondary {
-            @apply px-4 py-2 text-medium-gray hover:text-medium-black transition-all text-sm font-medium;
+            color: var(--theme-secondary);
+            @apply px-4 py-2 transition-all text-sm font-bold;
         }
 
-        /* Subtle dividers */
+        .btn-secondary:hover {
+            color: var(--theme-text);
+        }
+
+        /* Subtle Dividers */
         .divider {
-            @apply border-b border-medium-divider;
+            border-bottom: 1px solid var(--theme-divider);
         }
 
-        /* Smooth animations */
+        /* Dark mode overrides */
+        .dark .bg-white { background-color: var(--theme-bg) !important; }
+        .dark .bg-white\/95 { background-color: rgba(10, 10, 10, 0.95) !important; }
+        .dark .border-medium-divider { border-color: var(--theme-divider) !important; }
+        .dark .text-medium-black { color: var(--theme-text) !important; }
+        .dark .text-medium-gray { color: var(--theme-secondary) !important; }
+        .dark .bg-medium-divider { background-color: var(--theme-divider) !important; }
+
+        /* No drop shadows for premium feel */
+        .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl {
+            box-shadow: none !important;
+        }
+
         .fade-in {
             animation: fadeIn 0.4s ease-out forwards;
             opacity: 0;
@@ -75,21 +115,61 @@
                 opacity: 1;
             }
         }
+
+        /* Hide scrollbar but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 
     {% block extra_css %}{% endblock %}
+    <style>
+        .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            padding: 12px 18px;
+            background: rgba(var(--brand-rgb), 0.1);
+            border-radius: 1rem;
+            border-bottom-left-radius: 2px;
+            width: fit-content;
+        }
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--brand);
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: typing 1s infinite alternate;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            from { transform: translateY(0); opacity: 0.4; }
+            to { transform: translateY(-4px); opacity: 1; }
+        }
+    </style>
 </head>
 
 <body class="selection:bg-brand/20">
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-medium-divider">
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-medium-divider transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-6 lg:px-12">
             <div class="flex items-center justify-between h-20">
                 <a href="/" class="flex items-center space-x-1 group">
-                    <span class="text-2xl font-bold tracking-tighter serif">ClassPulse</span>
+                    <span class="text-2xl font-bold tracking-tighter serif text-medium-black">ClassPulse</span>
                 </a>
 
                 <div class="flex items-center space-x-4 md:space-x-8">
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 text-medium-gray hover:text-medium-black transition-colors" id="theme-toggle">
+                        <i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i>
+                    </button>
+
                     {% if current_user.is_authenticated %}
                         <!-- Lecturer specific links -->
                         <a href="{{ url_for('dashboard') }}"
@@ -173,6 +253,28 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
+
+        // Theme Toggle Logic
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+            }
+        }
+
+        // Initialize Theme
+        if (localStorage.getItem('theme') === 'dark' || 
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            updateThemeIcon(true);
+        }
 
         // Auto-hide flash messages after 3 seconds with graceful fade
         document.addEventListener('DOMContentLoaded', () => {

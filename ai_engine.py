@@ -210,22 +210,38 @@ STRICT RULES:
     return None, 'forward_to_lecturer'
 
 
-def ask_groq_ai_direct(prompt):
+def ask_groq_ai_direct(prompt, tools_enabled=False):
     """
     Direct Groq AI call with full prompt control
-    Used for context-aware responses
+    Used for context-aware responses and agentic actions
     """
     if not groq_client:
         return None
 
     try:
+        system_msg = "You are the ClassPulse Oracle AI. Keep responses under 40 words."
+        if tools_enabled:
+            system_msg += """
+You can trigger system actions by including a JSON block at the end of your response.
+FORMAT: 
+{ "action": "ACTION_NAME", "params": { ... } }
+
+AVAILABLE ACTIONS:
+- create_group: { "name": str, "description": str }
+- lock_group: { "room_id": int, "lock": bool }
+- create_teaching_session: { "room_id": int, "topic": str, "days": int }
+- send_broadcast: { "room_id": int, "message": str }
+- delete_group: { "room_id": int }
+"""
+        
         chat_completion = groq_client.chat.completions.create(
             messages=[
+                {"role": "system", "content": system_msg},
                 {"role": "user", "content": prompt}
             ],
             model="llama-3.3-70b-versatile",
             temperature=0.7,
-            max_tokens=100  # Keep responses short
+            max_tokens=200
         )
 
         return chat_completion.choices[0].message.content
@@ -233,6 +249,31 @@ def ask_groq_ai_direct(prompt):
     except Exception as e:
         print(f"[ERROR] Groq AI Direct Error: {e}")
         return None
+
+
+def scan_for_important_questions(messages):
+    """
+    Analyze student messages and flag important/urgent questions
+    """
+    if not groq_client or not messages:
+        return []
+    
+    try:
+        msgs_text = "\n".join([f"- {m.content}" for m in messages])
+        prompt = f"""Identify any critical or high-priority student questions in this list that require immediate lecturer attention.
+Messages:
+{msgs_text}
+
+Return only the text of the important questions, one per line. If none, return 'NONE'."""
+        
+        response = ask_groq_ai_direct(prompt)
+        if not response or "NONE" in response:
+            return []
+        
+        return [q.strip() for q in response.split('\n') if q.strip()]
+    except Exception as e:
+        print(f"[ERROR] Scanning Error: {e}")
+        return []
 
 
 def summarize_pending_questions(questions):
