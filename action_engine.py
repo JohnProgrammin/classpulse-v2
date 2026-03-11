@@ -37,8 +37,14 @@ class ActionEngine:
     def lock_group(lecturer_id, room_id, lock=True):
         """Lock or unlock a group chat"""
         room = ChatRoom.query.get(room_id)
-        if not room or room.created_by != lecturer_id:
-            return False, "Group not found or unauthorized."
+        if not room:
+            return False, "Group not found."
+            
+        is_creator = room.created_by == lecturer_id
+        is_course_lecturer = room.course_id and room.course.lecturer_id == lecturer_id
+        
+        if not (is_creator or is_course_lecturer):
+            return False, "Unauthorized."
         
         room.locked = lock
         db.session.commit()
@@ -50,8 +56,14 @@ class ActionEngine:
     def create_teaching_session(lecturer_id, room_id, topic, days):
         """Turn a group into a teaching session"""
         room = ChatRoom.query.get(room_id)
-        if not room or room.created_by != lecturer_id:
-            return False, "Group not found or unauthorized."
+        if not room:
+            return False, "Group not found."
+            
+        is_creator = room.created_by == lecturer_id
+        is_course_lecturer = room.course_id and room.course.lecturer_id == lecturer_id
+        
+        if not (is_creator or is_course_lecturer):
+            return False, "Unauthorized."
         
         start_date = datetime.utcnow()
         close_date = start_date + timedelta(days=days)
@@ -94,8 +106,14 @@ class ActionEngine:
     def delete_group(lecturer_id, room_id):
         """Permanently delete a group"""
         room = ChatRoom.query.get(room_id)
-        if not room or room.created_by != lecturer_id:
-            return False, "Group not found or unauthorized."
+        if not room:
+            return False, "Group not found."
+            
+        is_creator = room.created_by == lecturer_id
+        is_course_lecturer = room.course_id and room.course.lecturer_id == lecturer_id
+        
+        if not (is_creator or is_course_lecturer):
+            return False, "Unauthorized."
         
         db.session.delete(room)
         db.session.commit()

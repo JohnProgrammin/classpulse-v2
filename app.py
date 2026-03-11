@@ -230,10 +230,16 @@ def add_course():
         description=f"Official group for {name}",
         room_type='group',
         invite_code=generate_invite_code(),
-        created_by=None, # System created
+        created_by=new_course.lecturer_id, # FIX: Lecturer creates it, so they have auth over it
         course_id=new_course.id
     )
     db.session.add(new_room)
+    db.session.flush()
+
+    # Automatically add lecturer as admin to their new course's group
+    from models import ChatMember
+    admin_member = ChatMember(room_id=new_room.id, user_id=new_course.lecturer_id, role='admin')
+    db.session.add(admin_member)
     db.session.commit()
 
     flash(f'Course {code} successfully created!', 'success')
@@ -698,7 +704,12 @@ def api_command_center():
     try:
         from ai_engine import ask_groq_ai_direct
         from action_engine import ActionEngine
+        from models import ChatRoom
         import json
+
+        # Get all groups in this course to give AI context
+        course_groups = ChatRoom.query.filter_by(course_id=course.id, is_active=True).all()
+        groups_context = "\n".join([f"- room_id: {g.id} | Name: {g.name} | Invite Code: {g.invite_code}" for g in course_groups])
 
         # Build a specialized prompt for the lecturer command center
         prompt = f"""You are the ClassPulse Control AI for {course.code}. 
@@ -708,7 +719,10 @@ Your job is to assist them with:
 2. Analyzing course data
 3. Drafting academic content
 4. Answering technical system questions
-5. Executing system actions (Create group, lock chat, teaching sessions, etc.)
+5. Executing system actions (Create group, lock chat, teaching sessions, delete group, etc.)
+
+CURRENT GROUPS IN THIS COURSE (CRITICAL FOR ACTION PARAMETERS):
+{groups_context if course_groups else "No groups currently exist for this course."}
 
 Respond warmly and naturally like a highly intelligent human assistant. Be professional, concise, and proactive. Do not sound robotic.
 
