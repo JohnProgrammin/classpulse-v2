@@ -7,45 +7,41 @@
     <!-- Header Section -->
     <div class="mb-16 fade-in">
         <a href="{{ url_for('dashboard') }}"
-            class="inline-flex items-center gap-2 text-medium-gray hover:text-medium-black transition-colors mb-6 text-xs font-bold uppercase tracking-widest">
+            class="inline-flex items-center gap-2 text-medium-gray hover:text-medium-black transition-colors mb-8 text-xs font-bold uppercase tracking-[0.2em]">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>
             <span>Back to Dashboard</span>
         </a>
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div class="space-y-2">
-                <div class="flex items-center gap-3">
-                    <h1 class="text-5xl font-bold serif tracking-tight text-medium-black">{{ course.code }}</h1>
-                </div>
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div class="space-y-4">
+                <h1 class="text-5xl md:text-6xl font-bold serif tracking-tight text-medium-black leading-none">{{ course.code }}</h1>
                 <p class="text-2xl text-medium-gray serif italic">{{ course.name }}</p>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="showAddFAQ()"
-                    class="px-6 py-3 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/10 flex items-center gap-2">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    Add FAQ
-                </button>
-            </div>
+            <button onclick="showAddFAQ()"
+                class="px-8 py-3 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/10 flex items-center justify-center gap-2 w-full md:w-auto">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                Expand Knowledge
+            </button>
         </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="border-b border-medium-divider mb-12 fade-in">
-        <div class="flex gap-10 overflow-x-auto no-scrollbar">
+    <div class="border-b border-medium-divider mb-12 fade-in overflow-hidden">
+        <div class="flex gap-8 md:gap-12 overflow-x-auto no-scrollbar pb-1">
             <button onclick="switchTab('knowledge')" id="tab-knowledge"
-                class="tab-button border-b-2 py-4 font-bold text-sm transition-all uppercase tracking-widest active">
-                Knowledge Base ({{ faqs|length }})
+                class="tab-button border-b-2 py-4 font-bold text-xs transition-all uppercase tracking-widest active">
+                Archive ({{ faqs|length }})
             </button>
             <button onclick="switchTab('pending')" id="tab-pending"
-                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-sm transition-all uppercase tracking-widest">
-                Questions ({{ pending|length }})
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-xs transition-all uppercase tracking-widest whitespace-nowrap">
+                Review ({{ pending|length }})
             </button>
             <button onclick="switchTab('scheduled')" id="tab-scheduled"
-                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-sm transition-all uppercase tracking-widest">
-                Scheduled ({{ scheduled|length }})
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-xs transition-all uppercase tracking-widest">
+                Plans ({{ scheduled|length }})
             </button>
             <button onclick="switchTab('history')" id="tab-history"
-                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-sm transition-all uppercase tracking-widest">
-                History
+                class="tab-button border-b-2 border-transparent text-medium-gray py-4 font-bold text-xs transition-all uppercase tracking-widest">
+                Log
             </button>
         </div>
     </div>

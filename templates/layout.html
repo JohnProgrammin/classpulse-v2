@@ -89,15 +89,15 @@
                     <span class="text-2xl font-bold tracking-tighter serif">ClassPulse</span>
                 </a>
 
-                <div class="flex items-center space-x-6 md:space-x-8">
+                <div class="flex items-center space-x-4 md:space-x-8">
                     {% if current_user.is_authenticated %}
                         <!-- Lecturer specific links -->
                         <a href="{{ url_for('dashboard') }}"
-                            class="text-sm font-bold uppercase tracking-widest text-medium-gray hover:text-medium-black transition-colors">
+                            class="text-[10px] md:text-sm font-bold uppercase tracking-widest text-medium-gray hover:text-medium-black transition-colors">
                             Courses
                         </a>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs font-bold uppercase tracking-widest text-medium-black">{{ current_user.phone }}</span>
+                        <div class="hidden sm:flex items-center space-x-3">
+                            <span class="text-xs font-bold uppercase tracking-widest text-medium-black">{{ current_user.phone_number }}</span>
                         </div>
                         <a href="{{ url_for('logout') }}"
                             class="text-medium-gray hover:text-medium-black transition-colors">
@@ -106,7 +106,7 @@
                     {% elif session.get('chat_user_id') %}
                         <!-- Student specific links -->
                         <a href="{{ url_for('chat_app') }}"
-                            class="text-sm font-bold uppercase tracking-widest text-medium-gray hover:text-medium-black transition-colors">
+                            class="text-[10px] md:text-sm font-bold uppercase tracking-widest text-medium-gray hover:text-medium-black transition-colors">
                             Knowledge Base
                         </a>
                         <a href="{{ url_for('chat_logout') }}"
@@ -115,11 +115,11 @@
                         </a>
                     {% else %}
                         <!-- Not logged in -->
-                        <a href="{{ url_for('chat_index') }}" class="text-xs font-bold uppercase tracking-widest text-medium-gray hover:text-medium-black transition-colors">
+                        <a href="{{ url_for('chat_index') }}" class="hidden xs:block text-[10px] md:text-xs font-bold uppercase tracking-widest text-medium-gray hover:text-medium-black transition-colors">
                             For Students
                         </a>
-                        <a href="{{ url_for('login') }}" class="btn-primary">
-                            Lecturer Sign In
+                        <a href="{{ url_for('login') }}" class="btn-primary scale-90 md:scale-100">
+                            Sign In
                         </a>
                     {% endif %}
                 </div>
