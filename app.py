@@ -1,5 +1,9 @@
-import eventlet
-eventlet.monkey_patch()
+try:
+    import eventlet
+    eventlet.monkey_patch()
+except ImportError:
+    print("[WARN] eventlet not found. Falling back to standard threading.")
+
 
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, session, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
