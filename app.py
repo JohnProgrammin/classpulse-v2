@@ -1,4 +1,5 @@
-
+import eventlet
+eventlet.monkey_patch()
 
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, session, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -717,7 +718,9 @@ LECTURER COMMAND: {message}"""
             if "{" in response and "}" in response:
                 try:
                     # Crude extraction of JSON from response
-                    json_str = response[response.find("{"):response.rfind("}")+1]
+                    start_idx = response.find("{")
+                    end_idx = response.rfind("}") + 1
+                    json_str = response[start_idx:end_idx]
                     action_data = json.loads(json_str)
                     action = action_data.get('action')
                     params = action_data.get('params', {})
@@ -737,6 +740,14 @@ LECTURER COMMAND: {message}"""
                     elif action == 'delete_group':
                         success, res = ActionEngine.delete_group(current_user.id, params.get('room_id'))
                         action_result = res
+                        
+                    # Remove the JSON block from the readable response
+                    response = response[:start_idx] + response[end_idx:]
+                    response = response.strip()
+                    
+                    # Append the action result to the response so the user sees it (e.g., invite codes)
+                    if action_result:
+                        response += f"\n\nSystem Action: {action_result}"
                 except Exception as e:
                     print(f"[WARN] Failed to parse AI action: {e}")
 

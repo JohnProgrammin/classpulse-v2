@@ -1661,8 +1661,13 @@ def clean_response_for_display(response):
     cleaned = re.sub(r'\[UNLOCK:([^\]]+)\]', r'🔓 "\1" unlocked', cleaned)
     cleaned = re.sub(r'\[TEACH:([^|]+)\|(\d+)\]', r'📚 Teaching group for "\1" created (\2 days)', cleaned)
     cleaned = re.sub(r'\[DELETE_TEACH:([^\]]+)\]', '', cleaned)  # Remove tag, stats appended separately
+    cleaned = re.sub(r'\[DELETE_GROUP:([^\]]+)\]', '', cleaned)  # Remove tag, deletion handled separately
     cleaned = re.sub(r'\[CREATE_COURSE:([^|]+)\|([^\]]+)\]', r'📖 Course "\1" (\2) registered', cleaned)
     cleaned = re.sub(r'\[CREATE_PERM_GROUP:([^\]]+)\]', r'👥 Group "\1" created', cleaned)
+    cleaned = re.sub(r'\[NEED_LECTURER\]', '', cleaned)  # Always strip, handled separately
+    # Catch-all: strip any remaining unrecognised [TAG:...] brackets
+    cleaned = re.sub(r'\[[A-Z_]+:[^\]]*\]', '', cleaned)
+    cleaned = re.sub(r'\[/[A-Z_]+\]', '', cleaned)
     return cleaned.strip()
 
 
