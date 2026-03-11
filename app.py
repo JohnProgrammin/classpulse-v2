@@ -748,7 +748,7 @@ LECTURER COMMAND: {message}"""
                     # Append the action result to the response so the user sees it (e.g., invite codes)
                     if action_result:
                         response += f"\n\nSystem Action: {action_result}"
-                except Exception as e:
+                except Exception as e:  
                     print(f"[WARN] Failed to parse AI action: {e}")
 
             return jsonify({
